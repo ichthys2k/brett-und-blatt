@@ -62,6 +62,11 @@ export interface GameInfo {
    * dem Zug etwas aufgedeckt, wüsste die bittende Person schon mehr. Nie zusammen mit `noUndo`.
    */
   takeBack?: boolean;
+  /**
+   * Kurzspiel (#570): Ab dieser Dauer und Zugzahl gilt eine Partie für die Stufen des Spielerpasses als gewertet
+   * (Vorgabe der Plattform: 60 Sekunden und 6 Züge, hier kleiner, z. B. `{ ms: 20_000, moves: 3 }`). Online zählt nur die Dauer.
+   */
+  ratedAfter?: { ms: number; moves: number };
   /** Kurze Anleitung „So geht's“: die wichtigsten Regeln in wenigen Sätzen, je ein Punkt pro Eintrag. */
   howToPlay: string[];
 }

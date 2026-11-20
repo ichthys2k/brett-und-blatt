@@ -2,7 +2,7 @@ import type { GameSession, Result, SeatConfig } from '@brett-und-blatt/engine';
 import type { AlbumSpec } from '@brett-und-blatt/ui';
 import { useEffect, useRef, useState } from 'react';
 import { ALBUM_KEY, recordFinds, sanitizeAlbum } from './album';
-import { emptyBook, localMode, outcomeFor, recordGame, sanitizeBook, strongestBot, type Mode, type PlayedGame } from './partiebuch';
+import { emptyBook, isRated, localMode, outcomeFor, recordGame, sanitizeBook, strongestBot, type Mode, type PlayedGame } from './partiebuch';
 import { passBook } from './passes';
 import { rememberReplay } from './chronikStore';
 import { addTrophy, sanitizeTrophies, trophyFor } from './pokale';
@@ -23,6 +23,8 @@ export interface RecordRow {
   /** Pass, dem die Zeile gehört; null: der aktive. */
   passId: string | null;
   game: PlayedGame;
+  /** Gewertete Partie (Mindestdauer und -züge, #570): zählt für die Stufen. */
+  rated: boolean;
 }
 
 export interface RecordInput {
@@ -34,6 +36,10 @@ export interface RecordInput {
   durationMs: number;
   /** Punkte je Platz (aus `GameUi.seatScore`), soweit vorhanden. */
   scores?: readonly (number | string | null | undefined)[];
+  /** Züge im Zuglog der lokalen Sitzung; online unbekannt (dort zählt nur die Dauer). */
+  moves?: number;
+  /** Schwellen des Spiels für „gewertet“ (`GameInfo.ratedAfter`); sonst die der Plattform. */
+  ratedAfter?: { ms: number; moves: number };
   /** Online: der eigene Platz (null: Zuschauer, dann wird nichts aufgezeichnet). */
   online?: { yourSeat: number | null; tournament: boolean };
 }
@@ -65,11 +71,13 @@ export function rowsFor(input: RecordInput): RecordRow[] {
         activeTaken = true;
         return [{ seat, index, passId: null as string | null }];
       });
+  const rated = isRated({ durationMs: input.durationMs, moves: input.online ? undefined : input.moves }, input.ratedAfter);
   return [...mine, ...local].map(({ index, passId }) => {
     const outcome = outcomeFor(result, index);
     const score = input.scores?.[index];
     return {
       passId,
+      rated,
       game: {
         id: input.sessionId,
         gameId: input.gameId,
@@ -139,7 +147,7 @@ export function saveRows(rows: readonly RecordRow[], seats: readonly SeatConfig[
         // kaputtes Buch: neu anfangen
       }
       firstHardWin = !stampsFor(book, row.game.gameId).find((stamp) => stamp.kind === 'win-hard')!.earned;
-      return JSON.stringify(recordGame(book, row.game, device, level));
+      return JSON.stringify(recordGame(book, row.game, device, level, row.rated));
     });
     const trophy = trophyFor(row.game, level, firstHardWin);
     if (trophy) {
@@ -198,8 +206,10 @@ export function usePassRecorder(options: {
   /** Lernen beim Spielen (#223): was die Partie über das Wissen des eigenen Platzes zeigt. */
   learning?: { report: (view: never, seat: number) => { row: string; sure: boolean }[] };
   online?: { yourSeat: number | null; tournament: boolean; display?: boolean };
+  /** Schwellen für „gewertet“ aus dem Steckbrief (`GameInfo.ratedAfter`). */
+  ratedAfter?: { ms: number; moves: number };
 }): { trophy: boolean } {
-  const { session, gameId, seatScore, seriesRoundsDone, album, learning, online } = options;
+  const { session, gameId, seatScore, seriesRoundsDone, album, learning, online, ratedAfter } = options;
   const [trophy, setTrophy] = useState(false);
   const started = useRef<{ id: string; at: number }>({ id: session.id, at: Date.now() });
   const done = useRef<string | null>(null);
@@ -224,7 +234,18 @@ export function usePassRecorder(options: {
       roundsDone = null;
     }
     const now = Date.now();
-    const rows = rowsFor({ gameId, sessionId: session.id, result, seats, endedAt: now, durationMs: now - started.current.at, scores, ...(online ? { online: { yourSeat: online.yourSeat, tournament: online.tournament } } : {}) });
+    // Anzahl der Züge für „gewertet“ (#570): nur lokal bekannt, online zählt allein die Dauer.
+    let moves: number | undefined;
+    try {
+      const local = session as unknown as { snapshot?: () => { log: unknown } };
+      if (!online && typeof local.snapshot === 'function') {
+        const snap = local.snapshot();
+        if (Array.isArray(snap.log)) moves = snap.log.length;
+      }
+    } catch {
+      // Zugabe, darf nie stören
+    }
+    const rows = rowsFor({ gameId, sessionId: session.id, result, seats, endedAt: now, durationMs: now - started.current.at, scores, ...(moves !== undefined ? { moves } : {}), ...(ratedAfter ? { ratedAfter } : {}), ...(online ? { online: { yourSeat: online.yourSeat, tournament: online.tournament } } : {}) });
     // Lokale Partien: Zugliste für das Anheften in der Chronik merken (online kennt der Browser Seed und Züge nicht, siehe #99).
     // Im Hot-Seat bekommt jeder beteiligte Pass die Zugliste in seine Ablage (#561); ein Gast zeichnet nichts auf (#558).
     try {
@@ -250,7 +271,7 @@ export function usePassRecorder(options: {
     } catch {
       // Das Partiebuch ist eine Zugabe und darf nie den Tisch stören.
     }
-  }, [result, session, gameId, seatScore, seriesRoundsDone, learning, online]);
+  }, [result, session, gameId, seatScore, seriesRoundsDone, learning, online, ratedAfter]);
   useEffect(() => {
     if (!result) setTrophy(false);
   }, [result]);

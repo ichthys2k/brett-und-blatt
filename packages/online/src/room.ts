@@ -19,7 +19,7 @@ import {
   type SessionSnapshot,
   timePresetsOf,
 } from '@brett-und-blatt/engine';
-import { cleanAvatar, cleanName, crestField, setCrest } from './names';
+import { cleanAvatar, cleanName, crestField, setCrest, setFrame } from './names';
 import type { RoomReport } from './tournament';
 import { SERIES_PAUSE_MS, forfeitSeries, newSeries, recordSeriesGame, type SeriesState } from './tournament/best-of';
 import {
@@ -31,6 +31,7 @@ import {
   PHRASES,
   DISPLAY_MEMBER,
   PROTOCOL_VERSION,
+  frameField,
   protocolSupported,
   REACTIONS,
   parseClientMessage,
@@ -178,6 +179,8 @@ interface Member {
   avatar: string;
   /** Wappen in Normalform (geprüft über `cleanCrest`), falls die Person es im Raum zeigen will. */
   crest?: string;
+  /** Avatar-Rahmen (Kennung, nur Form geprüft, #572). */
+  frame?: string;
   connections: Set<string>;
   /** Seit wann keine Verbindung mehr besteht (null: verbunden). */
   disconnectedAt: number | null;
@@ -222,7 +225,7 @@ export interface RoomSnapshot {
   phase: RoomPhase;
   lobby: LobbySettings;
   /** `disconnectedAt`: seit wann ohne Verbindung (null: beim Speichern verbunden). */
-  members: { id: string; token: string; name: string; avatar: string; crest?: string; awayByDisconnect: boolean; disconnectedAt: number | null; nameFixed?: boolean; join?: 'asking' | 'queued'; joinAt?: number; declinedUntil?: number }[];
+  members: { id: string; token: string; name: string; avatar: string; crest?: string; frame?: string; awayByDisconnect: boolean; disconnectedAt: number | null; nameFixed?: boolean; join?: 'asking' | 'queued'; joinAt?: number; declinedUntil?: number }[];
   kicked: string[];
   nextMember: number;
   lastVersion: number;
@@ -585,7 +588,7 @@ export class Room {
       ...(this.reservedHost !== null ? { reservedHost: this.reservedHost } : {}),
       phase: this.phase,
       lobby: structuredClone(this.lobby),
-      members: [...this.members.values()].map(({ id, token, name, avatar, crest, awayByDisconnect, disconnectedAt, nameFixed, join, joinAt, declinedUntil }) => ({ id, token, name, avatar, ...(crest ? { crest } : {}), awayByDisconnect, disconnectedAt, ...(nameFixed ? { nameFixed } : {}), ...(join ? { join, ...(joinAt !== undefined ? { joinAt } : {}) } : {}), ...(declinedUntil !== undefined ? { declinedUntil } : {}) })),
+      members: [...this.members.values()].map(({ id, token, name, avatar, crest, frame, awayByDisconnect, disconnectedAt, nameFixed, join, joinAt, declinedUntil }) => ({ id, token, name, avatar, ...(crest ? { crest } : {}), ...(frame ? { frame } : {}), awayByDisconnect, disconnectedAt, ...(nameFixed ? { nameFixed } : {}), ...(join ? { join, ...(joinAt !== undefined ? { joinAt } : {}) } : {}), ...(declinedUntil !== undefined ? { declinedUntil } : {}) })),
       kicked: [...this.kicked],
       nextMember: this.nextMember,
       lastVersion: this.lastVersion,
@@ -693,6 +696,7 @@ export class Room {
         name,
         avatar: cleanAvatar(message.avatar),
         ...crestField(message.crest),
+        ...frameField(message.frame),
         connections: new Set(),
         disconnectedAt: null,
         awayByDisconnect: false,
@@ -714,6 +718,7 @@ export class Room {
       member.name = name;
       member.avatar = cleanAvatar(message.avatar);
       setCrest(member, message.crest);
+      setFrame(member, message.frame);
       this.syncSeatName(member);
     }
     this.connections.set(connectionId, member.id);
@@ -758,6 +763,7 @@ export class Room {
         member.name = name;
         member.avatar = cleanAvatar(message.avatar);
         setCrest(member, message.crest);
+      setFrame(member, message.frame);
         this.syncSeatName(member);
         return this.broadcastRoom();
       }
@@ -1150,7 +1156,7 @@ export class Room {
         ? { kind: 'bot', name: 'Computer', level: seat.level, memberId: null }
         : seat.memberId === null
           ? { kind: 'human', name: 'Frei', memberId: null }
-          : { kind: 'human', name: this.members.get(seat.memberId)?.name ?? '?', avatar: this.members.get(seat.memberId)?.avatar, memberId: seat.memberId },
+          : { kind: 'human', name: this.members.get(seat.memberId)?.name ?? '?', avatar: this.members.get(seat.memberId)?.avatar, ...frameField(this.members.get(seat.memberId)?.frame), memberId: seat.memberId },
     );
     const teamCount = teamsFor(module.info, this.lobby.options, seats.length)?.count ?? 0;
     const teamOptions: Options = teamCount >= 2 ? { [TEAM_OPTION_ID]: seats.map((seat, i) => seat.team ?? i % teamCount).join(',') } : {};
@@ -1739,7 +1745,7 @@ export class Room {
   }
 
   private roomMessage(): RoomMessage {
-    const members: MemberInfo[] = [...this.members.values()].map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, ...(m.crest ? { crest: m.crest } : {}), connected: m.disconnectedAt === null, ...(m.nameFixed ? { nameFixed: true } : {}), ...(m.join ? { join: m.join } : {}), ...(this.isXrMember(m) ? { xr: true as const } : {}), ...(this.isVoiceMember(m) ? { voice: true as const } : {}) }));
+    const members: MemberInfo[] = [...this.members.values()].map((m) => ({ id: m.id, name: m.name, avatar: m.avatar, ...(m.crest ? { crest: m.crest } : {}), ...(m.frame ? { frame: m.frame } : {}), connected: m.disconnectedAt === null, ...(m.nameFixed ? { nameFixed: true } : {}), ...(m.join ? { join: m.join } : {}), ...(this.isXrMember(m) ? { xr: true as const } : {}), ...(this.isVoiceMember(m) ? { voice: true as const } : {}) }));
     const series = this.match?.series;
     const match = this.match
       ? { tournament: this.match.config.tournament, label: this.match.config.label, noShow: this.match.noShow !== null, ...(series ? { series: { bestOf: series.bestOf, score: this.seriesScoreBySeat(series), next: series.nextAt, done: series.winner !== undefined } } : {}) }

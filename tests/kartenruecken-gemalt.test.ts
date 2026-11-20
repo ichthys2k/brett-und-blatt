@@ -53,22 +53,22 @@ describe('Gemalte Kartenrücken (#314)', () => {
     const check = (id: string, s: CardBackUnlockState) => PAINTED_CARD_BACK_CATALOG.find((entry) => entry.id === id)!.unlockCheck(s).unlocked;
     expect(check('tavern-lantern', state())).toBe(true);
 
-    expect(check('castle-banner', state({ book: book({ d: { skat: { 'bots/easy': { played: 9, won: 0, drawn: 0, lost: 9 } } } }) }))).toBe(false);
-    expect(check('castle-banner', state({ book: book({ d: { skat: { 'bots/easy': { played: 6, won: 0, drawn: 0, lost: 6 } }, uno: { 'solo/-': { played: 4, won: 0, drawn: 0, lost: 4 } } } }) }))).toBe(true);
+    expect(check('castle-banner', state({ book: book({ d: { skat: { 'bots/easy': { played: 9, won: 0, drawn: 0, lost: 9, rated: 9, ratedWon: 0 } } } }) }))).toBe(false);
+    expect(check('castle-banner', state({ book: book({ d: { skat: { 'bots/easy': { played: 6, won: 0, drawn: 0, lost: 6, rated: 6, ratedWon: 0 } }, uno: { 'solo/-': { played: 4, won: 0, drawn: 0, lost: 4, rated: 4, ratedWon: 0 } } } }) }))).toBe(true);
 
     expect(check('library-ink', state({ learnDays: 4 }))).toBe(false);
     expect(check('library-ink', state({ learnDays: 5 }))).toBe(true);
 
-    const one = { 'bots/easy': { played: 1, won: 0, drawn: 0, lost: 1 } };
+    const one = { 'bots/easy': { played: 1, won: 0, drawn: 0, lost: 1, rated: 1, ratedWon: 0 } };
     const family = ['ludo', 'kniffel', 'maexle'];
     expect(check('garden-rose', state({ familyGameIds: family, book: book({ d: { ludo: one, kniffel: one, skat: one } }) }))).toBe(false);
     expect(check('garden-rose', state({ familyGameIds: family, book: book({ d: { ludo: one }, e: { kniffel: one, maexle: one } }) }))).toBe(true);
 
     expect(check('fairground', state({ book: book({ d: { 'color-sorter': one } }) }))).toBe(false);
-    expect(check('fairground', state({ book: book({ d: { 'color-sorter': { 'solo/-': { played: 1, won: 1, drawn: 0, lost: 0 } } } }) }))).toBe(true);
+    expect(check('fairground', state({ book: book({ d: { 'color-sorter': { 'solo/-': { played: 1, won: 1, drawn: 0, lost: 0, rated: 1, ratedWon: 1 } } } }) }))).toBe(true);
 
     expect(check('night-sky', state({ book: book({ d: { skat: one } }) }))).toBe(false);
-    expect(check('night-sky', state({ book: book({ d: { skat: { 'tournament/-': { played: 1, won: 0, drawn: 0, lost: 1 } } } }) }))).toBe(true);
+    expect(check('night-sky', state({ book: book({ d: { skat: { 'tournament/-': { played: 1, won: 0, drawn: 0, lost: 1, rated: 1, ratedWon: 0 } } } }) }))).toBe(true);
   });
 
   it('ohne Bild bleibt ein gemalter Rücken unwählbar', () => {

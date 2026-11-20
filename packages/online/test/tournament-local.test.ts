@@ -173,6 +173,16 @@ describe('Tische und Aufruf', () => {
     expect(t.view(LEADER).matches.filter((m) => m.status === 'running')).toHaveLength(0);
   });
 
+  it('Zuschaulink lässt sich nachträglich umschalten, nur von der Leitung (#553)', () => {
+    const { t } = local(4, 'knockout', {}, 4);
+    expect(t.setSpectators('fremder-token', true)).toBeTypeOf('string');
+    expect(t.setSpectators(LEADER, true)).toBeNull();
+    expect(t.view(LEADER).settings.spectators).toBe(true);
+    expect(t.setSpectators(LEADER, false)).toBeNull();
+    expect(t.view(LEADER).settings.spectators).toBe(false);
+    expect(parseTournamentMessage(JSON.stringify({ type: 'setSpectators', on: 'ja' }))).toBeNull();
+  });
+
   it('assignFields lässt laufende Partien stehen', () => {
     const { t } = local(4, 'knockout', {}, 1);
     expect(t.start(LEADER)).toBeNull();

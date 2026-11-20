@@ -80,7 +80,7 @@ body {
 }
 
 /* Wer mit der Tastatur spielt, soll immer sehen, wo er gerade ist. */
-:where(button, a, [tabindex], input, select):focus-visible {
+:where(button, a, [tabindex], input, select, textarea, summary, [contenteditable='true']):focus-visible {
   outline: 3px solid var(--color-accent);
   outline-offset: 2px;
 }

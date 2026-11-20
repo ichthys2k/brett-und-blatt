@@ -103,7 +103,7 @@ export function RichField({ id, label, value, onChange, media, onAddMedia, cloze
 
   return (
     <div className="space-y-1">
-      <label htmlFor={id} className="block text-sm font-medium">
+      <label id={`${id}-label`} htmlFor={id} className="block text-sm font-medium">
         {label}
       </label>
       {!plain && (
@@ -193,6 +193,7 @@ export function RichField({ id, label, value, onChange, media, onAddMedia, cloze
           ref={ref}
           role="textbox"
           aria-multiline="true"
+          aria-labelledby={`${id}-label`}
           contentEditable
           suppressContentEditableWarning
           className="min-h-11 w-full rounded-xl border border-line bg-surface px-3 py-2 [&_img]:max-h-40 [&_img]:max-w-full"

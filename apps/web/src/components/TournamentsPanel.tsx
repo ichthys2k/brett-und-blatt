@@ -504,19 +504,6 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
             </label>
           )}
           {local && format === 'world' && (
-            <label className="block space-y-1 text-sm">
-              <span>{t('tournament.groupCount')}</span>
-              <select className={FIELD} value={groupCount} onChange={(e) => setGroupCount(Number(e.target.value))}>
-                <option value={0}>{t('tournament.groupCount.auto')}</option>
-                {(bestThirds ? [...BEST_THIRD_GROUPS] : [...GROUP_COUNT_CHOICES]).map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-          {local && format === 'world' && (
             <label className="flex items-start gap-2 text-sm">
               <input
                 type="checkbox"
@@ -531,6 +518,19 @@ export function TournamentsPanel({ profile }: { profile: Profile }) {
                 {t('tournament.bestThirds')}
                 <span className="block text-xs text-muted">{t('tournament.bestThirdsHint')}</span>
               </span>
+            </label>
+          )}
+          {local && format === 'world' && (
+            <label className="block space-y-1 text-sm">
+              <span>{t('tournament.groupCount')}</span>
+              <select className={FIELD} value={groupCount} onChange={(e) => setGroupCount(Number(e.target.value))}>
+                <option value={0}>{t('tournament.groupCount.auto')}</option>
+                {(bestThirds ? [...BEST_THIRD_GROUPS] : [...GROUP_COUNT_CHOICES]).map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
             </label>
           )}
           {format === 'dyp' && (

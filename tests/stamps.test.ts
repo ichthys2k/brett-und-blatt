@@ -1,6 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { emptyBook, mergeBooks, recordGame, sameBooks, sanitizeBook, stampsEarnedBy, type PlayedGame } from '../apps/web/src/lib/partiebuch';
-import { categoryStamp, stampCount, stampDescription, stampsFor } from '../apps/web/src/lib/stamps';
+import { categoryStamp, learnStampDescription, learnStamps, longestStreak, stampCount, stampDescription, stampsFor } from '../apps/web/src/lib/stamps';
+
+describe('Lern-Stempel (#581)', () => {
+  it('findet die längste Folge', () => {
+    expect(longestStreak([])).toBe(0);
+    expect(longestStreak([3, 1, 2, 7, 8])).toBe(3);
+  });
+  it('vergibt Stempel nach Lerntagen in Folge', () => {
+    const stamps = learnStamps([1, 2, 3, 4, 5]);
+    expect(stamps.map((s) => s.earned)).toEqual([true, true, false]);
+    expect(learnStampDescription(stamps[1]!)).toBe('5 Lerntage in Folge: erreicht');
+    expect(learnStampDescription(stamps[2]!)).toBe('10 Lerntage in Folge: offen');
+  });
+});
 
 const game = (id: string, extra: Partial<PlayedGame> = {}): PlayedGame => ({ id, gameId: 'chess', endedAt: 1000, durationMs: 1, mode: 'bots', seats: [], outcome: 'loss', ...extra });
 const earned = (book: ReturnType<typeof emptyBook>, gameId = 'chess') => stampsFor(book, gameId).filter((s) => s.earned).map((s) => s.kind);
