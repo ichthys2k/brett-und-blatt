@@ -35,6 +35,11 @@
 | `rounds` | Runden (Stammwörter) | `1` (Schnellrunde), `3` (Standard), `5` (Turnier) | `3` |
 | `minLength` | Mindestwortlänge | `3` (ab 3 Buchstaben), `4` (ab 4 Buchstaben) | `3` |
 
+## Wortlisten
+
+- **Stammwörter:** 123 (Bunter Mix 47, Natur & Tiere 40, Mathe & Geometrie 36). Die ursprünglichen 16 mit eigener Teilwortliste stehen in `src/words.ts` (`BASE_CATALOG`), die übrigen kompakt als `Stammwort | Hinweis` in `src/stems.ts`. Jedes Stammwort muss mindestens 15 Teilwörter ergeben.
+- **Prüf-Wörterbuch:** rund 3.200 geläufige deutsche Wörter (Grundformen, Plurale, häufige Verbformen, Mathe-Begriffe) in `src/dictionary.ts`, dazu alle Wörter der Teilwortlisten. Gültig ist ein Teilwort nur, wenn es dort steht – ein echtes Wort, das abgelehnt wird, gehört in `dictionary.ts`. Keine Eigennamen, Abkürzungen oder Ausrufe.
+
 ## Spielmodell & Sicherheit (`playerView`)
 
 - Während einer laufenden Runde sieht jeder Sitzplatz in `playerView` nur die **eigenen** gefundenen Wörter (`foundWords`) sowie die Gesamtzahl der möglichen Teilwörter (`totalPossible`).

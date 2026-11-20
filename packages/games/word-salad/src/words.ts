@@ -1,3 +1,6 @@
+import { DICTIONARY_WORDS } from './dictionary';
+import { EXTRA_STEMS } from './stems';
+
 export type SaladCategory = 'mix' | 'natur' | 'mathe';
 
 export interface StemEntry {
@@ -54,7 +57,7 @@ export function scoreWordLength(length: number): number {
   return 11;
 }
 
-export const STEM_CATALOG: Record<SaladCategory, readonly StemEntry[]> = {
+const BASE_CATALOG: Record<SaladCategory, readonly StemEntry[]> = {
   mix: [
     {
       display: 'Taschenlampe',
@@ -87,12 +90,12 @@ export const STEM_CATALOG: Record<SaladCategory, readonly StemEntry[]> = {
       display: 'Kühlschrank',
       hint: 'Hält Lebensmittel frisch',
       subwords: [
-        'KÜHL', 'SCHRANK', 'KRANK', 'KRAN', 'KAHN', 'KAHL', 'KALB', 'KALK', 'KANN', 'KARL',
+        'KÜHL', 'SCHRANK', 'KRANK', 'KRAN', 'KAHN', 'KAHL', 'KALB', 'KALK', 'KANN',
         'KLAR', 'KLANG', 'KNALL', 'KÜHN', 'KÜHE', 'KUH', 'KURS', 'LACHEN', 'LACHS', 'LACK',
-        'LAND', 'LANG', 'LAUCH', 'LAUN', 'LINKS', 'LOHN', 'LUCHS', 'NACH', 'NAH', 'NASE',
-        'RANG', 'RANK', 'RANKE', 'RASCH', 'RASEN', 'RAUCH', 'RAUM', 'REH', 'RING', 'RÜCK',
+        'LAND', 'LANG', 'LAUCH', 'LINKS', 'LOHN', 'LUCHS', 'NACH', 'NAH', 'NASE',
+        'RANG', 'RANK', 'RANKE', 'RASCH', 'RASEN', 'RAUCH', 'RAUM', 'REH', 'RING',
         'SACK', 'SAHNE', 'SALZ', 'SAND', 'SANG', 'SCHAL', 'SCHANK', 'SCHAR', 'SCHLANK',
-        'SCHLAU', 'SCHLUCK', 'SCHнуr', 'SCHUH', 'SCHUL', 'STAHL', 'STARK', 'UHR', 'KÜHLEN',
+        'SCHLAU', 'SCHLUCK', 'SCHUH', 'STAHL', 'STARK', 'UHR', 'KÜHLEN',
       ],
     },
     {
@@ -105,14 +108,14 @@ export const STEM_CATALOG: Record<SaladCategory, readonly StemEntry[]> = {
         'DURCH', 'ECHT', 'EDEL', 'Eiche', 'EILE', 'EILEN', 'ELCH', 'ERDE', 'HELD', 'HEMD',
         'HERD', 'HERB', 'HIER', 'HILFE', 'HIRN', 'HOCH', 'HOLZ', 'HUND', 'LAUB', 'LAUCH',
         'LEIB', 'LEID', 'LEIHEN', 'LICHT', 'LIEB', 'LIEBE', 'LIED', 'LOCH', 'LUCHS', 'REICH',
-        'REIF', 'REIH', 'REIHE', 'REIS', 'RIND', 'Rinde', 'RUHE', 'RUND', 'UFER', 'UHR',
+        'REIF', 'REIHE', 'REIS', 'RIND', 'Rinde', 'RUHE', 'RUND', 'UFER', 'UHR',
       ],
     },
     {
       display: 'Briefkasten',
       hint: 'Für Postkarten und Briefe',
       subwords: [
-        'BRIEF', 'KASTEN', 'KASTE', 'AST', 'ART', 'ARTEN', 'ATEM', 'BANK', 'BART', 'BAST',
+        'BRIEF', 'KASTEN', 'AST', 'ART', 'ARTEN', 'ATEM', 'BANK', 'BART', 'BAST',
         'BEIN', 'BERG', 'BESEN', 'BESTE', 'BETEN', 'BIENE', 'BIER', 'BIRKE', 'BIRNE', 'BIS',
         'BISS', 'BISSEN', 'BITTE', 'BITTEN', 'BLATT', 'BREI', 'BREIT', 'BREITE', 'BRille',
         'BROT', 'EBER', 'EBEN', 'ECKE', 'EIER', 'EILE', 'EILEN', 'EIMER', 'EINS', 'EIS',
@@ -155,7 +158,7 @@ export const STEM_CATALOG: Record<SaladCategory, readonly StemEntry[]> = {
         'RATEN', 'RATTE', 'RAUB', 'RAUBEN', 'RAUM', 'RAUPE', 'RAUPEN', 'REBE', 'REBEN',
         'RECHT', 'REDE', 'REDEN', 'REGEN', 'REIF', 'REIN', 'REIS', 'REISE', 'REISEN', 'REITEN',
         'RENTE', 'REST', 'RIND', 'RINDE', 'RING', 'RIPPE', 'RISS', 'RITTER', 'ROBE', 'ROHR',
-        'ROLLE', 'ROMAN', 'OSA', 'ROSE', 'ROSEN', 'ROST', 'ROSTEN', 'ROT', 'ROTE', 'ROTEN',
+        'ROLLE', 'ROMAN', 'ROSE', 'ROSEN', 'ROST', 'ROSTEN', 'ROT', 'ROTE', 'ROTEN',
         'ROUTE', 'RUDER', 'RUF', 'RUFEN', 'RUHE', 'RUHEN', 'RUHM', 'RUND', 'RUNDE', 'RUß',
         'RUTE', 'SAAT', 'SACHE', 'SAFT', 'SAGE', 'SAGEN', 'SAHNE', 'SAITE', 'SALAT', 'SALBE',
         'SALZ', 'SAMEN', 'SAMT', 'SAND', 'SANFT', 'SANG', 'SATT', 'SATZ', 'SAU', 'SAUBER',
@@ -165,11 +168,11 @@ export const STEM_CATALOG: Record<SaladCategory, readonly StemEntry[]> = {
         'SPINNE', 'SPORN', 'SPORT', 'SPOTT', 'SPUR', 'SPUREN', 'STAAT', 'STAB', 'STADT',
         'STALL', 'STAMM', 'STAND', 'STARK', 'START', 'STAUB', 'STAUNEN', 'STECKEN', 'STEG',
         'STEHEN', 'STEIN', 'STERN', 'STEUER', 'STIER', 'STIFT', 'STILL', 'STIRN', 'STOCK',
-        'STOFF', 'STOLZ', 'STOP', 'STORCH', 'STOSS', 'STRAFE', 'STRAHL', 'STRAND', 'STRASSE',
+        'STOFF', 'STOLZ', 'STORCH', 'STOSS', 'STRAFE', 'STRAHL', 'STRAND', 'STRASSE',
         'STRAUCH', 'STRAUSS', 'STREIT', 'STRENG', 'STROH', 'STROM', 'STUBE', 'STÜCK', 'STUFE',
         'STUHL', 'STUMM', 'STUNDE', 'STURM', 'STURZ', 'SUCHE', 'SUCHEN', 'SÜDEN', 'SUMME',
         'SUMPF', 'SUPPE', 'SURFEN', 'TABU', 'TAFEL', 'TAG', 'TAL', 'TANNE', 'TANTE', 'TANZ',
-        'TANZEN', 'TASCHE', 'TASSE', 'TASTE', 'TASTEN', 'TAT', 'TArist', 'TAUBE', 'TAUBEN',
+        'TANZEN', 'TASCHE', 'TASSE', 'TASTE', 'TASTEN', 'TAT', 'TAUBE', 'TAUBEN',
         'TAUCHEN', 'TAUSEND', 'TAXI', 'TEE', 'TEER', 'TEICH', 'TEIG', 'TEIL', 'TELLER',
         'TEMPO', 'TENNIS', 'TEPPICH', 'TERMIN', 'TEST', 'TEUER', 'TEXT', 'THEMA', 'THRON',
         'TIEF', 'TIER', 'TIGER', 'TINTE', 'TISCH', 'TITEL', 'TOAST', 'TOBEN', 'TOCHTER',
@@ -187,7 +190,7 @@ export const STEM_CATALOG: Record<SaladCategory, readonly StemEntry[]> = {
         'REGEN', 'SCHIRM', 'SCHIRME', 'MEER', 'MEHR', 'MINE', 'MIR', 'MISCHEN', 'arm',
         'Eiche', 'EIGEN', 'EIMER', 'EIN', 'EINE', 'EINER', 'EINS', 'EIS', 'EISEN', 'ENG',
         'ENGE', 'ENGEL', 'ENTE', 'ERBE', 'ERBEN', 'ERBSE', 'ERDE', 'ERNTE', 'ESEL', 'ESSEN',
-        ' GANS', 'GARN', 'GARTEN', 'GAST', 'GEBEN', 'GEGEN', 'GEHEN', 'GEHIRN', 'GEIER',
+        'GANS', 'GARN', 'GARTEN', 'GAST', 'GEBEN', 'GEGEN', 'GEHEN', 'GEHIRN', 'GEIER',
         'GEIGE', 'GEIST', 'GELD', 'GERN', 'GERNE', 'GERSTE', 'GESICHT', 'GESTERN', 'GIESSEN',
         'GIFT', 'GIPFEL', 'GLAS', 'GLEICH', 'GLEIS', 'GLIED', 'GLÜCK', 'GOLD', 'GRAB',
         'GRABEN', 'GRAD', 'GRAMM', 'GRAS', 'GRAU', 'GREIFEN', 'GREIS', 'GRENZE', 'GRIFF',
@@ -204,7 +207,7 @@ export const STEM_CATALOG: Record<SaladCategory, readonly StemEntry[]> = {
         'KARTE', 'KÄSE', 'KASTEN', 'KATZE', 'KAUFEN', 'KAUM', 'KEGEL', 'KEHLE', 'KEHREN',
         'KEIL', 'KEIM', 'KEIN', 'KELLER', 'KENNEN', 'KERN', 'KERZE', 'KETTE', 'KEULE',
         'KIEFER', 'KIES', 'KIND', 'KINN', 'KINO', 'KIRCHE', 'KIRSCHE', 'KISSEN', 'KISTE',
-        'KLAGE', 'KLAGEN', 'KLAMM', 'KLANG', 'KLAPPE', 'KLAR', 'KLASSE', 'KLAir', 'KLEBEN',
+        'KLAGE', 'KLAGEN', 'KLAMM', 'KLANG', 'KLAPPE', 'KLAR', 'KLASSE', 'KLEBEN',
         'KLEE', 'KLEID', 'KLEIN', 'KLETTERN', 'KLIMA', 'KLINGE', 'KLINGEL', 'KLIPPE', 'KLO',
         'KLOPFEN', 'KLOTZ', 'KLUG', 'KNABE', 'KNALL', 'KNAPP', 'KNECHT', 'KNIE', 'KNIEN',
         'KNOCHEN', 'KNOPF', 'KNOTEN', 'KOCH', 'KOCHEN', 'KOFFER', 'KOHL', 'KOHLE', 'KOMMEN',
@@ -222,7 +225,7 @@ export const STEM_CATALOG: Record<SaladCategory, readonly StemEntry[]> = {
         'LEUCHTE', 'LEUTE', 'LICHT', 'LIEB', 'LIEBE', 'LIEBEN', 'LIED', 'LIEFERN', 'LIEGEN',
         'LILIE', 'LIMO', 'LINDE', 'LINEAL', 'LINIE', 'LINK', 'LINKS', 'LINSE', 'LIPPE',
         'LIST', 'LISTE', 'LITER', 'LOB', 'LOBEN', 'LOCH', 'LOCKE', 'LOCKEN', 'LÖFFEL', 'LOHN',
-        'LOS', 'LOSE', 'LÖSEN', 'LÖWE', 'LUCHS', 'LÜCKE', 'LUFT', 'LÜGE', 'LÜGEN', 'LUI',
+        'LOS', 'LOSE', 'LÖSEN', 'LÖWE', 'LUCHS', 'LÜCKE', 'LUFT', 'LÜGE', 'LÜGEN',
         'LUNGE', 'LUST', 'MACHEN', 'MACHT', 'MÄDCHEN', 'MADE', 'MAGEN', 'MAGER', 'MAGIE',
         'MAHL', 'MAHNEN', 'MAI', 'MAIS', 'MAL', 'MALEN', 'MALER', 'MAMA', 'MANCH', 'MANDEL',
         'MANGEL', 'MANN', 'MANTEL', 'MAPPE', 'MÄRCHEN', 'MARK', 'MARKE', 'MARKT', 'MARMOR',
@@ -230,8 +233,8 @@ export const STEM_CATALOG: Record<SaladCategory, readonly StemEntry[]> = {
         'MAUS', 'MEER', 'MEHL', 'MEHR', 'MEILE', 'MEIN', 'MEINEN', 'MEISE', 'MEIST', 'MEISTER',
         'MELDEN', 'MELONE', 'MENGE', 'MENSCH', 'MERKEN', 'MESSE', 'MESSEN', 'MESSER', 'METALL',
         'METER', 'MIENE', 'MIETE', 'MIETEN', 'MILCH', 'MILD', 'MINE', 'MINUTE', 'MISCHEN',
-        'MIST', 'MIT', 'MITTE', 'MITTEL', 'MÖBEL', 'MODE', 'MÖGE', 'MÖGEN', 'MOHN', 'MÖHRE',
-        'MONAT', 'MOND', 'MOOR', 'MOOS', 'MOP', 'MORAL', 'MORD', 'MORGEN', 'MOST', 'MOTOR',
+        'MIST', 'MIT', 'MITTE', 'MITTEL', 'MÖBEL', 'MODE', 'MÖGEN', 'MOHN', 'MÖHRE',
+        'MONAT', 'MOND', 'MOOR', 'MOOS', 'MORAL', 'MORD', 'MORGEN', 'MOST', 'MOTOR',
         'MOTTE', 'MÖWE', 'MÜCKE', 'MÜDE', 'MÜHE', 'MÜHLE', 'MÜLL', 'MUND', 'MUNTER', 'MÜNZE',
         'MURMEL', 'MUSCHEL', 'MUSIK', 'MUSKEL', 'MUSS', 'MUSTER', 'MUT', 'MUTTER', 'MÜTZE',
         'NABE', 'NABEL', 'NACH', 'NACHT', 'NACKEN', 'NACKT', 'NADEL', 'NAGEL', 'NAGEN', 'NAH',
@@ -248,10 +251,10 @@ export const STEM_CATALOG: Record<SaladCategory, readonly StemEntry[]> = {
         'PFAD', 'PFAHL', 'PFANNE', 'PFAU', 'PFEFFER', 'PFEIFE', 'PFEIFEN', 'PFEIL', 'PFERD',
         'PFINGSTEN', 'PFIRSICH', 'PFLANZE', 'PFLASTER', 'PFLEGE', 'PFLEGEN', 'PFLICHT',
         'PFLOCK', 'PFLÜCKEN', 'PFLUG', 'PFORTE', 'PFOTE', 'PFUND', 'PFÜTZE', 'PILZ', 'PINSEL',
-        'PIRAT', 'PLAGE', 'PLAN', 'PLANEN', 'PLANET', 'PLANK', 'PLATZ', 'PLATZEN', 'PLUMP',
+        'PIRAT', 'PLAGE', 'PLAN', 'PLANEN', 'PLANET', 'PLATZ', 'PLATZEN', 'PLUMP',
         'PLUS', 'POL', 'POLIZEI', 'POLSTER', 'PONY', 'PORT', 'POST', 'POSTEN', 'PRACHT',
         'PRALL', 'PREIS', 'PRESSE', 'PRIESTER', 'PRINZ', 'PRISE', 'PROBE', 'PROBEN', 'PROFI',
-        'PROSA', 'PROST', 'PRÜFEN', ' PUDEL', 'PUDER', 'PULS', 'PULVER', 'PUMPE', 'PUMPEN',
+        'PROSA', 'PROST', 'PRÜFEN', 'PUDEL', 'PUDER', 'PULS', 'PULVER', 'PUMPE', 'PUMPEN',
         'PUNKT', 'PUPPE', 'PUTE', 'PUTZEN', 'QUELLE', 'QUER', 'RABE', 'RACHE', 'RACHEN',
         'RAD', 'RAHMEN', 'RAIN', 'RAND', 'RANG', 'RANKE', 'RANZEN', 'RAPPE', 'RASCH', 'RASEN',
         'RAST', 'RASTEN', 'RAT', 'RATEN', 'RATHAUS', 'RATTE', 'RAUB', 'RAUBEN', 'RAUCH',
@@ -321,7 +324,7 @@ export const STEM_CATALOG: Record<SaladCategory, readonly StemEntry[]> = {
       subwords: [
         'SONNE', 'SONNEN', 'BLUME', 'BLUMEN', 'BAUM', 'BEIN', 'BESEN', 'BIENE', 'BIENEN',
         'BLAU', 'BLEI', 'BLIND', 'BLUSE', 'BODEN', 'BOHNE', 'BOHNEN', 'BUBE', 'BUS', 'BUSEN',
-        'EBEN', 'EILE', 'EILEN', 'EINE', 'EINS', 'ELBE', 'ENDE', 'ENDEN', 'ENG', 'ENGEL',
+        'EBEN', 'EILE', 'EILEN', 'EINE', 'EINS', 'ENDE', 'ENDEN', 'ENG', 'ENGEL',
         'ENTE', 'ERBE', 'ERBSE', 'ERDE', 'ESEL', 'ESSEN', 'EULE', 'EULEN', 'LAUB', 'LAUNE',
         'LAUS', 'LEBEN', 'LEHM', 'LEINE', 'LEISE', 'LESEN', 'LIEB', 'LIEBE', 'LILIE', 'LIMO',
         'LINSE', 'LOB', 'LOBEN', 'LOHN', 'LOS', 'LOSE', 'LÖSEN', 'LUPE', 'LUST', 'MAUL',
@@ -331,7 +334,7 @@ export const STEM_CATALOG: Record<SaladCategory, readonly StemEntry[]> = {
         'NEUN', 'NONNE', 'NOTE', 'NOTEN', 'NUDEL', 'NULL', 'NUN', 'NUSS', 'OBEN', 'OHNE',
         'OMEN', 'ONKEL', 'OPER', 'PULS', 'ROSE', 'RUND', 'SAUM', 'SEE', 'SEELE', 'SEGEN',
         'SEIL', 'SEIN', 'SEINE', 'SELBE', 'SENDEN', 'SENF', 'SENKEN', 'SINN', 'SOHLE', 'SOHN',
-        'SOLO', 'SOMMER', 'SONST', 'SUB', 'SUMME', 'SUMMEN', 'ULME', 'UNTEN',
+        'SOLO', 'SOMMER', 'SONST', 'SUMME', 'SUMMEN', 'ULME', 'UNTEN',
       ],
     },
     {
@@ -430,7 +433,7 @@ export const STEM_CATALOG: Record<SaladCategory, readonly StemEntry[]> = {
         'RENNEN', 'RICHTEN', 'RIECHEN', 'RIND', 'RINDE', 'RING', 'RINNE', 'RINNEN', 'ROH',
         'ROHR', 'RÖHRE', 'SCHEIN', 'SCHEINEN', 'SCHERE', 'SCHICHT', 'SCHIENE', 'SCHIER',
         'SCHiff', 'SCHIRM', 'SCHÖN', 'SCHON', 'SCHONEN', 'SCHORNSTEIN', 'SCHREIEN', 'SCHREIN',
-        'SCHUH', 'SEE', 'SEHEN', 'SEHNE', 'SEHR', 'SEIN', 'SEINE', 'SICHER', 'SIE', 'SIECH',
+        'SCHUH', 'SEE', 'SEHEN', 'SEHNE', 'SEHR', 'SEIN', 'SEINE', 'SICHER', 'SIE',
         'SINN', 'SOHN', 'SONNE', 'SUCHE', 'SUCHEN',
       ],
     },
@@ -441,7 +444,7 @@ export const STEM_CATALOG: Record<SaladCategory, readonly StemEntry[]> = {
       hint: 'Mathe-Rätsel mit Innen- und Außenzahlen (Kl. 5)',
       subwords: [
         'RECHNEN', 'RECHNER', 'DREIECK', 'DREI', 'ECKE', 'ECKEN', 'ECKIG', 'RECHT', 'RECHTECK',
-        'DECKE', 'DECKEL', 'DECKEN', 'DEICH', 'DEIN', 'DEINE', 'DENK', 'DENKEN', 'DENKER',
+        'DECKE', 'DECKEL', 'DECKEN', 'DEICH', 'DEIN', 'DEINE', 'DENKEN', 'DENKER',
         'DICHT', 'DICHTE', 'DICHTEN', 'DICHTER', 'DICK', 'DICKE', 'DIEB', 'DIENEN', 'DIENER',
         'DING', 'DINGE', 'DIREKT', 'DOCH', 'DORN', 'DORT', 'DRACHE', 'DRACHEN', 'DRECK',
         'DREHEN', 'DRIN', 'DRUCK', 'DURCH', 'ECHT', 'EDEL', 'EHRE', 'EHREN', 'EICHE', 'EICHEN',
@@ -494,7 +497,7 @@ export const STEM_CATALOG: Record<SaladCategory, readonly StemEntry[]> = {
         'TRITT', 'TROCKEN', 'TROST', 'TROTZ', 'TURM', 'TURNEN', 'AKTE', 'AKTION', 'ALT', 'ALTE',
         'AMT', 'AMEISE', 'ANKER', 'ARM', 'ART', 'ARTEN', 'AST', 'ATEM', 'ATMEN', 'ATOM',
         'DAME', 'DAMEN', 'Damm', 'DANK', 'DANKE', 'DANKEN', 'DANN', 'DARM', 'DAS', 'DATEI',
-        'DATEN', 'DAUER', 'DAUERN', 'DEIN', 'DEINE', 'DENK', 'DENKEN', 'DENN', 'DIAMANT',
+        'DATEN', 'DAUER', 'DAUERN', 'DEIN', 'DEINE', 'DENKEN', 'DENN', 'DIAMANT',
         'DICHT', 'DICK', 'DIEB', 'DIENEN', 'DIENER', 'DIENST', 'DIES', 'DIESE', 'DING',
         'DIREKT', 'DIR', 'DOKTOR', 'DOM', 'DONNER', 'DORF', 'DORN', 'DORT', 'DOSE', 'DOSEN',
         'DRAHT', 'DRAMA', 'DRAN', 'DRANG', 'DREHEN', 'DREI', 'DRIN', 'DRITTE', 'DROHEN',
@@ -576,10 +579,10 @@ export const STEM_CATALOG: Record<SaladCategory, readonly StemEntry[]> = {
         'BURG', 'FALL', 'FALTE', 'FALTEN', 'FAUL', 'FILM', 'FLINK', 'FLUT', 'FRAU', 'FUNK',
         'GOLD', 'GRAD', 'GRUND', 'GUT', 'HALB', 'HALL', 'HALLE', 'HALM', 'HALS', 'HALT',
         'HAND', 'HART', 'HAUPT', 'HAUS', 'HAUT', 'HEIL', 'HEIM', 'HELL', 'HELM', 'HILFE',
-        'HUT', 'IKONE', 'IMMER', 'INSEL', 'ITALIEN', 'KAHN', 'KALB', 'KALK', 'KALT', 'KAMEL',
+        'HUT', 'IKONE', 'IMMER', 'INSEL', 'KAHN', 'KALB', 'KALK', 'KALT', 'KAMEL',
         'KAMIN', 'KAMM', 'KAMPF', 'KANAL', 'KANNE', 'KANTE', 'KAPITÄN', 'KARTE', 'KASTEN',
         'KATZE', 'KAUM', 'KEIL', 'KEIM', 'KEIN', 'KELLER', 'KERN', 'KEULE', 'KIEL', 'KIES',
-        'KIND', 'KINN', 'KINO', 'KISSEN', 'KISTE', 'KLAMM', 'KLANG', 'KLAPPE', 'KLAR', 'KLAU',
+        'KIND', 'KINN', 'KINO', 'KISSEN', 'KISTE', 'KLAMM', 'KLANG', 'KLAPPE', 'KLAR',
         'KLEID', 'KLEIN', 'KLIMA', 'KLINGE', 'KLIPPE', 'KLO', 'KLOPFEN', 'KLOTZ', 'KLUG',
         'KNALL', 'KNAPP', 'KNIE', 'KNOPF', 'KNOTEN', 'KOHL', 'KOMMA', 'KOMMEN', 'KÖNIG',
         'KONTO', 'KOPF', 'KORN', 'KRAFT', 'KRAN', 'KRANK', 'KRAUT', 'KREIS', 'KRONE', 'KRUG',
@@ -606,7 +609,7 @@ export const STEM_CATALOG: Record<SaladCategory, readonly StemEntry[]> = {
         'SEIL', 'SEIN', 'SEIT', 'SEKT', 'SINN', 'SITZ', 'SKI', 'SOFA', 'SOHN', 'SOLO', 'SONNE',
         'SPALT', 'SPAN', 'SPATZ', 'SPIEL', 'SPIND', 'SPION', 'SPITZ', 'SPORN', 'SPORT', 'SPOTT',
         'SPUR', 'STAAT', 'STAB', 'STADT', 'STALL', 'STAMM', 'STAND', 'STARK', 'START', 'STAUB',
-        'STEIN', 'STERN', 'STIFT', 'STILL', 'STIRN', 'STOCK', 'STOLZ', 'STOP', 'STOSS', 'STRAND',
+        'STEIN', 'STERN', 'STIFT', 'STILL', 'STIRN', 'STOCK', 'STOLZ', 'STOSS', 'STRAND',
         'STROH', 'STROM', 'STUFE', 'STUHL', 'STUMM', 'STURM', 'TAL', 'TANNE', 'TANTE', 'TANZ',
         'TASSE', 'TASTE', 'TAT', 'TAUBE', 'TAUSEND', 'TAXI', 'TEICH', 'TEIG', 'TELLER', 'TEMPO',
         'TENNIS', 'TERMIN', 'TEST', 'TEXT', 'THEMA', 'THRON', 'TIEF', 'TIER', 'TIGER', 'TINTE',
@@ -648,6 +651,13 @@ export const STEM_CATALOG: Record<SaladCategory, readonly StemEntry[]> = {
   ],
 };
 
+/** Alle Stammwörter je Wortpaket: die ursprünglichen mit eigenen Teilwortlisten und die Ergänzungen aus `stems.ts`. */
+export const STEM_CATALOG: Record<SaladCategory, readonly StemEntry[]> = {
+  mix: [...BASE_CATALOG.mix, ...EXTRA_STEMS.mix],
+  natur: [...BASE_CATALOG.natur, ...EXTRA_STEMS.natur],
+  mathe: [...BASE_CATALOG.mathe, ...EXTRA_STEMS.mathe],
+};
+
 /**
  * Gemeinsamer deutscher Grundwortschatz aus allen Stammwörtern + häufigen Grundwörtern,
  * damit jedes echte deutsche Wort, das sich aus den Buchstaben des aktuellen Stammwortes
@@ -674,11 +684,11 @@ const GLOBAL_WORD_SET: ReadonlySet<string> = (() => {
     'BUDE', 'BÜGEL', 'BÜHNE', 'BUND', 'BUNT', 'BURG', 'BÜRO', 'BÜRSTE', 'BUS', 'BUSCH', 'BUTTER',
     'CAFE', 'CHEF', 'CHOR', 'CREME', 'DACH', 'DACHS', 'DAME', 'DAMM', 'DAMPF', 'DANK', 'DANN',
     'DARM', 'DAS', 'DASS', 'DATEI', 'DATEN', 'DATUM', 'DAUER', 'DAUMEN', 'DECKE', 'DECKEL',
-    'DEHNEN', 'DEICH', 'DEIN', 'DELFIN', 'DENK', 'DENKEN', 'DENN', 'DICHT', 'DICK', 'DIEB',
+    'DEHNEN', 'DEICH', 'DEIN', 'DELFIN', 'DENKEN', 'DENN', 'DICHT', 'DICK', 'DIEB',
     'DIELE', 'DIENEN', 'DIENST', 'DIES', 'DING', 'TINTE', 'DIREKT', 'DIR', 'DISTEL', 'DOCH',
     'DOKTOR', 'DOLCH', 'DOM', 'DONNER', 'DOPPEL', 'DORF', 'DORN', 'DORT', 'DOSE', 'DRACHE',
     'DRAHT', 'DRAMA', 'DRAN', 'DRANG', 'DRECK', 'DREHEN', 'DREI', 'DRIN', 'DRITTE', 'DROHEN',
-    'DROSSEL', 'DRUCK', 'DUFT', 'DULD', 'DUMM', 'DUNKEL', 'DÜNN', 'DUNST', 'DURCH', 'DÜRFEN',
+    'DROSSEL', 'DRUCK', 'DUFT', 'DUMM', 'DUNKEL', 'DÜNN', 'DUNST', 'DURCH', 'DÜRFEN',
     'DÜRR', 'DURST', 'DUSCHE', 'DÜSE', 'EBBE', 'EBEN', 'EBENE', 'EBER', 'ECHO', 'ECHT', 'ECKE',
     'EDEL', 'EFEU', 'EGAL', 'EGEL', 'EHE', 'EHER', 'EHRE', 'EICHE', 'EICHEL', 'EID', 'EIFER',
     'EIGEN', 'EILE', 'EILEN', 'EIMER', 'EIN', 'EINE', 'EINER', 'EINS', 'EIS', 'EISEN', 'EITEL',
@@ -687,7 +697,7 @@ const GLOBAL_WORD_SET: ReadonlySet<string> = (() => {
     'ESCHE', 'ESEL', 'ESSEN', 'ESSIG', 'ETWA', 'ETWAS', 'EULE', 'EURO', 'EWIG',
   ];
 
-  for (const w of extraCommon) {
+  for (const w of [...extraCommon, ...DICTIONARY_WORDS]) {
     const norm = normalizeSaladWord(w);
     if (norm.length >= 3) set.add(norm);
   }

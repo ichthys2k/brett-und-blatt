@@ -28,6 +28,33 @@ describe('Wort-Salat – Regeln, Wortprüfung & Bot', () => {
     }
   });
 
+  it('hat genug Stammwörter je Wortpaket, damit sich Runden nicht ständig wiederholen', () => {
+    const alle = new Set<string>();
+    for (const cat of ['mix', 'natur', 'mathe'] as const) {
+      expect(STEM_CATALOG[cat].length).toBeGreaterThanOrEqual(30);
+      for (const entry of STEM_CATALOG[cat]) {
+        const norm = normalizeSaladWord(entry.display);
+        expect(norm.length).toBeGreaterThanOrEqual(9);
+        expect(entry.hint.length).toBeGreaterThan(0);
+        expect(alle.has(norm)).toBe(false); // kein Stammwort doppelt
+        alle.add(norm);
+      }
+    }
+  });
+
+  it('enthält in den Teilwortlisten nur echte Buchstaben (keine fremden Schriftzeichen)', () => {
+    for (const cat of ['mix', 'natur', 'mathe'] as const) {
+      for (const entry of STEM_CATALOG[cat]) {
+        for (const sub of entry.subwords) expect(sub).toMatch(/^[A-Za-zÄÖÜäöüß]+$/);
+      }
+    }
+  });
+
+  it('erkennt geläufige Wörter aus dem Prüf-Wörterbuch', () => {
+    expect(getValidSubwords('Sonnenuntergang')).toEqual(expect.arrayContaining(['SONNE', 'GARTEN', 'TANNE']));
+    expect(getValidSubwords('Weihnachtsbaum')).toEqual(expect.arrayContaining(['NACHT', 'BAUCH', 'HAUS']));
+  });
+
   it('vergibt Punkte nach Wortlänge und verdoppelt Exklusiv-Funde im Modus unique', () => {
     let state = start({ mode: 'unique', category: 'natur', rounds: '1', minLength: '3' }, 2, 'unique-test');
     const valid = getValidSubwords(state.currentStem, 3);
