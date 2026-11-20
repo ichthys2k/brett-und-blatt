@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Brett &amp; Blatt 16</title>
+    <!-- Keine Anfragen an fremde Server (EmulatorJS fragt sonst nach Updates bei cdn.emulatorjs.org). -->
+    <meta http-equiv="Content-Security-Policy" content="connect-src 'self' blob: data:" />
+    <style>
+      html, body { margin: 0; height: 100%; background: #14100c; color: #efe3c8; font-family: system-ui, sans-serif; overflow: hidden; }
+      #spiel { width: 100%; height: 100%; }
+      #meldung { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 24px; text-align: center; }
+    </style>
+  </head>
+  <body>
+    <div id="spiel"></div>
+    <p id="meldung"></p>
+    <script>
+      // Brett & Blatt 16 im Browser (#596): EmulatorJS (Snes9x) vom eigenen Server, ROM unter spiel.sfc.
+      // Der Spielstand (2 KB batteriegepufferter Speicher mit der Statistik) liegt in IndexedDB „bub-snes“.
+      var DB = 'bub-snes';
+      var STORE = 'sram';
+      var KEY = 'BB16';
+
+      function zeigeMeldung(text) {
+        var m = document.getElementById('meldung');
+        m.textContent = text;
+        m.style.display = 'flex';
+      }
+
+      function db() {
+        return new Promise(function (resolve, reject) {
+          var req = indexedDB.open(DB, 1);
+          req.onupgradeneeded = function () { req.result.createObjectStore(STORE); };
+          req.onsuccess = function () { resolve(req.result); };
+          req.onerror = function () { reject(req.error); };
+        });
+      }
+      function lesen() {
+        return db().then(function (d) {
+          return new Promise(function (resolve) {
+            var r = d.transaction(STORE).objectStore(STORE).get(KEY);
+            r.onsuccess = function () { d.close(); resolve(r.result || null); };
+            r.onerror = function () { d.close(); resolve(null); };
+          });
+        }).catch(function () { return null; });
+      }
+      function schreiben(bytes) {
+        return db().then(function (d) {
+          return new Promise(function (resolve) {
+            var t = d.transaction(STORE, 'readwrite');
+            t.objectStore(STORE).put(bytes, KEY);
+            t.oncomplete = function () { d.close(); resolve(); };
+            t.onerror = function () { d.close(); resolve(); };
+          });
+        }).catch(function () {});
+      }
+
+      var letzter = null;
+      function gleich(a, b) {
+        if (!a || !b || a.length !== b.length) return false;
+        for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+        return true;
+      }
+      function sichern() {
+        var ejs = window.EJS_emulator;
+        if (!ejs || !ejs.started) return Promise.resolve();
+        return Promise.resolve(ejs.gameManager.getSaveFile()).then(function (datei) {
+          if (!datei || datei.length === 0 || gleich(datei, letzter)) return;
+          letzter = new Uint8Array(datei);
+          return schreiben(letzter);
+        }).catch(function () {});
+      }
+      function einlesen() {
+        var ejs = window.EJS_emulator;
+        return lesen().then(function (bytes) {
+          if (!bytes || !ejs) return;
+          letzter = new Uint8Array(bytes);
+          var gm = ejs.gameManager;
+          var pfad = gm.getSaveFilePath();
+          var teile = pfad.split('/');
+          var cp = '';
+          for (var i = 0; i < teile.length - 1; i++) {
+            if (teile[i] === '') continue;
+            cp += '/' + teile[i];
+            if (!gm.FS.analyzePath(cp).exists) gm.FS.mkdir(cp);
+          }
+          if (gm.FS.analyzePath(pfad).exists) gm.FS.unlink(pfad);
+          gm.FS.writeFile(pfad, letzter);
+          gm.loadSaveFiles();
+        });
+      }
+
+      fetch('spiel.sfc', { method: 'HEAD' }).then(function (r) {
+        var typ = r.headers.get('content-type') || '';
+        if (!r.ok || typ.indexOf('text/html') === 0) throw new Error('kein ROM');
+        window.EJS_player = '#spiel';
+        window.EJS_core = 'snes';
+        window.EJS_gameUrl = 'spiel.sfc';
+        window.EJS_gameName = 'Brett & Blatt 16';
+        window.EJS_pathtodata = 'emulatorjs/';
+        window.EJS_language = 'de-GER';
+        window.EJS_color = '#5a3b22';
+        window.EJS_startButtonName = 'Spielen';
+        window.EJS_threads = false;
+        window.EJS_DEBUG_XX = true; // die gebündelten Dateien lesen (ohne .min)
+        window.EJS_disableLocalStorage = false;
+        window.EJS_defaultOptions = { 'save-save-interval': '0' };
+        window.EJS_onGameStart = function () {
+          einlesen().then(function () { setInterval(sichern, 5000); });
+        };
+        var s = document.createElement('script');
+        s.src = 'emulatorjs/loader.js';
+        s.onerror = function () { zeigeMeldung('Der Emulator konnte nicht geladen werden.'); };
+        document.body.appendChild(s);
+      }).catch(function () {
+        zeigeMeldung('Dieses Easter Egg ist in dieser Fassung nicht enthalten.');
+      });
+
+      window.addEventListener('pagehide', sichern);
+      document.addEventListener('visibilitychange', function () { if (document.hidden) sichern(); });
+      window.addEventListener('message', function (e) {
+        if (e.origin === location.origin && e.data === 'speichern') sichern();
+      });
+    </script>
+  </body>
+</html>

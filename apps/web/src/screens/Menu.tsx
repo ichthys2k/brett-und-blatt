@@ -7,6 +7,7 @@ import { useCrest } from '../lib/crestStore';
 import { findGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
 import { GAME_SERVER } from '../lib/server';
+import { logoTap } from '../lib/snesEgg';
 import { storage } from '../lib/storage';
 import { useMenuStations } from '../lib/look';
 import { setHoveredStation, type TavernStationId } from '../lib/tavern3d';
@@ -68,7 +69,7 @@ export function Menu() {
     <div className="bub-menu">
       <TavernScene />
 
-      <h1 className="bub-menu-logo">
+      <h1 className="bub-menu-logo" onClick={logoTap}>
         Brett &amp; Blatt
         <small>Karten- und Brettspiele für alle</small>
       </h1>

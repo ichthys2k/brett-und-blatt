@@ -123,6 +123,7 @@ Jede Stufe endet mit einem spielbaren ROM. Danach kann man aufhören, ohne dass 
 - Baustein „Raster mit Cursor“ (Gegenstück zu `GridBoard`), optional SNES-Maus.
 - Minimax mit Alpha-Beta in C, Zeitbudget je Zug (z. B. 2 s, gemessen in Bildern), heiße Schleifen bei Bedarf in Assembler.
 - Erstes ROM-Release (GitHub Release mit `.sfc`), Eintrag auf der Seite „Weitere Spiele“ oder einer eigenen Seite mit EmulatorJS.
+  - **Umgesetzt als Easter Egg (20.11.2026, #596):** Siebenmal aufs Logo im Hauptmenü tippen startet das ROM mit EmulatorJS im Browser; Einzelheiten in `docs/CHRONIK.md`.
 
 ### Stufe 3 – Würfel und Familie (mittel) – erledigt (#520)
 
