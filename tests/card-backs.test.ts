@@ -108,7 +108,7 @@ describe('Kartenrücken-Katalog & Freischaltungen (K2, #272)', () => {
       book.counts = {
         device1: {
           'color-sorter': {
-            'solo/-': { played: 1, won: 0, drawn: 0, lost: 1 },
+            'solo/-': { played: 1, won: 0, drawn: 0, lost: 1, rated: 1, ratedWon: 0 },
           },
         },
       };
@@ -143,7 +143,7 @@ describe('Kartenrücken-Katalog & Freischaltungen (K2, #272)', () => {
       book.counts = {
         device1: {
           drachenspiel: {
-            'bots/easy': { played: 2, won: 0, drawn: 0, lost: 2 },
+            'bots/easy': { played: 2, won: 0, drawn: 0, lost: 2, rated: 2, ratedWon: 0 },
           },
         },
       };
@@ -163,7 +163,7 @@ describe('Kartenrücken-Katalog & Freischaltungen (K2, #272)', () => {
       book.counts = {
         device1: {
           drachenspiel: {
-            'bots/medium': { played: 1, won: 1, drawn: 0, lost: 0 },
+            'bots/medium': { played: 1, won: 1, drawn: 0, lost: 0, rated: 1, ratedWon: 1 },
           },
         },
       };

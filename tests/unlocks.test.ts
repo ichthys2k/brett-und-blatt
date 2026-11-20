@@ -11,7 +11,7 @@ import { buildProgress, checkRule, crestProgressOf, crestUnlock, fillText, unloc
  * (so, wie `cardBacks.ts` sie vor dem Umbau berechnete); beide müssen für viele Stände dasselbe sagen, samt Text.
  */
 
-const c = (played: number, won = 0): Counter => ({ played, won, drawn: 0, lost: played - won });
+const c = (played: number, won = 0): Counter => ({ played, won, drawn: 0, lost: played - won, rated: played, ratedWon: won });
 const bookOf = (counts: Book['counts'], stamps: Book['stamps'] = {}): Book => ({ counts, stamps, recent: [] });
 
 const label = (have: number, needed: number, done: string, todo: (missing: number) => string) =>

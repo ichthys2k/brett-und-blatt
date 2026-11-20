@@ -1,6 +1,6 @@
 import type { Result, SeatConfig } from '../packages/engine/src';
 import { describe, expect, it, vi } from 'vitest';
-import { emptyBook, localMode, mergeBooks, outcomeFor, recordGame, sameBooks, sanitizeBook, strongestBot, totals, type PlayedGame } from '../apps/web/src/lib/partiebuch';
+import { RATED_AFTER, emptyBook, isRated, localMode, mergeBooks, outcomeFor, recordGame, sameBooks, sanitizeBook, strongestBot, totals, type PlayedGame } from '../apps/web/src/lib/partiebuch';
 import { createPassBook, type Store } from '../apps/web/src/lib/passes';
 
 vi.mock('../apps/web/src/lib/playerPass', () => ({ passSyncSoon: () => undefined }));
@@ -32,8 +32,8 @@ describe('Partiebuch (#142)', () => {
     book = recordGame(book, game('b', { outcome: 'loss', endedAt: 2000 }), 'g1', 'hard');
     book = recordGame(book, game('c', { outcome: 'draw', endedAt: 3000 }), 'g1', 'easy');
     expect(recordGame(book, game('a'), 'g1', 'hard')).toBe(book);
-    expect(totals(book, 'chess')).toEqual({ played: 3, won: 1, drawn: 1, lost: 1 });
-    expect(book.counts.g1!.chess!['bots/hard']).toEqual({ played: 2, won: 1, drawn: 0, lost: 1 });
+    expect(totals(book, 'chess')).toEqual({ played: 3, won: 1, drawn: 1, lost: 1, rated: 3, ratedWon: 1 });
+    expect(book.counts.g1!.chess!['bots/hard']).toEqual({ played: 2, won: 1, drawn: 0, lost: 1, rated: 2, ratedWon: 1 });
     expect(book.recent.map((g) => g.id)).toEqual(['c', 'b', 'a']);
   });
 
@@ -41,7 +41,7 @@ describe('Partiebuch (#142)', () => {
     const phone = recordGame(recordGame(emptyBook(), game('a'), 'phone', 'medium'), game('b', { endedAt: 2000 }), 'phone', 'medium');
     const tablet = recordGame(emptyBook(), game('c', { endedAt: 3000, outcome: 'loss' }), 'tablet', 'medium');
     const merged = mergeBooks(phone, tablet);
-    expect(totals(merged)).toEqual({ played: 3, won: 2, drawn: 0, lost: 1 });
+    expect(totals(merged)).toEqual({ played: 3, won: 2, drawn: 0, lost: 1, rated: 3, ratedWon: 2 });
     // vertauschbar und beliebig oft anwendbar
     expect(sameBooks(mergeBooks(tablet, phone), merged)).toBe(true);
     expect(sameBooks(mergeBooks(merged, phone), merged)).toBe(true);
@@ -73,7 +73,7 @@ describe('Partiebuch (#142)', () => {
       counts: { g1: { chess: { 'bots/hard': { played: 3, won: 9, drawn: 9, lost: 9 }, 'quatsch/x': { played: 1 } }, 'Böse Id!': {} }, '!': {} },
       recent: [game('ok'), { id: 'kaputt' }, { ...game('x'), mode: 'cheat' }, { ...game('y'), seats: [{ kind: 'human', name: 'x'.repeat(100) }, { kind: 'nope' }] }],
     });
-    expect(dirty.counts.g1!.chess).toEqual({ 'bots/hard': { played: 3, won: 3, drawn: 0, lost: 0 } });
+    expect(dirty.counts.g1!.chess).toEqual({ 'bots/hard': { played: 3, won: 3, drawn: 0, lost: 0, rated: 3, ratedWon: 3 } });
     expect(dirty.recent.map((g) => g.id).sort()).toEqual(['ok', 'y']);
     expect(dirty.recent.find((g) => g.id === 'y')!.seats).toEqual([{ name: 'x'.repeat(40), kind: 'human' }]);
   });
@@ -135,5 +135,74 @@ describe('Partiebuch im Speicher der Pässe', () => {
     // nach dem Wechsel liegt Lenas Buch unter dem gewohnten Schlüssel
     book.switchTo(lena, A);
     expect(store.get(KEY)).toBe('"lena"');
+  });
+});
+
+describe('Gewertete Partien (#570)', () => {
+  const human2 = (name: string): SeatConfig => ({ kind: 'human', name });
+  const base = { gameId: 'chess', sessionId: 'S1', endedAt: 5000, result: { kind: 'win', winners: [0] } as Result, seats: [human2('Mia'), bot()] };
+
+  it('Mindestdauer und Mindestzüge müssen beide erreicht sein', () => {
+    expect(RATED_AFTER).toEqual({ ms: 60_000, moves: 6 });
+    expect(isRated({ durationMs: 60_000, moves: 6 })).toBe(true);
+    expect(isRated({ durationMs: 59_999, moves: 40 })).toBe(false);
+    expect(isRated({ durationMs: 600_000, moves: 5 })).toBe(false);
+    // online kennt der Browser den Zuglog nicht: nur die Dauer
+    expect(isRated({ durationMs: 60_000 })).toBe(true);
+    expect(isRated({ durationMs: 59_000 })).toBe(false);
+  });
+
+  it('Kurzspiel: kleiner Wert aus dem Steckbrief', () => {
+    const short = { ms: 20_000, moves: 3 };
+    expect(isRated({ durationMs: 20_000, moves: 3 }, short)).toBe(true);
+    expect(isRated({ durationMs: 19_999, moves: 3 }, short)).toBe(false);
+    expect(isRated({ durationMs: 25_000, moves: 2 }, short)).toBe(false);
+    expect(isRated({ durationMs: 25_000, moves: 3 })).toBe(false);
+  });
+
+  it('der Recorder wertet nach Dauer und Zügen, online nur nach Dauer', () => {
+    expect(rowsFor({ ...base, durationMs: 30_000, moves: 20 })[0]!.rated).toBe(false);
+    expect(rowsFor({ ...base, durationMs: 90_000, moves: 4 })[0]!.rated).toBe(false);
+    expect(rowsFor({ ...base, durationMs: 90_000, moves: 12 })[0]!.rated).toBe(true);
+    expect(rowsFor({ ...base, durationMs: 90_000 })[0]!.rated).toBe(true);
+    expect(rowsFor({ ...base, durationMs: 90_000, moves: 1, online: { yourSeat: 0, tournament: false } })[0]!.rated).toBe(true);
+    expect(rowsFor({ ...base, durationMs: 30_000, online: { yourSeat: 0, tournament: false } })[0]!.rated).toBe(false);
+    expect(rowsFor({ ...base, durationMs: 25_000, moves: 4, ratedAfter: { ms: 20_000, moves: 3 } })[0]!.rated).toBe(true);
+  });
+
+  it('eine zu kurze Partie zählt als Partie, aber nicht als gewertete', () => {
+    let book = recordGame(emptyBook(), game('a'), 'g1', 'hard', false);
+    book = recordGame(book, game('b', { endedAt: 2000 }), 'g1', 'hard', true);
+    book = recordGame(book, game('c', { endedAt: 3000, outcome: 'loss' }), 'g1', 'hard', false);
+    expect(totals(book)).toEqual({ played: 3, won: 2, drawn: 0, lost: 1, rated: 1, ratedWon: 1 });
+    expect(book.counts.g1!.chess!['bots/hard']).toEqual({ played: 3, won: 2, drawn: 0, lost: 1, rated: 1, ratedWon: 1 });
+  });
+
+  it('Altbestand: ohne die neuen Felder gilt jede bisherige Partie als gewertet', () => {
+    const old = { counts: { g1: { chess: { 'bots/hard': { played: 5, won: 3, drawn: 1, lost: 1 } } } }, stamps: {}, recent: [] };
+    const book = sanitizeBook(old);
+    expect(book.counts.g1!.chess!['bots/hard']).toMatchObject({ rated: 5, ratedWon: 3 });
+    // Zeile nach dem Umstieg: neue kurze Partie zählt nur als Partie
+    const next = recordGame(book, game('n'), 'g1', 'hard', false);
+    expect(totals(next)).toMatchObject({ played: 6, rated: 5, ratedWon: 3 });
+    // nie mehr gewertet als gespielt, nie mehr Siege gewertet als Siege
+    const odd = sanitizeBook({ counts: { g1: { chess: { 'bots/hard': { played: 2, won: 1, drawn: 0, lost: 1, rated: 9, ratedWon: 9 } } } } });
+    expect(odd.counts.g1!.chess!['bots/hard']).toMatchObject({ rated: 2, ratedWon: 1 });
+  });
+
+  it('zwei Geräte führen zusammen: je Zahl der größere Wert, alte Bücher ohne Felder werden aufgefüllt', () => {
+    const phone = recordGame(recordGame(emptyBook(), game('a'), 'phone', 'medium', true), game('b', { endedAt: 2000 }), 'phone', 'medium', false);
+    const tablet = recordGame(emptyBook(), game('c', { endedAt: 3000 }), 'tablet', 'medium', true);
+    const merged = mergeBooks(phone, tablet);
+    expect(totals(merged)).toMatchObject({ played: 3, rated: 2, ratedWon: 2 });
+    expect(sameBooks(mergeBooks(tablet, phone), merged)).toBe(true);
+    expect(sameBooks(mergeBooks(merged, merged), merged)).toBe(true);
+    const legacy = { counts: { phone: { chess: { 'bots/medium': { played: 4, won: 2, drawn: 0, lost: 2 } } } }, stamps: {}, recent: [] } as unknown as Parameters<typeof mergeBooks>[0];
+    expect(totals(mergeBooks(legacy, phone))).toMatchObject({ played: 4, rated: 4, ratedWon: 2 });
+  });
+
+  it('Kurzspiele tragen ratedAfter im Steckbrief', async () => {
+    const { meta } = await import('../packages/games/tic-tac-toe/src/meta');
+    expect(meta.ratedAfter).toEqual({ ms: 20_000, moves: 3 });
   });
 });

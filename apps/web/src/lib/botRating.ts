@@ -1,5 +1,8 @@
 import type { BotLevel } from '@brett-und-blatt/engine';
-import type { Book, Counter } from './partiebuch';
+import type { Book, Counter as FullCounter } from './partiebuch';
+
+/** Nur die vier Zähler, die die Bot-Wertung braucht (ohne die gewerteten, #570). */
+type Counter = Pick<FullCounter, 'played' | 'won' | 'drawn' | 'lost'>;
 
 /*
  * Bot-Wertung des Spielerpasses (Vorhaben #135, Schritt #144): je Spiel eine **Leistungszahl gegen die Bots** und eine
