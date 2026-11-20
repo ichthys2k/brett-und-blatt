@@ -416,6 +416,16 @@ try {
     const wide = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     if (wide > 1) problems.push(`Pass-Seite: rollt waagerecht (${wide} px)`);
     if (errors.length > 0) problems.push(`Pass-Seite: ${errors[0]}`);
+    // Belohnungen (#576): Stufenkarte (Gast-Hinweis oder Stufe) und Teilen-Dialog sind da und sprengen die Breite nicht.
+    const level = page.getByRole('heading', { name: 'Stufe' });
+    if ((await level.count()) === 0) problems.push('Pass-Seite: Stufenkarte fehlt');
+    await page.getByRole('button', { name: /Pass teilen/ }).click();
+    const share = page.locator('#share-title');
+    await share.waitFor({ timeout: 5_000 }).catch(() => {});
+    if ((await share.count()) === 0) problems.push('Pass-Seite: Teilen-Dialog fehlt');
+    const wide2 = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    if (wide2 > 1) problems.push(`Pass-Seite (Stufenkarte, Teilen): rollt waagerecht (${wide2} px)`);
+    if (errors.length > 0) problems.push(`Pass-Seite (Stufenkarte): ${errors[0]}`);
     await context.close();
   }
   // Spielhelfer (#106): Übersicht und alle 5 Werkzeuge ohne Fehler und ohne waagerechtes Rollen.
