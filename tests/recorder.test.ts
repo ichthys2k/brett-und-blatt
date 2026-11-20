@@ -56,7 +56,7 @@ describe('Recorder schreibt Buch und Pokale (#142, #146)', () => {
     finish('s1', 0, 5000);
     finish('s1', 0, 5000);
     const book = sanitizeBook(JSON.parse(data.get(BOOK_KEY)!));
-    expect(Object.values(book.counts)[0]!.chess!['bots/hard']).toEqual({ played: 1, won: 1, drawn: 0, lost: 0 });
+    expect(Object.values(book.counts)[0]!.chess!['bots/hard']).toEqual({ played: 1, won: 1, drawn: 0, lost: 0, rated: 0, ratedWon: 0 });
     expect(sanitizeTrophies(JSON.parse(data.get(TROPHIES_KEY)!))).toHaveLength(1);
   });
 
