@@ -323,7 +323,7 @@ export function Datenschutz() {
       </p>
       <p>
         <strong>Was geteilt wird:</strong> Stufe und Titel verlassen dein Gerät nie von allein. Beim „Pass teilen“ gelangen sie nur in den Schnappschuss, wenn
-        du sie ausdrücklich ankreuzt (Vorgabe: aus; die Auswahlzeile folgt, bis dahin wird die Stufe nicht geteilt). In Online-Räumen sieht niemand deine
+        du sie ausdrücklich ankreuzt (Vorgabe: aus). In Online-Räumen sieht niemand deine
         Stufe oder deinen Titel; dort kann höchstens ein Avatar-Rahmen, eine kurze Kennung ohne Personenbezug, als Teil deines Raumprofils (neben Spitzname und
         Emoji-Bild) mitgehen, und nur freiwillig. In Klassen und Schulgruppen ist das Anzeigen von Rahmen und Titel zunächst aus; nur die Leitung kann es für
         ihre Klasse einschalten und wieder ausschalten. Nie gespeichert oder gesendet werden Spielstände, Züge oder Ergebnisse aus dem Partiebuch im Zuge

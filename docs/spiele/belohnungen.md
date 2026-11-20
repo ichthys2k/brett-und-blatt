@@ -171,7 +171,7 @@ Jedes Issue hat `status: Idee`; `Ready` gibt Cornelius. Ohne Bilder (Entscheidun
 7. **Klassen-Schalter:** Leitung schaltet Rahmen und Titel für ihre Klasse ein (Standard aus), `ClassState`/`classroom.ts`, Anzeige beachtet den Schalter. Hängt von 6 ab.
 8. **Abschluss:** `Legal.tsx` (Rahmen als Teil des Raumprofils), `docs/CHRONIK.md`, Rauchtest in Taverne, Schlicht und hohem Kontrast. Hängt von 1 bis 7 ab.
 
-**Stand der Umsetzung (20.11.2026):** Umgesetzt sind Schritt 1 (#569), 2 (#570), 3 (#571), 4 (#573, ohne Auswahlzeile beim „Pass teilen“), 5 (#574), 6 (#572), 7 (#575) und 8 (#576, Datenschutztext in `Legal.tsx`, Chronik, Rauchtest der Pass-Seite). Dateipfade je Schritt stehen in `docs/CHRONIK.md`. **Offen:** Rahmenbilder (#598), die Auswahlzeile „Stufe“ beim „Pass teilen“ samt Passkarte (Vorgabe aus) und eine Quelle, aus der die Web-App einen Rahmen an den Server schickt.
+**Stand der Umsetzung (20.11.2026):** Umgesetzt sind Schritt 1 (#569), 2 (#570), 3 (#571), 4 (#573, mit Auswahlzeile „Stufe und Titel“ beim „Pass teilen“), 5 (#574), 6 (#572), 7 (#575) und 8 (#576, Datenschutztext in `Legal.tsx`, Chronik, Rauchtest der Pass-Seite). Dateipfade je Schritt stehen in `docs/CHRONIK.md`. **Offen:** Rahmenbilder (#598) und eine Quelle, aus der die Web-App einen Rahmen an den Server schickt.
 
 **Später, noch ohne Issue:** Avatar-Rahmen, Tischflächen, Raumkulisse und neue Kartenrücken als Grafikaufträge (`.agent/workflows/grafik-erzeugen.md`), Sammelziele und Spielränge im Stempelheft samt „erreichbare Stempel je Spiel“.
 
