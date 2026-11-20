@@ -116,6 +116,10 @@ Scheitern direkte Verbindungen zwischen Brillen oft (etwa in Schul- oder Firmenn
 
 Den alten Worker `brett-und-blatt-xr` (erster Versuch) kann man danach im Dashboard löschen; seine Adresse fällt dann bei Gelegenheit aus `ALLOWED_ORIGINS`. Den Worker **`brett-und-blatt`** nie anfassen – das ist der Spieleserver.
 
+## Controller-Gruppen (#586)
+
+Die Gruppen für Zeiger und Griff (`getController`/`getControllerGrip`) werden vor dem Sitzungsstart angelegt (`apps/xr/src/controllers.ts`), denn three ordnet Eingabequellen nur vorhandenen Gruppen zu. Im Quest-Nachbau (IWER) sind die Controller damit ohne Trennen und Verbinden gleich im ersten Bild gültig: gemessen `visible=true`, Position links (−0,25; 1,5; −0,4) und rechts (0,25; 1,5; −0,4), Griffgruppen sichtbar; ohne den Aufruf `visible=false` und Position 0. Test: `tests/xr-controller.test.ts`. **Auf echter Quest prüfen (Cornelius).**
+
 ## Grenzen des Probelaufs
 
 - Die Figuren sind schlicht (Kopf, Hände, Körper); Finger und Mimik gibt es nicht.

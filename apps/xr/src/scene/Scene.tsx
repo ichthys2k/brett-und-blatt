@@ -26,6 +26,7 @@ import { bindPressSession } from '../press-tracking';
 import { alignOffset, type Offset } from './view-align';
 import { SCALE_STEP, TablePlacer, clampScale, placementOrigin, scaleAboutTable, type Placement } from './Placement';
 import { handAnchor } from '../hand-fan';
+import { ensureControllers } from '../controllers';
 import { POSTURE_LIFT, getPosture, holdingHand, onUiStateChange } from '../ui-state';
 import { WristMenu } from './WristMenu';
 import { clampOffset, dragOffset, inEdgeZone, nextGrabMode, pinchScale, tableGrab, tableLocked, type Offset as GrabOffset } from '../table-grab';
@@ -348,6 +349,8 @@ function TableGrab({ origin, mixed, offset, onOffset, onSaveOffset, tableScale, 
 /** Meldet dem Vibrationshelfer (#380) und dem Greif-Baustein (#382, Ende des Drückens) die laufende Sitzung. */
 function HapticsBridge() {
   const gl = useThree((state) => state.gl);
+  // Controller-Gruppen vor dem Sitzungsstart anlegen, sonst weist three ihnen beim Start keine Eingabequelle zu (#586).
+  ensureControllers(gl.xr);
   useEffect(() => {
     bindHapticSession(() => gl.xr.getSession());
     // Ende jedes Drückens melden (Loslassen beim Greifen auch ohne pointerup, #382).
