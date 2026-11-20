@@ -130,3 +130,9 @@ export function hiddenMoveIndexes(game: GameMessage): Set<number> {
   });
   return hidden;
 }
+
+/** Indizes der Züge, die die 2D-Leiste als Knöpfe zeigen darf: nie Beispielzüge samt Lösung (#587). */
+export function listedMoveIndexes(game: GameMessage): number[] {
+  const hidden = hiddenMoveIndexes(game);
+  return game.legalMoves.map((_, i) => i).filter((i) => !hidden.has(i));
+}

@@ -123,4 +123,6 @@ Die Gruppen für Zeiger und Griff (`getController`/`getControllerGrip`) werden v
 ## Grenzen des Probelaufs
 
 - Die Figuren sind schlicht (Kopf, Hände, Körper); Finger und Mimik gibt es nicht.
-- Der Kartenfächer schwebt vor dir; an der Hand oder am Controller hängt er noch nicht, und Karten werden angetippt statt gegriffen. Kartenblitz, Quartett, Marktplatz, Drachenspiel, Narrenhof und Wölfe im Schafspelz laufen über Spieltafel und Fenster, noch ohne eigene Figuren.
+- Der Kartenfächer hängt an der Haltehand (#384), sobald sie mehr als 15 cm über der Tischplatte ist, sonst steht er an der Tischkante (Umschalter „Fächer an der Hand / am Tisch“); spielbare Karten lassen sich greifen und über der Tischmitte loslassen, Antippen geht weiter. Der Fächer an der Hand ist nur gerechnet, nicht in der Brille geprüft, und nahes Greifen mit der Hand ohne Strahl ist nicht eigens gebaut; offene Punkte dazu: #585 und #586.
+- Kartenblitz, Quartett, Marktplatz, Drachenspiel, Narrenhof und Wölfe im Schafspelz laufen über Spieltafel und Fenster, noch ohne eigene Figuren.
+- Die rechte 2D-Leiste zeigt bei Spielen mit eigener Eingabe (Zeitstrahl, Wort-Salat, Enten-Rallye u. a.) keine Beispielzüge mehr, weil sie die Lösung verraten würden (#587).

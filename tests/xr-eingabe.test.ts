@@ -7,7 +7,7 @@ import type { AnyGameModule } from '../packages/engine/src';
 import { resolveOptions } from '../packages/engine/src';
 import type { GameMessage } from '../packages/online/src';
 import { onlineGames } from '../apps/server/src/games';
-import { inputPlan } from '../apps/xr/src/scene/input-spec';
+import { inputPlan, listedMoveIndexes } from '../apps/xr/src/scene/input-spec';
 import { tafelLines } from '../apps/xr/src/scene/tafel-lines';
 
 // Wer bin ich? bietet freies Raten (guessText) nur in manchen Spielarten an; die Eingabe dafür ist dieselbe Tastatur wie bei Wort-Salat.
@@ -69,6 +69,21 @@ describe('VR-Eingabe', () => {
       expect(checked, `${id}: keine Eingabe geprüft`).toBeGreaterThan(0);
     });
   }
+
+  it('die 2D-Leiste listet keine Beispielzüge samt Lösung (#587)', () => {
+    for (const id of GAMES) {
+      const module = onlineGames.find((m) => m.info.id === id) as AnyGameModule;
+      const seats = Math.max(2, module.info.players.min);
+      const state = module.setup(seats, resolveOptions(module, {}), `leiste-${id}`);
+      for (let seat = 0; seat < seats; seat++) {
+        const legalMoves = module.legalMoves(state, seat) as Record<string, unknown>[];
+        const message = { gameId: id, yourSeat: seat, seats: Array.from({ length: seats }, (_, i) => ({ name: `P${i + 1}` })), view: module.playerView(state, seat), legalMoves, result: null } as unknown as GameMessage;
+        const plan = inputPlan(message);
+        if (!plan) continue;
+        for (const i of listedMoveIndexes(message)) expect(plan.hide, `${id}: ${JSON.stringify(legalMoves[i])}`).not.toContain(legalMoves[i]!.type);
+      }
+    }
+  });
 
   it('Spieltafel und Eingabe lesen jede Sicht ohne Fehler', () => {
     for (const module of onlineGames) {

@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { resolveOptions } from '../packages/engine/src';
+import { onlineGames } from '../apps/server/src/games';
 import { eventSpot, seatEdge, seatHead, toWorld } from '../apps/xr/src/sound-spot';
 
 describe('Räumlicher Klang (#381)', () => {
@@ -20,5 +22,18 @@ describe('Räumlicher Klang (#381)', () => {
     const [x] = toWorld([0.4, 0.74, -0.55], 0.5);
     expect(x).toBeCloseTo(0.2);
     expect(toWorld([0.4, 0.74, -0.55], 1)).toEqual([0.4, 0.74, -0.55]);
+  });
+
+  it('Schach-Züge tragen den Platz des Ziehenden und klingen vom Tischrand (#587)', () => {
+    for (const id of ['chess', 'four-player-chess']) {
+      const module = onlineGames.find((m) => m.info.id === id)!;
+      const state = module.setup(Math.max(2, module.info.players.min), resolveOptions(module, {}), 'klang');
+      const actor = module.currentPlayers(state).find((a): a is number => a !== 'system')!;
+      const move = module.legalMoves(state, actor)[0];
+      const { events } = module.applyMove(state, actor, move);
+      const moved = events.find((e) => e.type === 'moved') as { seat?: number };
+      expect(moved.seat, id).toBe(actor);
+      expect(eventSpot(moved, () => 0), id).toEqual(seatEdge(0));
+    }
   });
 });
