@@ -624,7 +624,9 @@ button.ch-log-cell:hover {
 
 @media (orientation: landscape) and (max-height: 599px) {
   .ch-fit {
-    --bub-ratio: 1.35 !important;
+    /* Brett (quadratisch, so hoch wie der Rahmen) plus Seitenspalte bis 11rem plus Lücke:
+       bei 1.35 blieb dem Brett weniger Breite als Höhe und es ragte links aus dem Rahmen (#549) */
+    --bub-ratio: 1.5 !important;
   }
 
   .ch-wrap {
