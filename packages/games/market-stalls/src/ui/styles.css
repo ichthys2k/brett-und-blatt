@@ -300,9 +300,44 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.mst-board[data-around] .mst-stand {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+/*
+ * In der Ringmitte (container-type: size) richten sich Kartengröße und Tabelle nach der Höhe der Mitte:
+ * Zuerst bekommt die Wertungstabelle alle Zeilen (Plätze + Kopf, je ~1 rem), den Rest teilen sich die zwei
+ * Standreihen. So bleibt jede Zeile sichtbar, bei 2 bis 10 Plätzen (#582).
+ */
+.mst-board[data-around] {
+  --mst-rows: calc(var(--mst-seats, 4) + 1);
+  --mst-free: calc(100cqh - 8.5rem - var(--mst-rows) * 1rem);
+  --mst-cw: clamp(1.3rem, min(calc(var(--mst-free) * 0.375 - 0.6rem), 5.5rem, 8.5cqw), 5.5rem);
 }
+
+.mst-board[data-around] .mst-stand {
+  grid-template-columns: repeat(5, var(--mst-cw));
+}
+
+.mst-board[data-around] .mst-pantries {
+  flex: none;
+  max-height: none;
+  overflow: visible;
+}
+
+.mst-board[data-around] .mst-table {
+  font-size: 0.72rem;
+  line-height: 1.2;
+}
+
+.mst-board[data-around] .mst-table th,
+.mst-board[data-around] .mst-table td {
+  padding: 0.02rem 0.25rem;
+}
+
+.mst-board[data-around] .mst-queue li {
+  flex-basis: 2.2rem;
+}
+
+.mst-board[data-around] .mst-card-number { font-size: clamp(0.65rem, calc(var(--mst-cw) * 0.3), 1.15rem); }
+.mst-board[data-around] .mst-card-icon { font-size: clamp(0.65rem, calc(var(--mst-cw) * 0.3), 1.2rem); }
+.mst-board[data-around] .mst-card-stars { min-height: 0; font-size: clamp(0.5rem, calc(var(--mst-cw) * 0.22), 0.75rem); }
 
 @media (min-width: 900px) and (min-height: 700px) {
   .mst-board {
