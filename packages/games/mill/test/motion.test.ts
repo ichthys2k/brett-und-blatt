@@ -6,7 +6,7 @@ import { motionsOf } from '../src/ui/motion';
 const fresh = (): MillState => gameModule.setup(2, resolveOptions(gameModule, {}), 'test');
 
 function play(state: MillState, move: MillMove): MillState {
-  return gameModule.applyMove(state, state.turn, move, undefined as never).state;
+  return gameModule.applyMove(state, state.turn, move).state;
 }
 
 /** Zugphase mit gegebener Belegung. */
