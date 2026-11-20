@@ -16,8 +16,6 @@ export const meta: GameInfo = {
   hints: true,
   takeBack: true,
   ruleVersion: 1,
-  // Bis zur Freigabe (M5) bleibt das Spiel ein Entwurf.
-  draft: true,
   howToPlay: [
     'Jeder Hase startet in einer Ecke. Die Rüben liegen offen auf dem Brett; wer zuerst die Zielzahl geerntet hat, gewinnt.',
     'Dein Zug hat zwei Schritte: Erst drehst du das Freiteil und schiebst es an einer der Pfeilstellen ins Brett – die ganze Reihe rutscht mit allem, was darauf liegt.',
