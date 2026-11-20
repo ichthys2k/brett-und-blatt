@@ -21,8 +21,21 @@
   box-shadow: 0 4px 14px rgb(0 0 0 / 0.35);
 }
 
+/* Das Bildfenster der Zoomkarte ist flach (Karte 5:7, Text darunter): Das Bild zeigt den unteren Teil, wo
+   die Motive sitzen, und das Fenster ist etwas höher als zuvor – so verdeckt das Namensband nicht den
+   halben Körper (#556). */
 .ds-zoom-card .ds-zoom-face .bub-combat-media {
-  flex-basis: 44%;
+  flex-basis: 48%;
+}
+
+.ds-zoom-card .ds-zoom-face .bub-combat-image img {
+  object-position: 50% 62%;
+}
+
+/* Werte-Edelsteine wachsen mit der Karte, statt auf kleinen Zoomkarten (Handy quer) Spruch und Text zu
+   überdecken (#556); die Ecken bleiben unter dem Textfeld. */
+.ds-zoom-card .ds-zoom-face .bub-game-card-anki {
+  --ds-sym-stat-hand: clamp(18px, 16cqw, 46px);
 }
 
 /* Das Textfeld der Vorlage (Kurzzeile) weicht dem vollen Text samt Eigenschaften mit Zeichen. */
@@ -34,7 +47,7 @@
 .ds-zoom-text {
   position: absolute;
   z-index: 2;
-  top: 57%;
+  top: 61%;
   left: 7cqw;
   right: 7cqw;
   bottom: 17cqw;
@@ -158,6 +171,12 @@
 
 .ds-hand-hero .ds-zoom-origin {
   max-width: 62%;
+}
+
+/* Rechts steht die Säule aus Rüstung und Wimpel: Der Text lässt sie frei (#556). */
+.ds-hand-hero .ds-zoom-text {
+  top: 57%;
+  right: 24cqw;
 }
 
 .ds-hand-hero .ds-hero-zoom-hp .ds-held-hp {
