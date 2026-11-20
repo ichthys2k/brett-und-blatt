@@ -5,6 +5,10 @@
  * Wappen). Die Bundesliga-Liste ist die Saison 2026/27 und wird beim Auf- und Abstieg gepflegt (alte Kennungen bleiben gültig).
  */
 
+/** Cremefarbe der Wappenmedaillons und feste dunkle Linie um sie (Kontrast über 14 : 1, unabhängig von hell/dunkel; #563). */
+export const CREST_MEDALLION_FILL = '#FFF7E3';
+export const CREST_MEDALLION_LINE = '#2B1D0E';
+
 export const CREST_GROUPS = ['klassisch', 'staedte', 'laender', 'fussball', 'sport'] as const;
 export type CrestGroup = (typeof CREST_GROUPS)[number];
 
