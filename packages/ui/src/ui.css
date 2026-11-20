@@ -1966,6 +1966,63 @@ button.bub-net-point:not(:disabled) {
   }
 }
 
+/* Handy-Querformat (#550): Der Zwischenstand passt dort nicht unter die Hand. Er liegt als Fenster
+   über dem Spielfeld (auch die eingebettete Fassung), mit zwei Spalten und knappem Rand. */
+@media (orientation: landscape) and (max-height: 540px) {
+  .bub-round-summary-inline {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: grid;
+    place-items: center;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.72);
+  }
+
+  .bub-round-summary {
+    padding: 0.5rem;
+  }
+
+  .bub-round-summary-card {
+    width: min(100%, 36rem);
+    max-height: calc(100dvh - 1rem);
+    padding: 0.75rem 1rem;
+    gap: 0.5rem;
+    border-radius: 1rem;
+  }
+
+  .bub-round-summary-title {
+    font-size: 1.1rem;
+  }
+
+  .bub-round-summary-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .bub-round-summary-round-detail {
+    font-size: 0.75rem;
+  }
+
+  .bub-round-summary-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem;
+  }
+
+  .bub-round-summary-row {
+    padding: 0.35rem 0.6rem;
+    gap: 0.5rem;
+  }
+
+  .bub-round-summary-actions {
+    margin-top: 0;
+  }
+
+  .bub-round-summary-btn {
+    padding: 0.45rem 1.4rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .bub-round-summary,
   .bub-round-summary-card,
