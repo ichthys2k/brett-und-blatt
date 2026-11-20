@@ -303,7 +303,7 @@ export function ClassPage({ code }: { code: string }) {
               {view.members.map((member) => {
                 const crest = member.crest ? parseCrest(member.crest) : null;
                 return (
-                  <li key={member.id} className="flex items-center gap-2 rounded-xl border border-line bg-surface p-2">
+                  <li key={member.id} data-frame={member.frame} className="flex items-center gap-2 rounded-xl border border-line bg-surface p-2">
                     <button type="button" className="flex min-w-0 flex-1 items-center gap-2 text-left" aria-label={`Profil von ${member.name} ansehen`} onClick={() => setSelected(member.id)}>
                       {crest ? <PlayerCrest spec={crest} size={36} label={`Wappen von ${member.name}`} /> : <span className="text-2xl" aria-hidden="true">{member.avatar}</span>}
                       <span className="min-w-0 flex-1 truncate">
@@ -591,6 +591,10 @@ export function ClassPage({ code }: { code: string }) {
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" className="h-4 w-4 accent-accent" checked={view.leaderboard} onChange={(e) => void apply('configure', { leaderboard: e.target.checked })} />
                 Rangliste anzeigen (Bot-Wertung, Pokale)
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" className="h-4 w-4 accent-accent" checked={view.frames} onChange={(e) => void apply('configure', { frames: e.target.checked })} />
+                Rahmen und Titel anzeigen
               </label>
               <fieldset className="space-y-1 text-sm">
                 <legend className="mb-1">Das dürfen die Klassenkarten zeigen</legend>

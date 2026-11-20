@@ -2,6 +2,7 @@ import { ROOM_EMOJIS, parseRoomCode } from './codes';
 import type { OrgRole } from './org-roles';
 import { DEFAULT_CARD_SECTIONS, parseSections, sanitizeCard, type CardSections, type ClassCard } from './classcard';
 import { cleanAvatar, cleanName, crestField } from './names';
+import { frameField } from './protocol';
 
 /*
  * Klassen (Vorhaben #135, Schritt #150) – Logik ohne Anbieterbindung.
@@ -68,6 +69,8 @@ export interface ClassMember {
   name: string;
   avatar: string;
   crest?: string;
+  /** Avatar-Rahmen (#572); wird gespeichert, aber nur ausgeliefert, solange die Klasse Rahmen zeigt (`ClassState.frames`). */
+  frame?: string;
   lead: boolean;
   joinedAt: number;
   /** Nur Leitungen: öffentlicher Schlüssel, mit dem Mitglieder ihren Lernstand für sie verschlüsseln (#224). */
@@ -82,6 +85,7 @@ export interface ClassPending {
   name: string;
   avatar: string;
   crest?: string;
+  frame?: string;
   at: number;
 }
 export interface ClassState {
@@ -95,6 +99,8 @@ export interface ClassState {
   sections?: CardSections;
   /** Rangliste je Spiel anzeigen (Vorgabe der Leitung, Standard aus). */
   leaderboard?: boolean;
+  /** Rahmen und Titel der Mitglieder anzeigen (#575, Vorgabe der Leitung, Standard aus). Aus: der Server liefert keinen `frame` aus. */
+  frames?: boolean;
   /** Pakete der Klasse (#224). */
   packs?: ClassPack[];
   /** Räume, die Mitglieder für die Klasse geöffnet haben (#151). */
@@ -123,6 +129,8 @@ export interface ClassView {
   sections: CardSections;
   /** Rangliste je Spiel anzeigen (Vorgabe der Leitung, Standard aus). */
   leaderboard: boolean;
+  /** Zeigt die Klasse Rahmen und Titel (#575)? Nur dann enthalten die Mitglieder einen `frame`. */
+  frames: boolean;
   /** Pakete der Klasse, nur für Mitglieder. */
   packs: ClassPack[];
   /** Offene Räume der Klasse (neueste zuerst), nur für Mitglieder; `mine`: den Raum hat dieses Mitglied geöffnet. */
@@ -133,7 +141,7 @@ export interface ClassView {
   dueCards: boolean;
   /** Öffentliche Schlüssel der Leitungen, nur für Mitglieder und nur bei eingeschaltetem Lernstand. */
   leadKeys: { id: string; key: string }[];
-  members: (Pick<ClassMember, 'id' | 'name' | 'avatar' | 'crest' | 'lead' | 'card'> & { progressAt?: number })[];
+  members: (Pick<ClassMember, 'id' | 'name' | 'avatar' | 'crest' | 'frame' | 'lead' | 'card'> & { progressAt?: number })[];
   /** Nur für die Leitung. */
   pending: Pick<ClassPending, 'id' | 'name' | 'avatar'>[];
 }
@@ -145,7 +153,7 @@ export function cleanClassName(raw: unknown): string | null {
   return typeof raw === 'string' ? cleanName(raw, CLASS_NAME_MAX) : null;
 }
 
-export function createClass(code: string, className: unknown, who: { token: unknown; name: unknown; avatar?: unknown; crest?: unknown }, now: number): ClassState | string {
+export function createClass(code: string, className: unknown, who: { token: unknown; name: unknown; avatar?: unknown; crest?: unknown; frame?: unknown }, now: number): ClassState | string {
   const name = cleanClassName(className);
   const own = typeof who.name === 'string' ? cleanName(who.name) : null;
   if (!name || !own || !validToken(who.token)) return 'Name der Klasse oder Profil fehlt.';
@@ -156,7 +164,7 @@ export function createClass(code: string, className: unknown, who: { token: unkn
     approval: false,
     createdAt: now,
     lastActive: now,
-    members: { [who.token]: { id: randomId(), name: own, avatar: cleanAvatar(typeof who.avatar === 'string' ? who.avatar : ''), ...crestField(who.crest), lead: true, joinedAt: now } },
+    members: { [who.token]: { id: randomId(), name: own, avatar: cleanAvatar(typeof who.avatar === 'string' ? who.avatar : ''), ...crestField(who.crest), ...frameField(who.frame), lead: true, joinedAt: now } },
     pending: {},
   };
 }
@@ -169,13 +177,13 @@ const fail = (error: string): Outcome => ({ error });
 const ok: Outcome = { ok: true };
 
 /** Beitritt: sofort Mitglied oder auf der Warteliste, je nach Einstellung der Leitung. */
-export function joinClass(state: ClassState, who: { token: unknown; name: unknown; avatar?: unknown; crest?: unknown }, now: number): Outcome {
+export function joinClass(state: ClassState, who: { token: unknown; name: unknown; avatar?: unknown; crest?: unknown; frame?: unknown }, now: number): Outcome {
   if (!validToken(who.token)) return fail('Ungültige Anmeldung.');
   const name = typeof who.name === 'string' ? cleanName(who.name) : null;
   if (!name) return fail('Bitte zuerst einen Namen wählen.');
   if (state.members[who.token]) return ok;
   if (!state.open) return fail('Der Beitritt ist gerade geschlossen.');
-  const entry = { name, avatar: cleanAvatar(typeof who.avatar === 'string' ? who.avatar : ''), ...crestField(who.crest) };
+  const entry = { name, avatar: cleanAvatar(typeof who.avatar === 'string' ? who.avatar : ''), ...crestField(who.crest), ...frameField(who.frame) };
   if (state.approval) {
     if (!state.pending[who.token] && Object.keys(state.pending).length >= CLASS_MAX_PENDING) return fail('Es warten schon zu viele auf Bestätigung.');
     state.pending[who.token] = { id: randomId(), ...entry, at: now };
@@ -203,7 +211,7 @@ export function enrollMember(state: ClassState, leaderToken: unknown, who: { tok
 }
 
 /** Ändert Name, Bild und Wappen eines Mitglieds (nach Änderungen am Profil). */
-export function updateMember(state: ClassState, token: unknown, who: { name?: unknown; avatar?: unknown; crest?: unknown }, now: number): Outcome {
+export function updateMember(state: ClassState, token: unknown, who: { name?: unknown; avatar?: unknown; crest?: unknown; frame?: unknown }, now: number): Outcome {
   const member = validToken(token) ? state.members[token] : undefined;
   if (!member) return fail('Du bist nicht in dieser Klasse.');
   const name = typeof who.name === 'string' ? cleanName(who.name) : null;
@@ -213,6 +221,11 @@ export function updateMember(state: ClassState, token: unknown, who: { name?: un
     const { crest } = crestField(who.crest);
     if (crest) member.crest = crest;
     else delete member.crest;
+  }
+  if ('frame' in who) {
+    const { frame } = frameField(who.frame);
+    if (frame) member.frame = frame;
+    else delete member.frame;
   }
   state.lastActive = now;
   return ok;
@@ -239,7 +252,7 @@ export function decide(state: ClassState, token: unknown, id: unknown, accept: b
   delete state.pending[key];
   if (accept) {
     if (Object.keys(state.members).length >= CLASS_MAX_MEMBERS) return fail('Die Klasse ist voll.');
-    state.members[key] = { id: entry.id, name: entry.name, avatar: entry.avatar, ...(entry.crest ? { crest: entry.crest } : {}), lead: false, joinedAt: now };
+    state.members[key] = { id: entry.id, name: entry.name, avatar: entry.avatar, ...(entry.crest ? { crest: entry.crest } : {}), ...(entry.frame ? { frame: entry.frame } : {}), lead: false, joinedAt: now };
   }
   state.lastActive = now;
   return ok;
@@ -265,7 +278,7 @@ export function setLead(state: ClassState, token: unknown, id: unknown, lead: bo
   return ok;
 }
 
-export function configureClass(state: ClassState, token: unknown, change: { name?: unknown; open?: unknown; approval?: unknown; sections?: unknown; leaderboard?: unknown; learning?: unknown; dueCards?: unknown }, now: number): Outcome {
+export function configureClass(state: ClassState, token: unknown, change: { name?: unknown; open?: unknown; approval?: unknown; sections?: unknown; leaderboard?: unknown; frames?: unknown; learning?: unknown; dueCards?: unknown }, now: number): Outcome {
   const denied = mustLead(state, token);
   if (denied) return denied;
   if (change.name !== undefined) {
@@ -276,6 +289,7 @@ export function configureClass(state: ClassState, token: unknown, change: { name
   if (typeof change.open === 'boolean') state.open = change.open;
   if (typeof change.approval === 'boolean') state.approval = change.approval;
   if (typeof change.leaderboard === 'boolean') state.leaderboard = change.leaderboard;
+  if (typeof change.frames === 'boolean') state.frames = change.frames;
   if (typeof change.learning === 'boolean') {
     state.learning = change.learning;
     // Wird der Lernstand ausgeschaltet, fällt alles Abgelegte weg (der Server löscht die Daten, siehe `ClassRoom`).
@@ -320,6 +334,7 @@ export function classView(state: ClassState, token: unknown, now = Date.now()): 
     approval: state.approval,
     sections: sectionsOf(state),
     leaderboard: state.leaderboard === true,
+    frames: state.frames === true,
     packs: member ? (state.packs ?? []).map(({ id, name, key, at }) => ({ id, name, key, at })) : [],
     rooms: member ? liveClassRooms(state, now).flatMap((room) => {
       const by = Object.values(state.members).find((m) => m.id === room.by);
@@ -331,7 +346,7 @@ export function classView(state: ClassState, token: unknown, now = Date.now()): 
     me: member?.id ?? null,
     lead,
     waiting,
-    members: member ? Object.values(state.members).map(({ id, name, avatar, crest, lead: l, card, progressAt }) => ({ id, name, avatar, ...(crest ? { crest } : {}), lead: l, ...(card ? { card } : {}), ...(lead && progressAt ? { progressAt } : {}) })) : [],
+    members: member ? Object.values(state.members).map(({ id, name, avatar, crest, frame, lead: l, card, progressAt }) => ({ id, name, avatar, ...(crest ? { crest } : {}), ...(frame && state.frames === true ? { frame } : {}), lead: l, ...(card ? { card } : {}), ...(lead && progressAt ? { progressAt } : {}) })) : [],
     pending: lead ? Object.values(state.pending).map(({ id, name, avatar }) => ({ id, name, avatar })) : [],
   };
 }

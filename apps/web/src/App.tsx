@@ -1,3 +1,4 @@
+import { RewardBanner } from './components/RewardBanner';
 import { UpdateBanner } from './components/UpdateBanner';
 import { useRoute } from './lib/router';
 import { DisplayScreen } from './screens/Display';
@@ -50,6 +51,7 @@ export function App() {
         <SoftCursor />
         <ButtonPrompt onDismiss={() => saveInputSettings({ prompts: false })} />
         <UpdateBanner />
+        <RewardBanner />
       </CardCosmeticsProvider>
     </InputProvider>
   );
