@@ -1,11 +1,15 @@
 /**
  * Oberfläche für Maulwurfsgänge (M3): eigenes Brett mit SVG-Gängen, Schiebe-Pfeilen an allen
  * Schiebestellen, Freiteil mit Drehen und Vorschau, Laufen durch die verbundenen Gänge,
- * Handy-Layout und Tastaturbedienung. Animation, gemalte Bilder, Kulisse und Klänge folgen in M4.
- * Alle Klassen tragen das Präfix mt-.
+ * Handy-Layout und Tastaturbedienung. M4: Teile gleiten beim Schieben (CSS-Übergang auf `transform`,
+ * Schlüssel = Teil-id), der Hase hüpft den Weg ab, Ernte und Nachwachsen haben kleine Effekte, Hasen,
+ * Rübe und Maulwurf sind die gemalten Bilder aus dem Rübenacker (die SVG-Figuren bleiben Rückfall),
+ * Klänge laufen über `gameUi.sounds`. Alles Bewegte ist reine Anzeige: nichts wartet darauf, und bei
+ * `prefers-reduced-motion` springt alles sofort. Alle Klassen tragen das Präfix mt-.
  */
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type FocusEvent as ReactFocusEvent, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type FocusEvent as ReactFocusEvent, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import type { SeatId } from '@brett-und-blatt/engine';
+import { teilImage, type TeilName } from '@brett-und-blatt/game-turnip-patch/teile';
 import { FitBox, type BoardProps, type GameUi } from '@brett-und-blatt/ui';
 import { describeMove, KIND_NAMES } from '../describe';
 import {
@@ -16,6 +20,7 @@ import {
   isFixed,
   isPushForbidden,
   pathTo,
+  pushGeometry,
   pushTile,
   reachable,
   result,
@@ -29,11 +34,32 @@ import {
   type Tile,
 } from '../rules';
 import { arrowCenter, hareSlots, openingNames, pushRing, type PushSpot } from './helpers';
+import { useMoveFx } from './useMoveFx';
 import './styles.css';
 
 const SEAT_NAMES = ['Rot', 'Blau', 'Grün', 'Gelb'];
-/** Spielerfarben der Hasen; M4 ersetzt sie durch die gemalten Hasen aus dem Rübenacker. */
+/** Spielerfarben (Rückfall-Hase, Zahlenplakette); die gemalten Hasen tragen dieselben Farben an Mütze und Halstuch. */
 const SEAT_COLORS = ['#c0392b', '#2c6fbb', '#2e8b57', '#d9a516'];
+const HARE_IMAGES: TeilName[] = ['hase-rot', 'hase-blau', 'hase-gruen', 'hase-gelb'];
+
+const hareImage = (seat: SeatId) => teilImage(HARE_IMAGES[seat % HARE_IMAGES.length]!);
+
+/** Gerätevorliebe: erreichbare Felder leuchten lassen (nur Anzeige, ändert keine Regel). */
+const REACH_KEY = 'brett-und-blatt:maulwurf-leuchtfelder';
+function loadReach(): boolean {
+  try {
+    return window.localStorage.getItem(REACH_KEY) !== 'aus';
+  } catch {
+    return true;
+  }
+}
+function saveReach(on: boolean) {
+  try {
+    window.localStorage.setItem(REACH_KEY, on ? 'an' : 'aus');
+  } catch {
+    // ohne Speicher bleibt es bei der Sitzung
+  }
+}
 
 const ARMS: { bit: number; x: number; y: number }[] = [
   { bit: N, x: 50, y: 0 },
@@ -95,11 +121,15 @@ function HareShape({ seat, active }: { seat: SeatId; active?: boolean }) {
   );
 }
 
-/** Ein Gangteil mit allem, was darauf liegt (Rübe, Maulwurf, Hasen). */
-function TileArt({ tile, fixed, hares, turnSeat }: { tile: Tile; fixed: boolean; hares: SeatId[]; turnSeat: SeatId | null }) {
+type TileFx = 'harvest' | 'sprout';
+
+/** Ein Gangteil mit allem, was fest darauf liegt (Rübe, Maulwurf); die Hasen laufen auf einer eigenen Ebene. */
+function TileArt({ tile, fixed, fx }: { tile: Tile; fixed: boolean; fx?: TileFx }) {
   const mask = tileMask(tile);
   const arms = ARMS.filter((arm) => mask & arm.bit);
-  const slots = hareSlots(hares.length);
+  const turnipUrl = teilImage('ruebe');
+  const moleUrl = teilImage('maulwurf');
+  const small = tile.mole;
   return (
     <svg className="mt-art" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
       <rect className={fixed ? 'mt-soil mt-soil-fixed' : 'mt-soil'} x="1" y="1" width="98" height="98" rx="8" />
@@ -126,37 +156,76 @@ function TileArt({ tile, fixed, hares, turnSeat }: { tile: Tile; fixed: boolean;
       {tile.mole && (
         <>
           <rect className="mt-mole-shade" x="1" y="1" width="98" height="98" rx="8" />
-          <g transform="translate(50 52) scale(1.2)">
-            <MoleShape />
-          </g>
+          {moleUrl ? (
+            <image className="mt-pic" href={moleUrl} x="12" y="14" width="76" height="76" />
+          ) : (
+            <g transform="translate(50 52) scale(1.2)">
+              <MoleShape />
+            </g>
+          )}
         </>
       )}
       {tile.turnip && (
-        <g transform={`translate(${tile.mole ? 76 : 50} ${tile.mole ? 26 : 42}) scale(${tile.mole ? 0.6 : 0.95})`}>
-          <TurnipShape />
+        <g className={fx === 'sprout' ? 'mt-fx-sprout' : undefined}>
+          {turnipUrl ? (
+            <image className="mt-pic" href={turnipUrl} x={small ? 56 : 20} y={small ? 4 : 12} width={small ? 40 : 60} height={small ? 40 : 60} />
+          ) : (
+            <g transform={`translate(${small ? 76 : 50} ${small ? 26 : 42}) scale(${small ? 0.6 : 0.95})`}>
+              <TurnipShape />
+            </g>
+          )}
         </g>
       )}
-      {hares.map((seat, i) => {
-        const slot = slots[i]!;
-        return (
-          <g key={seat} transform={`translate(${slot.x} ${slot.y}) scale(${slot.scale * 1.05})`}>
-            <HareShape seat={seat} active={seat === turnSeat} />
-          </g>
-        );
-      })}
+      {fx === 'harvest' && (
+        <g className="mt-fx-harvest">
+          {turnipUrl ? (
+            <image href={turnipUrl} x="20" y="12" width="60" height="60" />
+          ) : (
+            <g transform="translate(50 42) scale(0.95)">
+              <TurnipShape />
+            </g>
+          )}
+        </g>
+      )}
+      {fx === 'harvest' && <circle className="mt-fx-ring" cx="50" cy="50" r="30" />}
     </svg>
+  );
+}
+
+/** Ein Hase auf der Hasenebene: gemaltes Bild mit Zahlenplakette (nie nur Farbe), Rückfall ist die SVG-Figur. */
+function HareSprite({ seat }: { seat: SeatId }) {
+  const url = hareImage(seat);
+  const color = SEAT_COLORS[seat % SEAT_COLORS.length]!;
+  return (
+    <>
+      {url ? (
+        <img className="mt-hare-img" src={url} alt="" draggable={false} />
+      ) : (
+        <svg className="mt-hare-img" viewBox="-18 -30 36 46" aria-hidden="true" focusable="false">
+          <HareShape seat={seat} />
+        </svg>
+      )}
+      <span className="mt-hare-badge" style={{ borderColor: color }} aria-hidden="true">
+        {seat + 1}
+      </span>
+    </>
   );
 }
 
 function SeatSymbol({ seat, className = '' }: { seat: SeatId; seats?: number; className?: string }) {
+  const url = hareImage(seat);
+  const color = SEAT_COLORS[seat % SEAT_COLORS.length]!;
   return (
-    <svg className={`mt-seat-symbol ${className}`} viewBox="-18 -30 36 46" aria-hidden="true" focusable="false">
-      <HareShape seat={seat} />
-    </svg>
+    <span className={`mt-seat-symbol ${className}`} style={{ borderColor: color }} aria-hidden="true">
+      {url ? <img src={url} alt="" draggable={false} /> : <svg viewBox="-18 -30 36 46" focusable="false"><HareShape seat={seat} /></svg>}
+      <b style={{ background: color }}>{seat + 1}</b>
+    </span>
   );
 }
 
 function TurnipIcon() {
+  const url = teilImage('ruebe');
+  if (url) return <img className="mt-turnip-icon" src={url} alt="" draggable={false} />;
   return (
     <svg className="mt-turnip-icon" viewBox="-22 -34 44 62" aria-hidden="true" focusable="false">
       <TurnipShape />
@@ -189,7 +258,7 @@ function pushKey(spot: PushSpot): string {
 /** Kann dieses Gerät ein Fingerzeig sein (Handy)? Dann schiebt erst der zweite Tipp. */
 type PointerKind = 'mouse' | 'touch' | 'pen' | 'key';
 
-function Board({ view, legalMoves, onMove, hint, seatNames }: BoardProps<MoleState, MoleMove>) {
+function Board({ view, legalMoves, onMove, hint, seatNames, events }: BoardProps<MoleState, MoleMove>) {
   const n = view.size;
   const over = result(view) !== null;
   const yourMove = legalMoves.length > 0 && !over;
@@ -241,8 +310,41 @@ function Board({ view, legalMoves, onMove, hint, seatNames }: BoardProps<MoleSta
   const turnHare = view.hares[view.turn]!;
   const path = canWalk && aim ? pathTo(view, turnHare, aim) : null;
 
-  const haresAt = new Map<number, SeatId[]>();
-  shownHares.forEach(([r, c], seat) => haresAt.set(r * n + c, [...(haresAt.get(r * n + c) ?? []), seat]));
+  // Bewegung: Schieben, Hüpfen, Ernte (nur Anzeige; bei reduzierter Bewegung springt alles).
+  const previewShown = useRef(false);
+  const { push: pushFx, walk: walkFx, done: doneFx } = useMoveFx(view, events, previewShown);
+  const [reach, setReach] = useState(loadReach);
+  const toggleReach = () => {
+    saveReach(!reach);
+    setReach(!reach);
+  };
+  const tileFor = (tile: Tile): Tile => {
+    if (walkFx && tile.id === walkFx.harvest) return { ...tile, turnip: true };
+    if (walkFx && tile.id === walkFx.sprout) return { ...tile, turnip: false };
+    return tile;
+  };
+  const fxFor = (tile: Tile): TileFx | undefined => (doneFx?.harvest === tile.id ? 'harvest' : doneFx?.sprout === tile.id ? 'sprout' : undefined);
+
+  // Hasen: eigene Ebene; der laufende Hase folgt dem Weg Feld für Feld.
+  const placed = shownHares.map((pos, seat): Pos => (walkFx && walkFx.seat === seat ? (walkFx.path[walkFx.step] ?? pos) : pos));
+  const seatsAt = new Map<number, SeatId[]>();
+  placed.forEach(([r, c], seat) => seatsAt.set(r * n + c, [...(seatsAt.get(r * n + c) ?? []), seat]));
+  const lastPlaced = useRef<Pos[]>([]);
+  const facing = useRef<Record<number, 1 | -1>>({});
+  if (walkFx && walkFx.step > 0) {
+    const a = walkFx.path[walkFx.step - 1]!;
+    const b = walkFx.path[walkFx.step]!;
+    if (b[1] !== a[1]) facing.current[walkFx.seat] = b[1] > a[1] ? 1 : -1;
+  }
+  // Springt ein Hase mehr als ein Feld (mit dem hinausgeschobenen Teil), gleitet er nicht quer übers Brett.
+  const jumping = new Set<number>();
+  placed.forEach(([r, c], seat) => {
+    const before = lastPlaced.current[seat];
+    if (before && Math.abs(before[0] - r) + Math.abs(before[1] - c) > 1) jumping.add(seat);
+  });
+  useLayoutEffect(() => {
+    lastPlaced.current = placed;
+  });
 
   const hintPush = hint?.type === 'push' ? hint : null;
   const hintWalk = hint?.type === 'walk' ? hint : null;
@@ -250,6 +352,7 @@ function Board({ view, legalMoves, onMove, hint, seatNames }: BoardProps<MoleSta
   const doPush = (spot: PushSpot) => {
     const move = (pushMoves.get(pushKey(spot)) ?? []).find((m) => m.type === 'push' && m.rot === turns);
     if (!move) return;
+    previewShown.current = chosen?.side === spot.side && chosen.index === spot.index;
     setSelected(null);
     setHover(null);
     onMove(move);
@@ -330,25 +433,91 @@ function Board({ view, legalMoves, onMove, hint, seatNames }: BoardProps<MoleSta
           const row = Math.floor(index / n);
           const col = index % n;
           const isPreviewTile = preview !== null && tile.id === view.spare.id;
+          const entering = pushFx !== null && !pushFx.fromPreview && tile.id === pushFx.entered;
           return (
             <div
               key={tile.id}
               className="mt-tile"
               data-tile={tile.id}
               data-ghost={isPreviewTile || undefined}
-              data-soft={(canPush && softReach.has(index)) || undefined}
-              style={{ '--mt-r': row, '--mt-c': col } as CSSProperties}
+              data-enter={entering || undefined}
+              data-soft={(reach && canPush && softReach.has(index)) || undefined}
+              style={({ '--mt-r': row, '--mt-c': col, ...(entering ? { '--mt-dr': pushFx.dr, '--mt-dc': pushFx.dc } : {}) }) as CSSProperties}
             >
-              <TileArt tile={tile} fixed={isFixed(row, col)} hares={haresAt.get(index) ?? []} turnSeat={over ? null : view.turn} />
+              <TileArt tile={tileFor(tile)} fixed={isFixed(row, col)} fx={fxFor(tile)} />
             </div>
           );
         })}
+        {pushFx && (
+          <div
+            key={`exit-${pushFx.key}`}
+            className="mt-tile mt-exit"
+            data-from-preview={pushFx.fromPreview || undefined}
+            style={
+              {
+                '--mt-r': pushFx.exit[0] + (pushFx.fromPreview ? pushFx.dr : 0),
+                '--mt-c': pushFx.exit[1] + (pushFx.fromPreview ? pushFx.dc : 0),
+                '--mt-dr': pushFx.dr,
+                '--mt-dc': pushFx.dc,
+              } as CSSProperties
+            }
+          >
+            <TileArt tile={pushFx.out} fixed={false} />
+          </div>
+        )}
+        {preview && chosen && !pushFx && (
+          // Vorschau: auch das Teil, das hinausfallen würde, bleibt blass hinter dem Rand sichtbar.
+          <div
+            key="exit-preview"
+            className="mt-tile mt-exit mt-exit-preview"
+            style={
+              {
+                '--mt-r': pushGeometry(n, chosen.side, chosen.index).exit[0] + pushGeometry(n, chosen.side, chosen.index).dr,
+                '--mt-c': pushGeometry(n, chosen.side, chosen.index).exit[1] + pushGeometry(n, chosen.side, chosen.index).dc,
+              } as CSSProperties
+            }
+          >
+            <TileArt tile={preview.out} fixed={false} />
+          </div>
+        )}
         {path && path.length > 1 && (
           <svg className="mt-path" viewBox={`0 0 ${n} ${n}`} aria-hidden="true" focusable="false">
             <polyline className="mt-path-under" points={path.map(([r, c]) => `${c + 0.5},${r + 0.5}`).join(' ')} />
             <polyline className="mt-path-line" points={path.map(([r, c]) => `${c + 0.5},${r + 0.5}`).join(' ')} />
           </svg>
         )}
+        <div className="mt-hares" aria-hidden="true">
+          {placed.map(([row, col], seat) => {
+            const group = seatsAt.get(row * n + col) ?? [seat];
+            const slot = hareSlots(group.length)[Math.max(0, group.indexOf(seat))] ?? hareSlots(1)[0]!;
+            const walking = walkFx?.seat === seat;
+            return (
+              <div
+                key={seat}
+                className="mt-hare"
+                data-seat={seat}
+                data-active={(!over && seat === view.turn) || undefined}
+                data-jump={jumping.has(seat) || undefined}
+                data-walking={(walking && walkFx.step > 0) || undefined}
+                style={
+                  {
+                    '--mt-r': row,
+                    '--mt-c': col,
+                    '--mt-x': slot.x,
+                    '--mt-y': slot.y,
+                    '--mt-s': slot.scale,
+                    '--mt-face': facing.current[seat] ?? 1,
+                    '--mt-hop-ms': walking ? `${walkFx.stepMs}ms` : undefined,
+                  } as CSSProperties
+                }
+              >
+                <span key={walking ? walkFx.step : 0} className="mt-hop">
+                  <HareSprite seat={seat} />
+                </span>
+              </div>
+            );
+          })}
+        </div>
         {canWalk &&
           [...walkMoves.values()].map((move) => {
             const [row, col] = move.to;
@@ -423,7 +592,7 @@ function Board({ view, legalMoves, onMove, hint, seatNames }: BoardProps<MoleSta
   const goal = view.options.goal;
 
   return (
-    <div className="mt-wrap" ref={wrapRef} data-phase={view.phase} data-yours={yourMove || undefined} onKeyDown={onKeyDown} onBlur={onWrapBlur}>
+    <div className="mt-wrap" ref={wrapRef} data-reach={reach ? 'on' : 'off'} data-phase={view.phase} data-yours={yourMove || undefined} onKeyDown={onKeyDown} onBlur={onWrapBlur}>
       <div className="mt-layout">
         <div className="mt-status" role="status" aria-live="polite">
           <ol className="mt-steps" aria-label="Schritte deines Zugs">
@@ -453,7 +622,7 @@ function Board({ view, legalMoves, onMove, hint, seatNames }: BoardProps<MoleSta
               aria-label={`Freiteil: ${KIND_NAMES[view.spare.kind]}, offen nach ${openingNames(mask)}. Antippen dreht um eine Vierteldrehung (Taste R).`}
             >
               <span className="mt-tile mt-tile-spare" data-tile={spareShown.id}>
-                <TileArt tile={spareShown} fixed={false} hares={[]} turnSeat={null} />
+                <TileArt tile={spareShown} fixed={false} />
               </span>
             </button>
             <div className="mt-actions">
@@ -477,12 +646,15 @@ function Board({ view, legalMoves, onMove, hint, seatNames }: BoardProps<MoleSta
               <li key={seat} className="mt-score" data-active={(!over && seat === view.turn) || undefined} aria-current={!over && seat === view.turn ? 'true' : undefined}>
                 <SeatSymbol seat={seat} />
                 <span className="mt-score-name">{name(seat)}</span>
-                <span className="mt-score-count" aria-label={`${view.harvested[seat] ?? 0} von ${goal} Rüben`}>
+                <span className="mt-score-count" data-bump={(doneFx?.seat === seat && doneFx.harvest !== null) || undefined} aria-label={`${view.harvested[seat] ?? 0} von ${goal} Rüben`}>
                   <TurnipIcon /> {view.harvested[seat] ?? 0}<span className="mt-score-goal"> / {goal}</span>
                 </span>
               </li>
             ))}
           </ul>
+          <button type="button" className="mt-reach-toggle" aria-pressed={reach} onClick={toggleReach}>
+            Leuchtfelder: {reach ? 'an' : 'aus'}
+          </button>
         </div>
       </div>
     </div>
@@ -495,4 +667,12 @@ export const gameUi: GameUi<MoleState, MoleMove> = {
   seatLabel: (seat) => SEAT_NAMES[seat] ?? `Platz ${seat + 1}`,
   seatScore: (view, seat) => view.harvested[seat] ?? 0,
   seatDetail: (view) => `von ${view.options.goal} Rüben`,
+  // Vorläufig aus dem Katalog gewählt (M4); Cornelius wählt die endgültige Zuordnung. Sieg, Niederlage,
+  // Zeit und „Dein Zug“ vertont die Plattform selbst.
+  sounds: {
+    push: 'stein-schiefer',
+    // Stehenbleiben ist kein Hüpfen.
+    walk: (event) => (Array.isArray(event.path) && event.path.length > 1 ? 'ruebenacker-hopps' : null),
+    harvest: 'punkte-sammeln',
+  },
 };

@@ -5,7 +5,7 @@
     { "id": "drachenspiel", "title": "Drachenspiel", "mood": "abenteuerlich und heldenhaft", "games": ["drachenspiel"] },
     { "id": "narrenhof", "title": "Narrenhof", "mood": "verspielt und höfisch", "games": ["color-sorter"] },
     { "id": "patience", "title": "Patience", "mood": "gemütlich und verträumt", "games": ["solitaire"] },
-    { "id": "spielabend", "title": "Spielabend", "mood": "fröhlich und verspielt", "games": ["bible-quiz", "hangman", "word-salad", "maexle", "battleship", "tic-tac-toe", "four-in-a-row", "ultimate-tic-tac-toe", "bingo", "dominoes", "color-and-shape", "ludo", "ligretto", "scrabble", "kniffel", "low-flight", "symbol-match", "wolves-sheep", "chinese-checkers", "turnip-patch", "marketplace", "estimate", "majority", "timeline"] }
+    { "id": "spielabend", "title": "Spielabend", "mood": "fröhlich und verspielt", "games": ["bible-quiz", "hangman", "word-salad", "maexle", "battleship", "tic-tac-toe", "four-in-a-row", "ultimate-tic-tac-toe", "bingo", "dominoes", "color-and-shape", "ludo", "ligretto", "scrabble", "kniffel", "low-flight", "symbol-match", "wolves-sheep", "chinese-checkers", "turnip-patch", "mole-tunnels", "marketplace", "estimate", "majority", "timeline"] }
   ],
   "tracks": [
     { "id": "herbstbibliothek", "title": "Herbstbibliothek", "file": "herbstbibliothek.mp3", "playlist": "denkraum" },

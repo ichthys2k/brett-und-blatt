@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@brett-und-blatt/engine": "workspace:*",
+    "@brett-und-blatt/game-turnip-patch": "workspace:*",
     "@brett-und-blatt/ui": "workspace:*"
   },
   "peerDependencies": {

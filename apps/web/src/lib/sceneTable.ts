@@ -2,6 +2,7 @@
 export const SCENE_BY_GAME: Readonly<Record<string, string>> = {
   battleship: 'hafen',
   'turnip-patch': 'acker',
+  'mole-tunnels': 'acker',
   'duck-rally': 'bach',
   'wolves-sheep': 'nachtweide',
   'bible-quiz': 'schreibstube',

@@ -126,6 +126,8 @@ CSS-Klassen tragen **`mt-`** (Maulwurfsgänge; die Präfixe `mkt-`, `mst-`, `rub
 
 **Klänge (vorläufig, Katalog `packages/ui/src/audio/catalog.json`; Cornelius wählt endgültig):** Schieben `stein-schiefer`, Laufen `ruebenacker-hopps`, Ernte `punkte-sammeln`, Maulwurf-Treffer `ruebenacker-maulwurf`, Zugwechsel `dein-zug`. Sieg, Niederlage, Zeit vertont die Plattform. **Musik:** `mole-tunnels` in `packages/ui/src/audio/music.json` zur Playlist `spielabend` (Liste `games`) hinzufügen.
 
+**Stand M4 (20.11.2026):** Schiebe- und Hüpf-Animation (`src/ui/useMoveFx.ts`, `styles.css`), gemalte Hasen/Rübe/Maulwurf über `@brett-und-blatt/game-turnip-patch/teile` (SVG-Figuren als Rückfall, Erdhügel noch ungenutzt), Acker-Kulisse, Klänge `push` → `stein-schiefer`, `walk` → `ruebenacker-hopps`, `harvest` → `punkte-sammeln` (vorläufig; `ruebenacker-maulwurf` unbelegt, kein Maulwurf-Ereignis), Musik über die Playlist `spielabend`. `reach` ist als Gerätevorliebe umgesetzt (Knopf „Leuchtfelder“), nicht als Spieloption. Einzelheiten in `docs/CHRONIK.md`.
+
 ## Anbindung (Checkliste für die Freischaltung)
 
 - `apps/server/src/games.ts` (`onlineGames`) und `apps/server/package.json` (`@brett-und-blatt/game-mole-tunnels: workspace:*`), danach `corepack pnpm install`; `apps/server/test/games.test.ts` muss grün sein.
@@ -157,7 +159,7 @@ Freigegeben (`status: Ready`) wird jedes Glied einzeln durch Cornelius; Unter-Is
 | **M1** Regelkern | Spiel anlegen (`neues-spiel`), `meta.ts` (`draft: true`), `rules.ts`, `describe.ts`, `index.ts` mit Optionen und `timePresets`, Regeltests und Vertragsprüfungen, Server-Eintrag; Oberfläche vorerst die Vorlage | – | `packages/games/mole-tunnels/src/{meta,rules,describe,index}.ts`, `test/`, `apps/server/src/games.ts`, `apps/server/package.json` |
 | **M2** Bots | „Wühlmaus“ leicht/mittel/schwer, Bot-Tests, Prüfstand-Ziele, `BOT_STEP_MS` | M1 | `src/bots.ts`, `test/`, `apps/server/src/bots.ts` |
 | **M3** Brett und Bedienung | Eigenes Brett mit SVG-Gängen, Pfeile, Freiteil, Drehen, Vorschau, erreichbare Felder, Laufen, Spielerleiste, Handy-Layout, Tastatur; noch ohne Animation und Bilder | M1 | `src/ui/index.tsx`, `src/ui/styles.css` (`mt-`) |
-| **M4** Leben ins Brett | Schiebe- und Hüpf-Animation mit stabilen Teil-IDs, Hasen/Rübe/Maulwurf als Bilder, Acker-Kulisse, Klänge und Musik, `prefers-reduced-motion`, Kontrast-Modus | M3 | `src/ui/`, `src/ui/bilder.ts`, `apps/web/src/lib/sceneTable.ts`, `packages/ui/src/audio/music.json` |
+| **M4** Leben ins Brett (**erledigt 20.11.2026**) | Schiebe- und Hüpf-Animation mit stabilen Teil-IDs, Hasen/Rübe/Maulwurf als Bilder, Acker-Kulisse, Klänge und Musik, `prefers-reduced-motion`, Kontrast-Modus | M3 | `src/ui/`, `src/ui/bilder.ts`, `apps/web/src/lib/sceneTable.ts`, `packages/ui/src/audio/music.json` |
 | **M5** Freischalten | VR-Katalog und Spieltafel, Rauchtest, Prüfstand, Doku (README, CHRONIK), Spiel-Label, `draft` entfernen **nur auf Cornelius' Wort** | M2, M4 | `apps/xr/src/…`, `docs/` |
 | **M6** (optional) | Gemalte Gangteile (Gerade, Kurve, Abzweig) nach `docs/grafik/STILBIBEL.md`; Originale ins private Grafik-Repo – nur mit dessen Zugang und Cornelius' Auswahl | M5 | `src/ui/teile/`, `scripts/grafik/manifeste/` |
 | **M7** (optional) | Tagesrätsel allein („alle Rüben in N Zügen“, Seed pro Tag), Lernpaket-Variante (Bilder statt Rüben), Teams | M5 | später planen |
