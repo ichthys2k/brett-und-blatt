@@ -133,6 +133,33 @@
   }
 }
 
+/* Bewegung der Steine (#590): ein Geisterstein gleitet, fliegt oder verblasst über dem Netz. */
+.ml-net {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.ml-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.ml-ghost {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 12%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+}
+
+.ml-stone.ml-hidden {
+  visibility: hidden;
+}
+
 /* Gemalte Figuren (#325): Satz über data-pieces-mill auf <html>, Bilder über --fig-mill-<figur>; ohne Attribut die heutige Darstellung. */
 [data-pieces-mill] .ml-stone.ml-white {
   background: var(--fig-mill-stone-w) center / contain no-repeat;
