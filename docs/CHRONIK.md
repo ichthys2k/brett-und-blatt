@@ -649,3 +649,8 @@ Alle Etappen 1–7 sind abgeschlossen. Originalspiele liegen in `~/code/4playerc
 - Paket B Wortspiele (1.11.2026): Bausteine Texteingabe mit Prüfung, Abstimmung, Teams in der Lobby; Spiele Kategorien-Sprint, Wer bin ich?, Verboten!. Kataloge (freigegeben) in `content/wortspiele/`, vom Spieleserver geladen. Kein freier Chat.
 
 Kleinere Punkte zu vorhandenen Spielen (Go-Fernpartie, SGF-Import, Domino-Spinner, lösbare Spiele für Spider/Pyramide) sind umgesetzt; alle 20 Musikstücke sind eingetragen. Offene Aufgaben stehen in den GitHub Issues.
+
+**Turnierseite: Leitung übergeben, Serie zuordnen, Kalenderknöpfe (20.11.2026, #551, #552):**
+- `LeaderTransfer` und `SeriesAttach` sind über den neuen Baustein `LeadershipTools` in `apps/web/src/screens/Tournament.tsx` eingebunden (Anmeldephase vor Ort und online, laufendes Turnier in `LeaderTools`); nur für die Hauptleitung, bei `LOKAL-…` ohne Leitungsübergabe, die Serie wird dort vorgemerkt.
+- Kalenderknöpfe liegen nicht mehr in „Drucken und Export“, sondern als `CalendarButtons` auf der Turnierseite für alle; sichtbar nur bei feststehenden Zeiten (`hasCalendarTimes` in `apps/web/src/lib/calendar.ts`). Vor Ort zählen Phasenfristen nicht als Termin, „Meine Partien“ erscheint nur mit eigener Kennung (sonst ausgeblendet statt ausgegraut).
+- Tests: `tests/calendar.test.ts`, `tests/turnier-einbindung.test.ts`.
