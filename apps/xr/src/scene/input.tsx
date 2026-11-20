@@ -179,8 +179,8 @@ function CalcInput({ spec, onMove }: { spec: Extract<InputSpec, { kind: 'calc' }
 }
 
 function SymbolsInput({ spec, onMove }: { spec: Extract<InputSpec, { kind: 'symbols' }>; onMove: (move: unknown) => void }) {
-  const card = (labels: string[], x: number, title: string, press?: (i: number) => void) => (
-    <group position={[x, 0, 0]}>
+  const card = (key: string, labels: string[], x: number, title: string, press?: (i: number) => void) => (
+    <group key={key} position={[x, 0, 0]}>
       <Sign lines={[title]} position={[0, 0.12, 0]} width={0.22} height={0.03} />
       {labels.map((label, i) => (
         <Button3D key={i} label={label} position={[((i % 3) - 1) * 0.07, 0.07 - Math.floor(i / 3) * 0.055, 0]} width={0.065} height={0.05} onPress={press ? () => press(i) : undefined} disabled={!press} />
@@ -190,8 +190,8 @@ function SymbolsInput({ spec, onMove }: { spec: Extract<InputSpec, { kind: 'symb
   const count = spec.targets.length + 1;
   return (
     <>
-      {card(spec.center, -((count - 1) / 2) * 0.25, 'Mitte')}
-      {spec.targets.map((t, k) => card(t.symbols.map((s) => s.label), (k + 1 - (count - 1) / 2) * 0.25, t.name, (i) => onMove(t.symbols[i]!.move)))}
+      {card('mitte', spec.center, -((count - 1) / 2) * 0.25, 'Mitte')}
+      {spec.targets.map((t, k) => card(`platz-${t.seat}`, t.symbols.map((s) => s.label), (k + 1 - (count - 1) / 2) * 0.25, t.name, (i) => onMove(t.symbols[i]!.move)))}
     </>
   );
 }

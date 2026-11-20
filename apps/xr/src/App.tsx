@@ -10,6 +10,7 @@ import { createXRStore } from '@react-three/xr';
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { GAME_CHOICES, LEVEL_TEXT, gameName } from './catalog';
 import { createRoom, loadProfile, saveProfile, sendMove, serverUrl, useRoom } from './net';
+import { listedMoveIndexes } from './scene/input-spec';
 import { Scene } from './scene/Scene';
 import type { VoiceControls } from './scene/Panel';
 import { placeOf, play, soundsFor, unlockAudio } from './sound';
@@ -351,7 +352,7 @@ export function App() {
               <>
                 <p role="status">Du bist am Zug.</p>
                 <ul className="xr-moves" aria-label="Deine Züge">
-                  {game.legalMoves.map((_, i) => (
+                  {listedMoveIndexes(game).map((i) => (
                     <li key={i}>
                       <button type="button" onClick={() => onMove(i)}>
                         {game.moveLabels?.[i] ?? JSON.stringify(game.legalMoves[i])}

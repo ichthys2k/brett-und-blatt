@@ -147,3 +147,16 @@ export function stepPalm(state: PalmState, dot: number | null, now: number, opti
   }
   return true;
 }
+
+/** Ein Druck, der kürzer als dies dauert und sich kaum bewegt, ist ein Antippen, kein Greifen (#585). */
+export const TAP_MAX_MS = 500;
+export const TAP_MAX_TRAVEL = 0.025;
+
+/**
+ * Antippen oder Greifen? Beim Druck auf eine greifbare Figur oder Karte beginnt das Greifen sofort
+ * (die Figur verschwindet vom Brett und eine Auffangfläche erscheint); ein `click` auf die Figur kann
+ * dann nicht mehr eintreffen. Ein kurzer Druck ohne nennenswerte Bewegung gilt deshalb als Antippen.
+ */
+export function isTap(elapsedMs: number, travel: number): boolean {
+  return elapsedMs <= TAP_MAX_MS && travel <= TAP_MAX_TRAVEL;
+}

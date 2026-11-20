@@ -229,6 +229,7 @@ export function CheckersBoard({ game, onMove }: BoardProps) {
     size: BOARD,
     radius: cell * 0.7,
     targets: (from) => [...new Set(moves.filter((m) => m.from === from).map((m) => m.to))].map((to) => ({ id: to, x: at(to)[0], z: at(to)[1] })),
+    onTap: (from) => setSelected(from === selected ? null : from),
     onDrop: (from, to) => {
       if (to === null) return;
       const options = movesFor(moves, (m) => m.from, (m) => m.to, from, to);
@@ -373,6 +374,11 @@ export function MillBoard({ game, onMove }: BoardProps) {
     radius: 0.03,
     targets: (source) =>
       [...new Set(moves.filter((m) => (source === HAND ? m.type === 'place' : m.type === 'move' && m.from === source)).map((m) => m.to))].map((point) => ({ id: point, x: millPoint(point)[0], z: millPoint(point)[1] })),
+    onTap: (source) => {
+      if (source === HAND) return;
+      setTo(null);
+      setFrom(source === from ? null : source);
+    },
     onDrop: (source, point) => {
       if (point === null) return;
       const options = moves.filter((m) => m.to === point && (source === HAND ? m.type === 'place' : m.type === 'move' && m.from === source));

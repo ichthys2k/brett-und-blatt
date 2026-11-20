@@ -19,3 +19,10 @@ export const ROLL_MS = 650;
 export function rollProgress(ageMs: number): number {
   return Math.max(0, 1 - ageMs / ROLL_MS);
 }
+
+/** Würfelblock: Würfel i liegt bei x = (i - 2) * KNIFFEL_DIE_STEP, jeder ist etwa 0,07 breit (#585). */
+export const KNIFFEL_DIE_STEP = 0.08;
+export const KNIFFEL_DIE_WIDTH = 0.07;
+/** Würfeln-Knopf (Mitte, Breite): rechts neben dem fünften Würfel, damit er keinen Würfel überdeckt (#585). */
+export const KNIFFEL_ROLL_BUTTON: [number, number, number] = [0.38, 0.07, 0.0];
+export const KNIFFEL_ROLL_BUTTON_WIDTH = 0.24;

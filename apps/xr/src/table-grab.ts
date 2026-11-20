@@ -39,6 +39,20 @@ export function pinchScale(scaleStart: number, d0: number, d: number): number {
   return Math.max(SCALE_LIMITS.min, Math.min(SCALE_LIMITS.max, Math.round(scaleStart * (d / d0) * 100) / 100));
 }
 
+export type GrabMode = 'none' | 'move' | 'scale';
+
+/**
+ * Nächster Zustand des Tischgriffs bei `hands` Händen in der Greifzone (#585). Greift die zweite
+ * Hand erst später zu, wechselt ein laufendes Verschieben auf Drehen/Skalieren (vorher blieb es beim
+ * Verschieben, bis man beide Hände losließ). Aus dem Zweihandgriff geht es erst bei weniger als zwei
+ * Händen heraus.
+ */
+export function nextGrabMode(mode: GrabMode, hands: number): GrabMode {
+  if (mode === 'scale') return hands >= 2 ? 'scale' : 'none';
+  if (hands >= 2) return 'scale';
+  return hands === 1 ? 'move' : 'none';
+}
+
 /** Läuft gerade ein Tischgriff? Dann zeigt die Griff-Taste nicht (`PoseSender`). */
 export const tableGrab = { active: false };
 

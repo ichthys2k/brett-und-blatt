@@ -123,6 +123,7 @@ export function DominoBoard({ game, onMove }: BoardProps) {
     size: 0.9,
     radius: 0.4,
     targets: () => [{ id: 'kette', x: 0, z: 0 }],
+    onTap: (stone) => press(stone),
     onDrop: (stone, to) => {
       if (to !== null) press(stone);
     },
@@ -417,6 +418,7 @@ export function GrafschaftBoard({ game, onMove }: BoardProps) {
     size: 0.7,
     radius: d * 0.9,
     targets: (index) => moves.filter((x) => x.m.marketIndex === index).map((x) => ({ id: `${x.m.q},${x.m.r}`, x: hexAt(x.m.q, x.m.r)[0], z: hexAt(x.m.q, x.m.r)[1] })),
+    onTap: (index) => setMarket(market === index ? null : index),
     onDrop: (index, to) => {
       const hit = moves.find((x) => x.m.marketIndex === index && `${x.m.q},${x.m.r}` === to);
       if (hit) {

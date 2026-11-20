@@ -6,6 +6,7 @@
  * - Ende: Nochmal oder zurück in die Lobby;
  * - immer: Tisch höher/tiefer, näher/weiter.
  */
+import { REACTION_BAR } from './fan-layout';
 import { PHRASES, REACTIONS, type ClientMessage, type GameMessage, type LobbySeat, type RoomMessage } from '@brett-und-blatt/online';
 import { useEffect, useState } from 'react';
 import { GAME_CHOICES, LEVEL_TEXT, PHRASE_TEXT, gameName, isBoardGame } from '../catalog';
@@ -352,9 +353,9 @@ export function Panel({ room, game, you, send, boardMoves, onMove, adjust, place
 export function ReactionBar({ send }: { send: (m: ClientMessage) => void }) {
   const choices = REACTIONS.slice(0, 6);
   return (
-    <group position={[TABLE_CENTER[0], TABLE_CENTER[1] + 0.05, TABLE_CENTER[2] + 0.5]} rotation={[-Math.PI / 3, 0, 0]}>
+    <group position={[TABLE_CENTER[0], TABLE_CENTER[1] + REACTION_BAR.y, TABLE_CENTER[2] + REACTION_BAR.z]} rotation={[-REACTION_BAR.tilt, 0, 0]}>
       {choices.map((emoji, i) => (
-        <Button3D key={emoji} label={emoji} position={[(i - (choices.length - 1) / 2) * 0.055, 0, 0]} width={0.048} height={0.048} onPress={() => send({ type: 'react', emoji })} />
+        <Button3D key={emoji} label={emoji} position={[(i - (choices.length - 1) / 2) * 0.055, 0, 0]} width={REACTION_BAR.height} height={REACTION_BAR.height} onPress={() => send({ type: 'react', emoji })} />
       ))}
     </group>
   );

@@ -74,7 +74,7 @@ export function applyMove(state: engine.FourChessState, actor: Actor, move: Four
   if (!engine.applyAction(next, move)) throw new Error('Dieser Zug ist nicht erlaubt.');
   const events: GameEvent[] =
     move.t === 'm'
-      ? [{ type: 'moved', from: move.f, to: move.to, color: move.p, captured: victim && !victim.d ? victim.t : null }]
+      ? [{ type: 'moved', seat: actor, from: move.f, to: move.to, color: move.p, captured: victim && !victim.d ? victim.t : null }]
       : [{ type: 'claimed', color: move.p }];
   if (next.result) events.push({ type: 'over', winners: next.result.winners });
   return { state: next, events };

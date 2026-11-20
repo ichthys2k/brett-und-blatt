@@ -51,3 +51,20 @@ export function isThrow(samples: Sample[], center: [number, number], minSpeed = 
   if (length < 1e-6) return true;
   return (vx * tx + vz * tz) / (speed * length) >= minCosine;
 }
+
+/**
+ * Reaktionsleiste an der eigenen Tischkante (#585): Abstand zur Tischmitte (z) und Höhe über der
+ * Tischplatte. Bei elf bis sechzehn Handkarten (zwei Reihen) reicht die untere Reihe bis z = 0,49;
+ * die Leiste liegt dahinter (näher am Spieler), damit sie keine Karte überdeckt.
+ */
+export const REACTION_BAR = { z: 0.56, y: 0.03, height: 0.048, tilt: Math.PI / 3 };
+
+/** Lage der unteren Fächerreihe (Mitte und halbe Ausdehnung) relativ zur Tischmitte: z und Höhe über der Tischplatte. */
+export function fanRowExtent(row: 0 | 1, fanZ: number, fanY: number, cardH = 0.096, cardTilt = 0.55): { zMin: number; zMax: number; yMin: number; yMax: number } {
+  const slot = fanSlot(row === 1 ? 11 : 0, 12);
+  const cz = fanZ + slot.dz;
+  const cy = fanY + slot.dy;
+  const dz = (cardH / 2) * Math.sin(cardTilt);
+  const dy = (cardH / 2) * Math.cos(cardTilt);
+  return { zMin: cz - dz, zMax: cz + dz, yMin: cy - dy, yMax: cy + dy };
+}

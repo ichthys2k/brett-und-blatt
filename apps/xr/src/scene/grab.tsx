@@ -8,7 +8,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Group } from 'three';
 import { pulse } from '../haptics';
 import { presence } from '../presence';
-import { handRadius, isOwnerEnd, pickReleaseSnap, pushSample, smoothPoint, stickySnap, type PoseSample } from '../hand-assist';
+import { handRadius, isOwnerEnd, isTap, pickReleaseSnap, pushSample, smoothPoint, stickySnap, type PoseSample } from '../hand-assist';
 import { onPressEnd } from '../press-tracking';
 
 /** Das Zeigerereignis, das das Greifen auslöst; nur `pointerId` wird gebraucht (Zuordnung des Zeigers). */
@@ -79,6 +79,11 @@ interface GrabOptions<I> {
   floorCenter?: [number, number];
   /** Was Mitspieler sehen (#385): `card` = nur eine Kartenrückseite, sonst eine offene Figur. */
   heldKind?: 'card' | 'piece';
+  /**
+   * Kurzer Druck ohne Bewegung (#585): Antippen statt Greifen. Dasselbe wie der `onClick` der Figur,
+   * der nach dem Beginn des Greifens nicht mehr eintrifft. Ohne `onTap` zählt Loslassen im Leeren.
+   */
+  onTap?: (id: I) => void;
   /** Bei jeder Bewegung der gegriffenen Figur (z. B. zum Erkennen des Schüttelns). */
   onTrack?: (x: number, z: number) => void;
 }
@@ -104,6 +109,9 @@ export function useGrab<I extends string | number>(options: GrabOptions<I>): { h
   const smooth = useRef<[number, number] | null>(null);
   const history = useRef<PoseSample[]>([]);
   const beganAt = useRef(0);
+  /** Erster Messpunkt und größte Entfernung davon seit dem Beginn (zum Erkennen des Antippens). */
+  const firstPoint = useRef<[number, number] | null>(null);
+  const travel = useRef(0);
 
   const begin = (id: I, x: number, z: number, event?: GrabEvent) => {
     pulse('select');
@@ -112,6 +120,8 @@ export function useGrab<I extends string | number>(options: GrabOptions<I>): { h
     snapId.current = null;
     smooth.current = null;
     history.current = [];
+    firstPoint.current = null;
+    travel.current = 0;
     beganAt.current = performance.now();
     setHeld({ id, x, z, snap: null });
   };
@@ -120,6 +130,8 @@ export function useGrab<I extends string | number>(options: GrabOptions<I>): { h
     if (!h) return;
     hand.current = isHand;
     latest.current.onTrack?.(rawX, rawZ);
+    if (!firstPoint.current) firstPoint.current = [rawX, rawZ];
+    travel.current = Math.max(travel.current, Math.hypot(rawX - firstPoint.current[0], rawZ - firstPoint.current[1]));
     let x = rawX;
     let z = rawZ;
     if (isHand) {
@@ -146,6 +158,10 @@ export function useGrab<I extends string | number>(options: GrabOptions<I>): { h
     setHeld(null);
     owner.current = null;
     if (!drop) return;
+    if (latest.current.onTap && isTap(performance.now() - beganAt.current, travel.current)) {
+      latest.current.onTap(h.id);
+      return;
+    }
     // Mit der Hand springt der Strahl beim Öffnen der Finger: es zählt die Lage kurz davor.
     const to = hand.current ? pickReleaseSnap(history.current, performance.now(), HAND_RELEASE_LOOKBACK_MS) : (h.snap?.id ?? null);
     latest.current.onDrop(h.id, to);
@@ -197,6 +213,8 @@ export function useGrab<I extends string | number>(options: GrabOptions<I>): { h
           e.stopPropagation();
           release(true);
         }}
+        // Kein Durchklicken auf Felder und Ziele unter der Fläche: Das Antippen meldet `onTap`.
+        onClick={(e) => e.stopPropagation()}
         onPointerOut={(e) => {
           // Mit Hand oder Controller bricht ein verlassener Strahl das Greifen nicht ab; die Figur bleibt
           // an der letzten Stelle, bis losgelassen wird. Nur die Maus verlässt die Fläche wirklich.
