@@ -12,6 +12,7 @@ export const meta: GameInfo = {
   // Am selben Gerät reicht der Becher: Den Wurf sieht man nur, solange man ihn gedrückt hält.
   privateViews: false,
   ruleVersion: 1,
+  ratedAfter: { ms: 20_000, moves: 3 },
   howToPlay: [
     'Würfle verdeckt, schau heimlich unter den Becher und sag einen Wert an, der höher ist als die vorige Ansage. Lügen ist erlaubt.',
     'Der höhere Würfel zählt als Zehner: 4 und 2 ist 42. Pasche schlagen alle normalen Würfe, das Mäxle (2 und 1) schlägt alles.',

@@ -436,3 +436,29 @@
 .bub-menu-edit-panel { position: fixed; right: 12px; top: 12px; z-index: 50; display: flex; flex-direction: column; gap: 6px; width: 400px; max-width: calc(100vw - 24px); padding: 10px 12px; background: #140d07ee; border: 1px solid #f2d27a; border-radius: 8px; color: #f6e7c1; font: 12px/1.4 system-ui; }
 .bub-menu-edit-panel pre { margin: 0; padding: 6px; max-height: 180px; overflow: auto; background: #000a; font: 11px/1.4 monospace; white-space: pre; }
 .bub-menu-edit-panel button { margin-right: 6px; padding: 4px 10px; cursor: pointer; }
+
+/* Helle Variante der Seiten im Rahmen (#565, nur mit `adaptive`): bei hellem Farbschema und im Aussehen „Schlicht“
+   gelten die Farben der Oberfläche; Rahmen und Titel verlieren das Gold, die Szene entfällt. */
+.bub-tav[data-bright] { background: var(--color-bg); color: var(--color-ink); }
+.bub-tav[data-bright] .bub-menu-logo { color: var(--color-ink); text-shadow: none; }
+.bub-tav[data-bright] .bub-menu-logo small { color: var(--color-muted); }
+.bub-tav[data-bright] .bub-tav-back { border-color: var(--color-line); background: var(--color-surface); color: var(--color-ink); }
+.bub-tav[data-bright] .bub-tav-back:hover, .bub-tav[data-bright] .bub-tav-back:focus-visible { border-color: var(--color-accent); }
+.bub-tav[data-bright] .bub-tav-frame {
+  --color-bg: inherit;
+  --color-surface: inherit;
+  --color-surface-2: inherit;
+  --color-ink: inherit;
+  --color-muted: inherit;
+  --color-line: inherit;
+  --color-accent: inherit;
+  --color-accent-ink: inherit;
+  --color-warning: inherit;
+  --color-danger: inherit;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  box-shadow: 0 2px 12px rgb(0 0 0 / 0.08);
+}
+html[data-look='tavern'] .bub-tav[data-bright] .bub-tav-frame { border: 3px solid var(--tavern-wood); }
+.bub-tav[data-bright] .bub-tav-frame::before, .bub-tav[data-bright] .bub-tav-frame::after { display: none; }
+html[data-look='tavern'] .bub-tav[data-bright] .bub-tav-frame::before, html[data-look='tavern'] .bub-tav[data-bright] .bub-tav-frame::after { display: block; }

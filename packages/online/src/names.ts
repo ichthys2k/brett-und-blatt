@@ -1,5 +1,5 @@
 import { BLOCKED_WORD_PARTS, cleanCrest, parseCrest, simplifyForFilter } from '@brett-und-blatt/engine';
-import { AVATARS } from './protocol';
+import { AVATARS, frameField } from './protocol';
 
 export const MAX_NAME_LENGTH = 16;
 
@@ -38,4 +38,11 @@ export function setCrest(member: { crest?: string }, raw: unknown): void {
   const field = crestField(raw);
   if (field.crest) member.crest = field.crest;
   else delete member.crest;
+}
+
+/** Setzt oder löscht den Rahmen eines Mitglieds (fehlt er in der Nachricht, gilt kein Rahmen). */
+export function setFrame(member: { frame?: string }, raw: unknown): void {
+  const field = frameField(raw);
+  if (field.frame) member.frame = field.frame;
+  else delete member.frame;
 }

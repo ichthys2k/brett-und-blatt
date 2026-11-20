@@ -34,6 +34,7 @@ export type TournamentClientMessage =
   | { type: 'removeEntrant'; player: string }
   | { type: 'enterResult'; match: string; score?: [number, number]; winner?: MatchSide | 'draw' }
   | { type: 'setFields'; count: number }
+  | { type: 'setSpectators'; on: boolean }
   // Stufe 2: Helfer
   | { type: 'addHelper'; name: string; role: 'helper' | 'coleader' }
   | { type: 'removeHelper'; helper: string }
@@ -158,6 +159,8 @@ export function parseTournamentMessage(raw: string, push: ParsePushOptions = {})
       return typeof m.on === 'boolean' ? { type: 'keepLong', on: m.on } : null;
     case 'setReferees':
       return typeof m.on === 'boolean' ? { type: 'setReferees', on: m.on } : null;
+    case 'setSpectators':
+      return typeof m.on === 'boolean' ? { type: 'setSpectators', on: m.on } : null;
     case 'setFields':
       return Number.isInteger(m.count) && (m.count as number) >= 0 && (m.count as number) <= TOURNAMENT_MAX_FIELDS ? { type: 'setFields', count: m.count as number } : null;
     default:

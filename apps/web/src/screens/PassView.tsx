@@ -21,7 +21,7 @@ export function PassView({ passKey }: { passKey: string }) {
   }, [passKey]);
 
   return (
-    <TavernPage title="Spielerpass" subtitle="Von jemandem geteilt – ein Schnappschuss.">
+    <TavernPage adaptive title="Spielerpass" subtitle="Von jemandem geteilt – ein Schnappschuss.">
       {state === 'loading' && <p className="text-muted">Lade …</p>}
       {state === 'missing' && <p role="alert">Diesen Pass gibt es nicht (mehr). Vielleicht wurde das Teilen beendet.</p>}
       {state === 'error' && <p role="alert">Der Pass konnte nicht geöffnet werden. Ist der Link vollständig?</p>}

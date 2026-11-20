@@ -122,7 +122,7 @@ export function PassScreen() {
   const nameOf = (id: string) => findGame(id)?.name ?? id;
 
   return (
-    <TavernPage title={t('pass.page')} subtitle="Name, Wappen, Chronik, Abzeichen und Sicherung.">
+    <TavernPage adaptive title={t('pass.page')} subtitle="Name, Wappen, Chronik, Abzeichen und Sicherung.">
       {editing || !profile ? (
         <Section title={t('online.profile')}>
           <ProfileForm

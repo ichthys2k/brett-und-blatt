@@ -91,7 +91,7 @@ export function NotetypeEditor({ collection, media, onChange, onClose }: { colle
           }}
         >
           <input className={FIELD} value={newField} onChange={(e) => setNewField(e.target.value)} placeholder="Neues Feld" aria-label="Name des neuen Feldes" maxLength={100} />
-          <Button type="submit" disabled={!newField.trim()}>
+          <Button type="submit" aria-label="Feld hinzufügen" disabled={!newField.trim()}>
             ➕
           </Button>
         </form>
@@ -100,9 +100,9 @@ export function NotetypeEditor({ collection, media, onChange, onClose }: { colle
       <fieldset className="space-y-2">
         <legend className="font-semibold">{nt.type === 1 ? 'Vorlage (Lückentext)' : 'Karten (Vorlagen)'}</legend>
         {nt.type !== 1 && (
-          <div className="flex flex-wrap gap-2" role="tablist" aria-label="Vorlagen">
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Vorlagen">
             {nt.tmpls.map((t, i) => (
-              <button key={i} type="button" role="tab" aria-selected={i === ord} className="min-h-11 rounded-xl border border-line px-3 text-sm aria-selected:border-[3px] aria-selected:font-semibold" onClick={() => setTmplOrd(i)}>
+              <button key={i} type="button" aria-pressed={i === ord} className="min-h-11 rounded-xl border border-line px-3 text-sm aria-pressed:border-[3px] aria-pressed:font-semibold" onClick={() => setTmplOrd(i)}>
                 {t.name}
               </button>
             ))}
@@ -141,7 +141,7 @@ export function NotetypeEditor({ collection, media, onChange, onClose }: { colle
         <textarea key={`${nt.id}-css`} className={AREA} defaultValue={nt.css} onChange={(e) => onChange(updateNotetypeCss(collection, nt.id, e.target.value))} />
       </label>
 
-      <div className="space-y-2" aria-label="Vorschau">
+      <div className="space-y-2" role="group" aria-label="Vorschau">
         <h3 className="text-lg">Vorschau</h3>
         <CardPreview collection={collection} note={sample} ord={nt.type === 1 ? 0 : ord} media={media} label={sample.id === 1 && sample.guid === 'vorschau' ? 'mit Beispielwerten' : 'mit der ersten Notiz dieses Typs'} />
       </div>

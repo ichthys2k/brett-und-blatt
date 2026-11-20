@@ -15,6 +15,7 @@ export const meta: GameInfo = {
   hiddenInformation: false,
   takeBack: true,
   ruleVersion: 1,
+  ratedAfter: { ms: 20_000, moves: 3 },
   howToPlay: [
     'Ihr setzt abwechselnd euer Zeichen (Kreuz oder Kreis) in ein freies Feld.',
     'Wer zuerst drei Zeichen in einer Reihe hat – waagerecht, senkrecht oder diagonal –, gewinnt.',

@@ -44,6 +44,8 @@ Ablauf in [`klaenge-alle-spiele.md`](klaenge-alle-spiele.md), Werkzeuge im priva
 - **Web Push für Turniere und Fernpartien (#242):** Fragen entschieden am 10.11.2026, Schritt-für-Schritt-Fahrplan zur Übergabe an einen anderen Agenten in [`web-push.md`](web-push.md); steht auf `status: Ready` (freigegeben am 10.11.2026), begonnen ist es noch nicht. Die Kalenderdatei (#243) ist fertig.
 - **Turniersoftware (W-058):** Recherche und Gesamtkonzept für Online- und Vor-Ort-Turniere in [`turniersoftware.md`](turniersoftware.md) ([Issue #63](https://github.com/ichthys2k/brett-und-blatt/issues/63)). Stufe 0–2 fertig; Stufe 3 ([Issue #127](https://github.com/ichthys2k/brett-und-blatt/issues/127)): Teil 1 Turnierabend, Teil 2 Spieleabend (#129), Teil 3 Tischrunden und Teil 5 Best of N (#131) fertig, offen nur Teil 4 Teams (Übergabe-Hinweise im Konzept). Danach Stufe 4–6.
 
+- **Maulwurfsgänge (#457, Glied M5):** Wappen (#568), Bot-Porträt „Wühlmaus“ (#567), Klangauswahl und Prüfliste vor dem Freischalten: [`maulwurfsgaenge-freischalten.md`](maulwurfsgaenge-freischalten.md).
+
 ## 7. Zurückgestellt
 
 - **W-024** Discord: zurückgestellt in [Issue #54](https://github.com/ichthys2k/brett-und-blatt/issues/54); [`discord.md`](discord.md). Wichtig: Discord in Deutschland erst ab 16, also nie für Schulklassen.

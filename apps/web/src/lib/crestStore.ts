@@ -1,10 +1,10 @@
 import { DEFAULT_CREST, cleanCrest, parseCrest, serializeCrest, type CrestProgress, type CrestSpec } from '@brett-und-blatt/engine';
 import { useSyncExternalStore } from 'react';
 import { loadBook } from './chronikStore';
-import { totals } from './partiebuch';
+import { games } from './registry';
 import { passSyncSoon, syncPassEntry } from './playerPass';
 import { storage } from './storage';
-import { categoryStamp, stampCount } from './stamps';
+import { buildProgress, crestProgressOf, type Progress } from './unlocks';
 
 /*
  * Das Wappen dieses Passes (Vorhaben #135, Schritt #147): Speicher, Fortschritt fürs Freischalten und ein Haken für die Oberfläche.
@@ -54,19 +54,12 @@ export function useCrest(): CrestSpec {
   return currentCrest();
 }
 
+/** Die Zähler dieses Passes aus dem Freischalt-Baustein (#569), ohne Entwürfe. */
+export function currentCrestStats(): Progress {
+  return buildProgress({ book: loadBook(), knownGameIds: new Set(games.map((game) => game.id)) });
+}
+
 /** Was dieser Pass erreicht hat – daraus ergibt sich, welche Teile frei sind. */
-export async function crestProgress(): Promise<CrestProgress> {
-  const [{ games }, { CATEGORIES }] = await Promise.all([import('./registry'), import('../screens/Home')]);
-  const book = loadBook();
-  const known = new Set(games.map((game) => game.id));
-  const allIds = CATEGORIES.flatMap((category) => category.gameIds.filter((id) => known.has(id)));
-  const sum = totals(book);
-  return {
-    stamps: stampCount(book, allIds),
-    trophies: sum.won,
-    wins: sum.won,
-    played: sum.played,
-    tournamentWins: totals(book, undefined, 'tournament').won,
-    categoriesComplete: CATEGORIES.filter((category) => categoryStamp(book, category.gameIds.filter((id) => known.has(id))).earned).length,
-  };
+export function crestProgress(): CrestProgress {
+  return crestProgressOf(currentCrestStats());
 }

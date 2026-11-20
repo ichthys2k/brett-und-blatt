@@ -1,4 +1,5 @@
 import { cleanCrest } from '@brett-und-blatt/engine';
+import { cleanPinLock, type PinLock } from './passLock';
 
 /*
  * Mehrere Pässe an einem Gerät (Vorhaben #135, Schritt #139).
@@ -28,6 +29,8 @@ export interface PassEntry {
   hasCode: boolean;
   /** Gast: zeichnet nichts auf, seine Daten werden beim Wechsel gelöscht. */
   guest?: boolean;
+  /** Geräte-PIN für den Wechsel in diesen Pass (nur Hash, nur lokal, #559). */
+  lock?: PinLock;
 }
 
 export const PASSES_KEY = 'brett-und-blatt:paesse';
@@ -87,11 +90,12 @@ function sanitizeList(value: unknown): PassEntry[] {
   const seen = new Set<string>();
   const out: PassEntry[] = [];
   for (const item of value) {
-    const { id, name, avatar, hasCode, guest, crest } = (item ?? {}) as Record<string, unknown>;
+    const { id, name, avatar, hasCode, guest, crest, lock } = (item ?? {}) as Record<string, unknown>;
     const cleanedCrest = cleanCrest(crest);
+    const cleanedLock = guest === true ? undefined : cleanPinLock(lock);
     if (typeof id !== 'string' || !/^[0-9a-f]{12}$/.test(id) || seen.has(id)) continue;
     seen.add(id);
-    out.push({ id, name: typeof name === 'string' ? name.slice(0, 40) : '', avatar: typeof avatar === 'string' ? avatar.slice(0, 20) : '', hasCode: hasCode === true, ...(cleanedCrest ? { crest: cleanedCrest } : {}), ...(guest === true ? { guest: true } : {}) });
+    out.push({ id, name: typeof name === 'string' ? name.slice(0, 40) : '', avatar: typeof avatar === 'string' ? avatar.slice(0, 20) : '', hasCode: hasCode === true, ...(cleanedCrest ? { crest: cleanedCrest } : {}), ...(guest === true ? { guest: true } : {}), ...(cleanedLock ? { lock: cleanedLock } : {}) });
   }
   return out.slice(0, MAX_PASSES);
 }
@@ -223,7 +227,22 @@ export function createPassBook(store: Store) {
     return id !== null && list().some((entry) => entry.id === id && entry.guest === true);
   }
 
-  return { list, activeId, activeIsGuest, touch, switchTo, createNew, remove, updateStored };
+  /** Setzt oder entfernt die Geräte-PIN-Sperre eines Passes (Gäste bekommen keine). */
+  function setLock(id: string, lock: PinLock | null): boolean {
+    const entries = list();
+    const entry = entries.find((e) => e.id === id);
+    if (!entry || entry.guest) return false;
+    saveList(
+      entries.map((e) => {
+        if (e.id !== id) return e;
+        const { lock: _old, ...rest } = e;
+        return lock ? { ...rest, lock } : rest;
+      }),
+    );
+    return true;
+  }
+
+  return { list, activeId, activeIsGuest, setLock, touch, switchTo, createNew, remove, updateStored };
 }
 
 // ---------------------------------------------------------------- Browser
