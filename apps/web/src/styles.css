@@ -598,3 +598,9 @@ body {
   font-size: 0.8rem;
   opacity: 0.75;
 }
+/* Am Handy zeigt EmulatorJS Bildschirmtasten; der Tastaturhinweis wäre dort nur Platzverschwendung. */
+@media (pointer: coarse) {
+  .bub-snes-hint {
+    display: none;
+  }
+}

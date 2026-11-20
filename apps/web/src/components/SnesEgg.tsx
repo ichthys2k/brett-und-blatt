@@ -65,7 +65,7 @@ export function SnesEgg() {
         allow="autoplay; gamepad; fullscreen"
         referrerPolicy="no-referrer"
       />
-      <p className="bub-snes-hint">Steuerung: Pfeiltasten, X = A, Z = B, Enter = Start. Am Handy erscheinen Tasten auf dem Bildschirm.</p>
+      <p className="bub-snes-hint">Steuerung: Pfeiltasten, Z = A, X = B, A = X, S = Y, V = Select, Enter = Start.</p>
     </div>
   );
 }
