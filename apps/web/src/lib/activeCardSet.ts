@@ -102,6 +102,11 @@ function cardKey(card: Record<string, unknown>): string {
   return JSON.stringify([card.name, card.cost, card.attack, card.health, keywords, card.price, card.baseChips, card.multiplier, card.values, card.triggers, card.effects, card.targeting, card.house]);
 }
 
+/** Die Hinweise des Parsers (ungültige oder begrenzte Werte) für die Übersicht; reine Anzeige, ohne Wirkung aufs Spiel (#580). */
+function noticesOf(catalog: CustomCardCatalog): string[] {
+  return (catalog.notices ?? []).slice(0, 20);
+}
+
 /**
  * Nur die Karten eines Kartensets, die sich vom offiziellen Satz unterscheiden – so bleibt die Option
  * klein genug für Raum und Spielstand. Ohne Unterschied: null (dann gelten die Standardkarten).
@@ -118,7 +123,7 @@ export function changedCatalog(gameId: string, catalog: CustomCardCatalog | null
     if (!same) changed[id] = card;
   }
   if (Object.keys(changed).length === 0) return null;
-  return { checksum: catalog.checksum, notices: [], combatCards: {}, courtCards: {}, quartettCards: {}, [part]: changed } as CustomCardCatalog;
+  return { checksum: catalog.checksum, notices: noticesOf(catalog), combatCards: {}, courtCards: {}, quartettCards: {}, [part]: changed } as CustomCardCatalog;
 }
 
 /** Das Kartenset eines Pakets; mit Quartettkarten zusätzlich das ganze Set, falls es ein eigenes ist (#270). */
@@ -157,7 +162,7 @@ async function isOwnQuartettSet(set: NonNullable<CustomCardCatalog['quartettSet'
 export async function catalogOptionFor(gameId: string, catalog: CustomCardCatalog | null | undefined): Promise<string | null> {
   if (!catalog || !CARD_SET_GAMES[gameId]) return null;
   if (gameId === 'quartett' && catalog.quartettSet && (await isOwnQuartettSet(catalog.quartettSet))) {
-    return JSON.stringify({ checksum: catalog.checksum, notices: [], combatCards: {}, courtCards: {}, quartettCards: {}, quartettSet: catalog.quartettSet });
+    return JSON.stringify({ checksum: catalog.checksum, notices: noticesOf(catalog), combatCards: {}, courtCards: {}, quartettCards: {}, quartettSet: catalog.quartettSet });
   }
   const changed = changedCatalog(gameId, catalog, await officialCatalogs(gameId));
   return changed ? JSON.stringify(changed) : null;
