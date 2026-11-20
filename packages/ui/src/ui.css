@@ -483,7 +483,7 @@ button.bub-cell:focus-visible {
 
 .bub-game-card-title {
   font-weight: 700;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   text-align: center;
   flex: 1;
   white-space: nowrap;
@@ -1601,6 +1601,51 @@ button.bub-net-point:not(:disabled) {
   --bub-seat-h: 15rem;
   --bub-seat-gap-y: 7.5rem;
   --bub-own-w: 13rem;
+}
+
+/* Kompakte Plätze der Mitspieler (kleine Stufe, 7–8 Plätze): kleineres Zeichen, Punkte als Abzeichen an der Ecke,
+   damit Name und Detailzeile Platz haben und nicht abgeschnitten werden (#548). */
+.bub-seat-ring-seat .bub-chip:not([data-size='card']) {
+  position: relative;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem 0.3rem 0.3rem;
+}
+
+.bub-seat-ring-seat .bub-chip:not([data-size='card']) .bub-ring {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.bub-seat-ring-seat .bub-chip:not([data-size='card']) .bub-chip-score {
+  position: absolute;
+  top: -0.5rem;
+  right: -0.25rem;
+  min-width: 1.4rem;
+  margin: 0;
+  font-size: 0.75rem;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
+}
+
+/* Name und Detailzeile brechen um statt abzuschneiden; das kleine Avatar-Emoji entfällt (das Zeichen im Ring bleibt). */
+.bub-seat-ring-seat .bub-chip:not([data-size='card']) {
+  border-radius: 1.5rem;
+}
+
+.bub-seat-ring-seat .bub-chip:not([data-size='card']) .bub-chip-name,
+.bub-seat-ring-seat .bub-chip:not([data-size='card']) .bub-chip-detail,
+.bub-seat-ring-own .bub-chip:not([data-size='card']) .bub-chip-detail {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: break-word;
+}
+
+.bub-seat-ring-seat .bub-chip:not([data-size='card']) .bub-chip-name {
+  font-size: 0.78rem;
+}
+
+.bub-seat-ring-seat .bub-chip:not([data-size='card']) .bub-chip-name > [aria-hidden='true'] {
+  display: none;
 }
 
 /* Großes Sitzschild der Mitspieler: Schild oben mittig, darunter Name, Detail, Punkte. Der eigene Platz unten behält die Zeile (Schild links). */

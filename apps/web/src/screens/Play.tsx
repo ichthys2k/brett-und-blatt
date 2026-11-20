@@ -489,8 +489,9 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         away={session.isAway(index)}
         winner={result?.kind === 'win' && result.winners.includes(index)}
         clock={session.timed ? session.clock(index) : null}
-        size={sideShield > 0 ? 'card' : 'compact'}
-        shieldSize={sideShield}
+        // Im Sitzring bestimmt dessen Stufe die Größe (#494, #548); nur in der Leiste gilt `sideShield`.
+        size={around ? undefined : sideShield > 0 ? 'card' : 'compact'}
+        shieldSize={around ? undefined : sideShield}
       />
     );
   };
