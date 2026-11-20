@@ -28,6 +28,12 @@ export const STAT_KEYS = [
   'narrenhofWon',
   'dragonWon',
   'jester',
+  // Zähler für die Stufen (#571): nur gewertete Partien (#570)
+  'rated',
+  'ratedGames',
+  'beatMediumGames',
+  'beatHardGames',
+  'humanRated',
 ] as const;
 export type StatKey = (typeof STAT_KEYS)[number];
 
@@ -47,6 +53,31 @@ export interface ProgressInput {
 }
 
 const flag = (value: boolean): number => (value ? 1 : 0);
+const HUMAN_MODES = ['hotseat/', 'online/', 'tournament/'] as const;
+
+/** Zähler aus den gewerteten Partien (`rated`, `ratedWon`) über alle Geräte, für die Stufen. */
+function ratedStats(book: Book): Pick<Progress, 'rated' | 'ratedGames' | 'beatMediumGames' | 'beatHardGames' | 'humanRated'> {
+  const rated = new Set<string>();
+  const beatMedium = new Set<string>();
+  const beatHard = new Set<string>();
+  let total = 0;
+  let human = 0;
+  for (const games of Object.values(book.counts)) {
+    for (const [gameId, buckets] of Object.entries(games)) {
+      for (const [key, counter] of Object.entries(buckets)) {
+        const done = counter.rated ?? counter.played;
+        const won = counter.ratedWon ?? counter.won;
+        total += done;
+        if (done > 0) rated.add(gameId);
+        if (HUMAN_MODES.some((prefix) => key.startsWith(prefix))) human += done;
+        // Der Eimer trägt die stärkste Bot-Stufe am Tisch: Sieg dort gilt gegen diese Stufe.
+        if (key === 'bots/medium' || key === 'bots/hard') if (won > 0) beatMedium.add(gameId);
+        if (key === 'bots/hard' && won > 0) beatHard.add(gameId);
+      }
+    }
+  }
+  return { rated: total, ratedGames: rated.size, beatMediumGames: beatMedium.size, beatHardGames: beatHard.size, humanRated: human };
+}
 
 /** Rechnet die Zähler aus den Quellen aus. */
 export function buildProgress(input: ProgressInput): Progress {
@@ -71,6 +102,7 @@ export function buildProgress(input: ProgressInput): Progress {
     narrenhofWon: flag(totals(book, 'color-sorter').won > 0),
     dragonWon: flag(totals(book, 'drachenspiel').won > 0),
     jester: flag(totals(book, 'color-sorter').played > 0 || Boolean(input.jesterAtelier)),
+    ...ratedStats(book),
   };
 }
 
