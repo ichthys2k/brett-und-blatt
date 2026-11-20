@@ -45,6 +45,7 @@ Ablauf in [`klaenge-alle-spiele.md`](klaenge-alle-spiele.md), Werkzeuge im priva
 - **Turniersoftware (W-058):** Recherche und Gesamtkonzept für Online- und Vor-Ort-Turniere in [`turniersoftware.md`](turniersoftware.md) ([Issue #63](https://github.com/ichthys2k/brett-und-blatt/issues/63)). Stufe 0–2 fertig; Stufe 3 ([Issue #127](https://github.com/ichthys2k/brett-und-blatt/issues/127)): Teil 1 Turnierabend, Teil 2 Spieleabend (#129), Teil 3 Tischrunden und Teil 5 Best of N (#131) fertig, offen nur Teil 4 Teams (Übergabe-Hinweise im Konzept). Danach Stufe 4–6.
 
 - **Maulwurfsgänge (#457, Glied M5):** Wappen (#568), Bot-Porträt „Wühlmaus“ (#567), Klangauswahl und Prüfliste vor dem Freischalten: [`maulwurfsgaenge-freischalten.md`](maulwurfsgaenge-freischalten.md).
+- **Konsolen-Oberfläche (Vorhaben #607, 20.11.2026):** zuschaltbare Darstellung für Controller, Steam Deck und Fernseher (Bibliothek mit Regalen, feste Tasten, Controller-Eignung je Spiel). Plan in [`konsole.md`](konsole.md), Maße und Tasten in [`konsole-styleguide.md`](konsole-styleguide.md), Schritte K0–K11 als Unter-Issues #608–#625 (alle `status: Idee`).
 - **Belohnungen (#324):** Die Schritte 1 bis 8 sind umgesetzt (Konzept und Stand: [`belohnungen.md`](belohnungen.md)). Offen: Rahmenbilder ([Issue #598](https://github.com/ichthys2k/brett-und-blatt/issues/598)) und eine Quelle für den Rahmen im Online-Profil.
 
 ## 7. Zurückgestellt
