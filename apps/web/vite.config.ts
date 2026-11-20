@@ -6,6 +6,7 @@ import { inhaltsbilder } from './inhaltsbilder.ts';
 import { kataloge } from './kataloge.ts';
 import { csp } from './csp.ts';
 import { klaenge } from './klaenge.ts';
+import { snes } from './snes.ts';
 
 /** Kennung dieses Builds (Commit-Kurzform aus der CI, sonst „dev“) und Zeitpunkt – für die Versionsanzeige (#175). */
 const buildId = (process.env.GITHUB_SHA ?? 'dev').slice(0, 7);
@@ -29,6 +30,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     klaenge(),
+    snes(),
     kataloge(),
     inhaltsbilder(),
     VitePWA({
@@ -59,8 +61,10 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest,mp3,json,woff2}'],
         // Musik, Tierstimmen (Drachenspiel, rund 14 MB), Avatar-Ansagen (gut 5 MB) und Enten-Rallye-Ton
         // sind zu groß zum Vorab-Speichern: Sie kommen beim ersten Abspielen in einen eigenen Speicher.
-        globIgnores: ['**/version.json', '**/quartett/bilder/**', '**/gross/**', '**/klaenge/musik/**', '**/klaenge/tiere/**', '**/klaenge/avatare/**', '**/klaenge/duck-rally/**'],
+        globIgnores: ['**/version.json', '**/snes/**', '**/quartett/bilder/**', '**/gross/**', '**/klaenge/musik/**', '**/klaenge/tiere/**', '**/klaenge/avatare/**', '**/klaenge/duck-rally/**'],
         navigateFallback: 'index.html',
+        // Das Easter Egg (#596) liegt als eigene Seite unter snes/ und lädt erst beim Auslösen.
+        navigateFallbackDenylist: [/\/snes\//],
         runtimeCaching: [
           {
             // Quartett-Bilder (#319): je Set beim ersten Spielen laden, dann offline da.

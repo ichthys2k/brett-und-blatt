@@ -70,6 +70,26 @@ jobs:
           node apps/server/scripts/smoke.mjs || { tail -50 wrangler.log; exit 1; }
           node apps/cli/test/partie.mjs || { tail -50 wrangler.log; exit 1; }
 
+      # Easter Egg „Brett & Blatt 16“ (#596): Das ROM kommt mit in die Web-App (snes/spiel.sfc), darum hier bauen.
+      # Der Emulator (EmulatorJS, Snes9x) wird beim Bauen mit festem Prüfwert aus der npm-Registry geladen.
+      - name: SNES-Werkzeugkette aus dem Zwischenspeicher
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/brett-und-blatt-snes
+          key: snes-werkzeuge-${{ hashFiles('apps/snes/werkzeuge/werkzeugkette.sh', 'apps/snes/werkzeuge/emu/emu.c') }}
+
+      - name: SNES-ROM für das Easter Egg bauen
+        run: |
+          apps/snes/werkzeuge/werkzeugkette.sh | sed 's/^export //' >> "$GITHUB_ENV"
+          eval "$(apps/snes/werkzeuge/werkzeugkette.sh)"
+          make -C apps/snes
+
+      - name: Emulator-Zwischenspeicher
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/brett-und-blatt-emulatorjs
+          key: emulatorjs-4.2.3-${{ hashFiles('apps/web/snes.ts') }}
+
       # Adresse des Spieleservers aus der GitHub-Variable GAME_SERVER.
       # Ohne Variable bleibt der Online-Bereich unsichtbar.
       - name: Web-App bauen
@@ -78,6 +98,8 @@ jobs:
           VITE_GAME_SERVER: ${{ vars.GAME_SERVER }}
           # Schalter für Hinweise aufs Gerät (Web Push, #242): Solange die Variable leer ist, bleibt die Funktion in der Oberfläche unsichtbar.
           VITE_VAPID_PUBLIC_KEY: ${{ vars.VAPID_PUBLIC_KEY }}
+          # In der CI ist ein fehlendes ROM oder ein nicht geladener Emulator ein Fehler (apps/web/snes.ts).
+          SNES_ROM_STRICT: '1'
           # Gesetzt, wenn die Klänge geholt wurden – dann bricht der Build ab, falls eine Datei fehlt.
           KLAENGE_DIR: ${{ env.HAS_KLAENGE == 'true' && format('{0}/klaenge-repo', github.workspace) || '' }}
 

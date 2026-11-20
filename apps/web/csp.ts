@@ -30,7 +30,8 @@ export function csp(): Plugin {
         `connect-src ${connect.join(' ')}`,
         // Bots laufen im Web Worker; der Service Worker kommt aus derselben Quelle.
         "worker-src 'self' blob:",
-        "frame-src 'none'",
+        // Nur das Easter Egg „Brett & Blatt 16“ (#596) bettet eine eigene Seite ein (snes/index.html).
+        "frame-src 'self'",
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self'",
