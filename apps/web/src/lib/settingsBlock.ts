@@ -76,12 +76,21 @@ export function sanitizeItems(value: unknown): Items {
   return out;
 }
 
+/** Zuletzt gesehene Stufe: Die höhere gewinnt (nicht die jüngere), damit ein Gerät mit älterem Stand keinen Aufstieg zurücknimmt. */
+function higherSeen(mine: Item, other: Item): Item {
+  const rank = (item: Item): number => (item.v !== null && /^\d$/.test(item.v) ? Number(item.v) : -1);
+  if (rank(other) !== rank(mine)) return rank(other) > rank(mine) ? other : mine;
+  return other.t > mine.t ? other : mine;
+}
+
 /** Je Eintrag gewinnt die jüngere Änderung; bei Gleichstand der eigene Stand. */
 export function mergeItems(remote: Items, local: Items): Items {
   const out: Items = { ...local };
   for (const [name, item] of Object.entries(remote)) {
     const mine = out[name];
-    if (!mine || item.t > mine.t) out[name] = item;
+    if (!mine) out[name] = item;
+    else if (name === 'stufe-gesehen') out[name] = higherSeen(mine, item);
+    else if (item.t > mine.t) out[name] = item;
   }
   return out;
 }

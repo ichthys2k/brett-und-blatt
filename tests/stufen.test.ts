@@ -18,8 +18,8 @@ const FULL: Record<number, Partial<Progress>> = {
 
 describe('Stufenleiter (#571)', () => {
   it('fünf Stufen mit den Titeln aus dem Konzept', () => {
-    expect(LEVELS.map((level) => level.title)).toEqual(['Gast', 'Stammgast', 'Zunftmitglied', 'Meister', 'Hofrat']);
-    expect(levelOf(zero()).title).toBe('Gast');
+    expect(LEVELS.map((level) => level.title)).toEqual(['Neuling', 'Stammgast', 'Zunftmitglied', 'Meister', 'Hofrat']);
+    expect(levelOf(zero()).title).toBe('Neuling');
   });
 
   it('jede Stufe gilt an der Schwelle und nicht eins darunter (jede Zeile einzeln)', () => {
@@ -43,7 +43,7 @@ describe('Stufenleiter (#571)', () => {
   });
 
   it('Partien allein genügen nicht; eine fehlende Zeile hält die Stufe an', () => {
-    // Nur Partien, sonst nichts: bleibt bei Gast.
+    // Nur Partien, sonst nichts: bleibt beim Neuling.
     expect(levelOf(at({ rated: 5000 })).rank).toBe(0);
     // ohne Sieg gegen „schwer“ gilt auch Stufe 3 nicht
     expect(levelOf(at({ ...FULL[4], beatHardGames: 0 })).rank).toBe(2);

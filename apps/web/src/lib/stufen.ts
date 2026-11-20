@@ -24,7 +24,7 @@ export interface LevelRow {
 }
 
 export interface Level {
-  /** 0 = Gast, 1 bis 4 wie in der Tabelle. */
+  /** 0 = Neuling (nicht „Gast“: das ist der Pass ohne Aufzeichnung), 1 bis 4 wie in der Tabelle. */
   rank: number;
   title: string;
   /** Alle Zeilen müssen erfüllt sein; leer: von Anfang an. */
@@ -49,9 +49,9 @@ const together = (human: number, learn: number): LevelRow => ({
   ],
 });
 
-/** Die Stufenleiter: Gast, Stammgast, Zunftmitglied, Meister, Hofrat. */
+/** Die Stufenleiter: Neuling, Stammgast, Zunftmitglied, Meister, Hofrat. */
 export const LEVELS: readonly Level[] = [
-  { rank: 0, title: 'Gast', rows: [] },
+  { rank: 0, title: 'Neuling', rows: [] },
   { rank: 1, title: 'Stammgast', rows: [games('Partien', 'rated', 10, PARTIEN), games('Verschiedene Spiele', 'ratedGames', 3, SPIELE)] },
   {
     rank: 2,
