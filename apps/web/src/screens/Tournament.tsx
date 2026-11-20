@@ -11,7 +11,7 @@ import { roleList } from '../lib/orgLabels';
 import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
 import { applyOfflineMessage, createOfflineTournament, isOfflineCode, loadOfflineRecord, syncOfflineTournament } from '../lib/offlineTournament';
-import { buildIcs, calendarEvents } from '../lib/calendar';
+import { buildIcs, calendarEvents, hasCalendarTimes } from '../lib/calendar';
 import { PushToggle } from '../components/PushToggle';
 import { createTournament, useTournament, type TournamentState } from '../lib/tournament';
 import { FullscreenButton, Stage, useWakeLock } from './Display';
@@ -452,7 +452,7 @@ export function TournamentScreen({ code, claim, helper, leader }: { code: string
         {header}
         {subtitle}
         {isOfflineCode(code) && <OfflineBar code={code} />}
-        {local ? <LocalSignup view={view} code={code} send={send} /> : <SignupView view={view} code={code} send={send} />}
+        {local ? <LocalSignup view={view} code={code} state={state} send={send} /> : <SignupView view={view} code={code} state={state} send={send} />}
         <OrgRoleNote view={view} />
         {pushToggle}
         {banners}
@@ -502,7 +502,8 @@ export function TournamentScreen({ code, claim, helper, leader }: { code: string
         </>
       )}
       {view.phase === 'running' && pushToggle}
-      {can(capsOf(view), 'tools') && <LeaderTools view={view} code={code} send={send} claim={state.claim} onBoard={() => setBoard(true)} />}
+      {view.phase !== 'finished' && <CalendarButtons view={view} />}
+      {can(capsOf(view), 'tools') && <LeaderTools view={view} code={code} state={state} send={send} claim={state.claim} onBoard={() => setBoard(true)} />}
       {can(capsOf(view), 'print') && <PrintTools view={view} onPrint={setPrinting} />}
       {banners}
     </Page>
@@ -538,7 +539,7 @@ function EntrantForm({ view, send, label }: { view: TournamentView; send: Send; 
 }
 
 /** Einschreibung vor Ort: Die Leitung trägt die Namen ein, Zuschauer sehen die Liste. */
-function LocalSignup({ view, code, send }: { view: TournamentView; code: string; send: Send }) {
+function LocalSignup({ view, code, state, send }: { view: TournamentView; code: string; state: TournamentState; send: Send }) {
   const min = TOURNAMENT_MIN_PLAYERS[view.settings.format];
   const count = view.settings.checkin ? view.players.filter((p) => !p.pair && p.present).length : view.players.filter((p) => !p.pair).length;
   return (
@@ -588,6 +589,7 @@ function LocalSignup({ view, code, send }: { view: TournamentView; code: string;
           <SpectatorLink view={view} code={code} />
           <Helpers view={view} code={code} send={send} />
           <SchedulePanel view={view} send={send} />
+          <LeadershipTools view={view} code={code} state={state} send={send} />
         </Section>
       )}
     </>
@@ -791,6 +793,21 @@ function LeaderTransfer({ code, state, send }: { code: string; state: Tournament
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * Leitung übergeben und Serie zuordnen (#551): nur für die Hauptleitung, nicht für Mitleitung und Helfer.
+ * Ohne Netz (`LOKAL-…`) lässt sich die Leitung nicht übergeben; die Serie wird dort vorgemerkt und beim Abgleich zugeordnet.
+ */
+function LeadershipTools({ view, code, state, send }: { view: TournamentView; code: string; state: TournamentState; send: Send }) {
+  if (!view.isLeader || view.helperRole) return null;
+  const offline = isOfflineCode(code);
+  return (
+    <>
+      {!offline && <LeaderTransfer code={code} state={state} send={send} />}
+      <SeriesAttach view={view} send={send} offline={offline} />
+    </>
   );
 }
 
@@ -1079,7 +1096,7 @@ function Wishes({ view, send }: { view: TournamentView; send: Send }) {
   );
 }
 
-function SignupView({ view, code, send }: { view: TournamentView; code: string; send: Send }) {
+function SignupView({ view, code, state, send }: { view: TournamentView; code: string; state: TournamentState; send: Send }) {
   const teamSize = view.settings.teamSize ?? 1;
   const min = TOURNAMENT_MIN_PLAYERS[view.settings.format] * teamSize;
   const joined = view.players.filter((p) => !p.pair && !p.pending);
@@ -1171,6 +1188,11 @@ function SignupView({ view, code, send }: { view: TournamentView; code: string; 
           🔗 {t('tournament.copy')}
         </Button>
       </Section>
+      {view.isLeader && (
+        <Section title={t('tournament.tools')}>
+          <LeadershipTools view={view} code={code} state={state} send={send} />
+        </Section>
+      )}
     </>
   );
 }
@@ -1891,7 +1913,7 @@ function History({ view }: { view: TournamentView }) {
 // ---------------------------------------------------------------------------
 // Leitung
 
-function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentView; code: string; send: Send; claim: { player: string; code: string } | null; onBoard: () => void }) {
+function LeaderTools({ view, code, state, send, claim, onBoard }: { view: TournamentView; code: string; state: TournamentState; send: Send; claim: { player: string; code: string } | null; onBoard: () => void }) {
   const { label, players } = useLookup(view);
   const [matchId, setMatchId] = useState('');
   const match = view.matches.find((m) => m.id === matchId);
@@ -1907,6 +1929,7 @@ function LeaderTools({ view, code, send, claim, onBoard }: { view: TournamentVie
       {local && !isOfflineCode(code) && <SpectatorLink view={view} code={code} />}
       {local && isOfflineCode(code) && <p className="text-sm text-muted">{t('tournament.offlineNoSpectators')}</p>}
       {!isOfflineCode(code) && <CopyTools view={view} />}
+      <LeadershipTools view={view} code={code} state={state} send={send} />
       {view.phase !== 'signup' && !isOfflineCode(code) && (
         <label className="flex items-start gap-2 text-sm">
           <input type="checkbox" className="mt-0.5 h-4 w-4 accent-accent" checked={view.keepLong} onChange={(e) => send({ type: 'keepLong', on: e.target.checked })} />
@@ -2067,6 +2090,54 @@ function resultText(m: Match): string {
   return o.winner === null ? '–' : o.winner === 0 ? '1:0' : '0:1';
 }
 
+/**
+ * Kalenderdateien (#243, #552): für alle sichtbar, aber nur bei feststehenden Zeiten (Zeitplan; online auch die Phasenfrist, vor Ort nicht).
+ * „Meine Partien“ gibt es nur mit eigener Kennung (online als Teilnehmer); vor Ort ohne eigenen Platz entfällt der Knopf.
+ */
+function CalendarButtons({ view }: { view: TournamentView }) {
+  const { label } = useLookup(view);
+  const names = new Map(view.players.map((p) => [p.id, p.name]));
+  const exportCalendar = (mine: boolean) => {
+    const url = `${location.origin}${location.pathname}${paths.tournament(view.code)}`;
+    const events = calendarEvents(
+      view,
+      {
+        player: (id) => (id ? (names.get(id) ?? label(id)) : t('tournament.nobody')),
+        title: (id) => {
+          const m = view.matches.find((x) => x.id === id);
+          return m ? matchTitle(view, m) : id;
+        },
+        field: (n) => fieldName(view, n),
+        deadline: t('tournament.cal.deadline'),
+      },
+      { mine, url },
+    );
+    const base = view.settings.name.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'turnier';
+    const blob = new Blob([buildIcs(events, { name: view.settings.name, now: Date.now() })], { type: 'text/calendar;charset=utf-8' });
+    const href = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = href;
+    a.download = `${base}-${mine ? 'meine-partien' : 'zeitplan'}.ics`;
+    a.click();
+    URL.revokeObjectURL(href);
+  };
+  const all = hasCalendarTimes(view, false);
+  const mine = hasCalendarTimes(view, true);
+  if (!all) return null;
+  return (
+    <div className={`grid gap-2 ${mine ? 'grid-cols-2' : 'grid-cols-1'}`} data-testid="calendar-buttons">
+      {mine && (
+        <Button className="text-xs" onClick={() => exportCalendar(true)}>
+          📅 {t('tournament.cal.mine')}
+        </Button>
+      )}
+      <Button className="text-xs" onClick={() => exportCalendar(false)}>
+        📅 {t('tournament.cal.all')}
+      </Button>
+    </div>
+  );
+}
+
 function PrintTools({ view, onPrint }: { view: TournamentView; onPrint: (kind: PrintKind) => void }) {
   const download = (name: string, type: string, text: string) => {
     const url = URL.createObjectURL(new Blob([text], { type }));
@@ -2100,27 +2171,6 @@ function PrintTools({ view, onPrint }: { view: TournamentView; onPrint: (kind: P
       ]),
     );
   };
-  // Kalenderdatei (#243): Schnappschuss beim Klick, Zeiten aus Zeitplan oder Phasenfrist.
-  const { label: calendarLabel } = useLookup(view);
-  const exportCalendar = (mine: boolean) => {
-    const url = `${location.origin}${location.pathname}${paths.tournament(view.code)}`;
-    const events = calendarEvents(
-      view,
-      {
-        player: (id) => (id ? (names.get(id) ?? calendarLabel(id)) : t('tournament.nobody')),
-        title: (id) => {
-          const m = view.matches.find((x) => x.id === id);
-          return m ? matchTitle(view, m) : id;
-        },
-        field: (n) => fieldName(view, n),
-        deadline: t('tournament.cal.deadline'),
-      },
-      { mine, url },
-    );
-    download(`${base}-${mine ? 'meine-partien' : 'zeitplan'}.ics`, 'text/calendar;charset=utf-8', buildIcs(events, { name: view.settings.name, now: Date.now() }));
-  };
-  const calendarTimed = (mine: boolean) =>
-    view.matches.some((m) => m.status !== 'done' && (m.plannedAt !== undefined || (view.stages[m.stage]?.deadline ?? 0) > 0) && (!mine || (view.you !== null && m.slots.some((s) => s.player === view.you))));
   const kinds: [PrintKind, string][] = [
     ['plan', `📋 ${t('tournament.print.plan')}`],
     ['sheets', `📝 ${t('tournament.print.sheets')}`],
@@ -2148,16 +2198,6 @@ function PrintTools({ view, onPrint }: { view: TournamentView; onPrint: (kind: P
           ⬇️ JSON
         </Button>
       </div>
-      {(calendarTimed(false) || calendarTimed(true)) && (
-        <div className="grid grid-cols-2 gap-2">
-          <Button className="text-xs" onClick={() => exportCalendar(true)} disabled={!calendarTimed(true)}>
-            📅 {t('tournament.cal.mine')}
-          </Button>
-          <Button className="text-xs" onClick={() => exportCalendar(false)} disabled={!calendarTimed(false)}>
-            📅 {t('tournament.cal.all')}
-          </Button>
-        </div>
-      )}
     </Section>
   );
 }

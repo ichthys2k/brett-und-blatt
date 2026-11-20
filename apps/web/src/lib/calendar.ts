@@ -18,7 +18,7 @@ export interface CalendarEvent {
 /** Die Teile einer Turnieransicht, die die Rechnung braucht (damit Tests keine ganze Sicht bauen müssen). */
 export interface CalendarSource {
   code: string;
-  settings: { name: string };
+  settings: { name: string; /** Vor Ort gibt es keine Phasenfristen, nur den Zeitplan. */ mode?: string };
   /** Eigene Kennung des Geräts im Turnier; `null` als Zuschauer. */
   you: string | null;
   schedule: { matchMinutes: number } | null;
@@ -46,15 +46,30 @@ export interface CalendarLabels {
 const DEADLINE_MINUTES = 30;
 const DEFAULT_MINUTES = 30;
 
-/** Partien mit Uhrzeit: laut Zeitplan, sonst die Frist der Phase (online). Beendete Partien fallen weg. */
+/**
+ * Zeit einer Partie: laut Zeitplan; online sonst die Frist der Phase. Vor Ort ist eine Phasenfrist kein Termin (#552).
+ * `undefined` = keine feststehende Zeit.
+ */
+function matchStart(view: CalendarSource, m: CalendarSource['matches'][number]): number | undefined {
+  if (m.plannedAt !== undefined) return m.plannedAt;
+  if (view.settings.mode === 'local') return undefined;
+  const deadline = view.stages[m.stage]?.deadline;
+  return deadline && deadline > 0 ? deadline : undefined;
+}
+
+/** Gibt es offene Partien mit feststehender Zeit (und bei `mine` mit eigener Beteiligung)? Steuert, ob die Kalenderknöpfe erscheinen. */
+export function hasCalendarTimes(view: CalendarSource, mine: boolean): boolean {
+  return view.matches.some((m) => m.status !== 'done' && matchStart(view, m) !== undefined && (!mine || (view.you !== null && m.slots.some((s) => s.player === view.you))));
+}
+
+/** Partien mit Uhrzeit. Beendete Partien fallen weg. */
 export function calendarEvents(view: CalendarSource, labels: CalendarLabels, opts: { mine: boolean; url?: string }): CalendarEvent[] {
   const events: CalendarEvent[] = [];
   for (const m of view.matches) {
     if (m.status === 'done') continue;
     if (opts.mine && (!view.you || !m.slots.some((s) => s.player === view.you))) continue;
     const planned = m.plannedAt;
-    const deadline = view.stages[m.stage]?.deadline;
-    const start = planned ?? (deadline && deadline > 0 ? deadline : undefined);
+    const start = matchStart(view, m);
     if (start === undefined) continue;
     const minutes = planned !== undefined ? (view.schedule?.matchMinutes ?? DEFAULT_MINUTES) : DEADLINE_MINUTES;
     const [a, b] = m.slots.map((s) => labels.player(s.player)) as [string, string];

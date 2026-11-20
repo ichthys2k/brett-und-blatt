@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { emptyBook, mergeBooks, recordGame, sameBooks, sanitizeBook, stampsEarnedBy, type PlayedGame } from '../apps/web/src/lib/partiebuch';
-import { categoryStamp, stampCount, stampsFor } from '../apps/web/src/lib/stamps';
+import { categoryStamp, stampCount, stampDescription, stampsFor } from '../apps/web/src/lib/stamps';
 
 const game = (id: string, extra: Partial<PlayedGame> = {}): PlayedGame => ({ id, gameId: 'chess', endedAt: 1000, durationMs: 1, mode: 'bots', seats: [], outcome: 'loss', ...extra });
 const earned = (book: ReturnType<typeof emptyBook>, gameId = 'chess') => stampsFor(book, gameId).filter((s) => s.earned).map((s) => s.kind);
@@ -56,5 +56,13 @@ describe('Stempel im Pass (#145)', () => {
   it('bereinigt fremde Stempel', () => {
     const book = sanitizeBook({ stamps: { 'chess/first': 5, 'Böse/Art!': 5, 'chess/win': -1, 'chess/online': 'x', 'go/tournament': 9 } });
     expect(book.stamps).toEqual({ 'chess/first': 5, 'go/tournament': 9 });
+  });
+});
+
+describe('Beschriftung der Stempel (#562)', () => {
+  it('nennt Name und Bedingung, dazu Datum oder „offen“', () => {
+    expect(stampDescription({ kind: 'win-hard', earned: true }, '3. Mai 2026', 'offen')).toBe('Sieg gegen schwer · 3. Mai 2026');
+    expect(stampDescription({ kind: 'win-hard', earned: true }, null, 'offen')).toBe('Sieg gegen schwer');
+    expect(stampDescription({ kind: 'online', earned: false }, null, 'offen')).toBe('Online gespielt · offen');
   });
 });

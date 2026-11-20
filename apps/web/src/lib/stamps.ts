@@ -28,6 +28,11 @@ export const STAMP_LABEL: Readonly<Record<StampKind, string>> = {
   tournament: 'Im Turnier gespielt',
 };
 
+/** Beschriftung eines Stempels für Tastatur und Bildschirmleser (#562): Name und Bedingung, dazu „offen“ oder das Datum. */
+export function stampDescription(stamp: { kind: StampKind; earned: boolean }, dateText: string | null, openText: string): string {
+  return `${STAMP_LABEL[stamp.kind]}${stamp.earned ? (dateText ? ` · ${dateText}` : '') : ` · ${openText}`}`;
+}
+
 export interface Stamp {
   kind: StampKind;
   earned: boolean;

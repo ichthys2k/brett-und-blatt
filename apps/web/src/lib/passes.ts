@@ -212,10 +212,18 @@ export function createPassBook(store: Store) {
    */
   function updateStored(id: string | null, key: string, change: (raw: string | null) => string): void {
     const target = id === null || id === activeId() || !list().some((entry) => entry.id === id) ? key : `${STASH_PREFIX}${id}:${key}`;
+    // Ein Gast zeichnet nichts auf (#558): Schreiben auf den gewohnten Schlüsseln, solange ein Gast aktiv ist, entfällt.
+    if (target === key && activeIsGuest()) return;
     store.set(target, change(store.get(target)));
   }
 
-  return { list, activeId, touch, switchTo, createNew, remove, updateStored };
+  /** Ist der aktive Pass ein Gast? Dann wird nichts aufgezeichnet. */
+  function activeIsGuest(): boolean {
+    const id = activeId();
+    return id !== null && list().some((entry) => entry.id === id && entry.guest === true);
+  }
+
+  return { list, activeId, activeIsGuest, touch, switchTo, createNew, remove, updateStored };
 }
 
 // ---------------------------------------------------------------- Browser

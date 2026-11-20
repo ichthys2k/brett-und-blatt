@@ -86,3 +86,15 @@ describe('Bot-Wertung (#144)', () => {
     expect(DOWN_AT).toBeLessThan(0.5);
   });
 });
+
+describe('Form: deutsche Schreibweise (#564)', () => {
+  it('Komma statt Punkt, Einzahl nur bei genau einem Punkt', async () => {
+    const { formKey, formPointsText } = await import('../apps/web/src/lib/botRating');
+    expect(formPointsText(3.5)).toBe('3,5');
+    expect(formPointsText(2)).toBe('2');
+    expect(formKey(1)).toBe('botrating.form.one');
+    expect(formKey(0.5)).toBe('botrating.form');
+    expect(formKey(0)).toBe('botrating.form');
+    expect(formKey(2)).toBe('botrating.form');
+  });
+});

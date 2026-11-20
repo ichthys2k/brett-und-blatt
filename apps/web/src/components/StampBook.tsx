@@ -8,7 +8,7 @@ import { loadBook } from '../lib/chronikStore';
 import { crestUrl } from '../lib/crest';
 import { totals } from '../lib/partiebuch';
 import { games } from '../lib/registry';
-import { categoryStamp, STAMP_ICON, STAMP_KINDS, STAMP_LABEL, stampCount, stampsFor } from '../lib/stamps';
+import { categoryStamp, STAMP_ICON, stampCount, stampDescription, stampsFor } from '../lib/stamps';
 import { storage } from '../lib/storage';
 import { CATEGORIES } from '../screens/Home';
 
@@ -18,6 +18,8 @@ const date = (at: number | null) => (at ? new Date(at).toLocaleDateString('de-DE
 export function StampBook() {
   const crest = useCrest();
   const [designing, setDesigning] = useState(false);
+  // Welcher Stempel gerade erklärt wird (Fokus, Tippen oder Hover): `<Spiel>/<Art>`.
+  const [shown, setShown] = useState<string | null>(null);
   const book = loadBook();
   const profile = storage.loadProfile();
   const known = new Map(games.map((game) => [game.id, game]));
@@ -66,6 +68,7 @@ export function StampBook() {
               {list.map((game) => {
                 const stamps = stampsFor(book, game.id);
                 const earned = stamps.filter((stamp) => stamp.earned);
+                const shownStamp = stamps.find((stamp) => `${game.id}/${stamp.kind}` === shown);
                 const crest = crestUrl(game.id);
                 return (
                   <li key={game.id} className="flex items-center gap-3 rounded-xl border border-line bg-bg p-2">
@@ -78,23 +81,31 @@ export function StampBook() {
                     )}
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-medium">{game.name}</span>
-                      <span className="mt-1 flex flex-wrap gap-1" aria-hidden="true">
-                        {stamps.map((stamp) => (
-                          <span
-                            key={stamp.kind}
-                            title={`${STAMP_LABEL[stamp.kind]}${stamp.earned ? (stamp.at ? ` · ${date(stamp.at)}` : '') : ' · ' + t('pass.stamps.open')}`}
-                            className={`grid size-7 place-items-center rounded-full border text-sm ${stamp.earned ? 'border-accent bg-accent/15' : 'border-dashed border-line opacity-40 grayscale'}`}
-                          >
-                            {STAMP_ICON[stamp.kind]}
-                          </span>
-                        ))}
+                      <span className="mt-1 flex flex-wrap gap-1">
+                        {stamps.map((stamp) => {
+                          const id = `${game.id}/${stamp.kind}`;
+                          const text = stampDescription(stamp, stamp.at ? date(stamp.at) : null, t('pass.stamps.open'));
+                          return (
+                            <button
+                              key={stamp.kind}
+                              type="button"
+                              title={text}
+                              aria-label={`${game.name}: ${text}`}
+                              aria-pressed={shown === id}
+                              onFocus={() => setShown(id)}
+                              onClick={() => setShown(shown === id ? null : id)}
+                              className={`grid size-7 cursor-help place-items-center rounded-full border text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${stamp.earned ? 'border-accent bg-accent/15' : 'border-dashed border-line opacity-40 grayscale'}`}
+                            >
+                              <span aria-hidden="true">{STAMP_ICON[stamp.kind]}</span>
+                            </button>
+                          );
+                        })}
                       </span>
-                      <span className="sr-only">
-                        {earned.length > 0
-                          ? `${t('pass.stamps.have')}: ${earned.map((stamp) => `${STAMP_LABEL[stamp.kind]}${stamp.at ? ` (${date(stamp.at)})` : ''}`).join(', ')}.`
-                          : t('pass.stamps.none')}{' '}
-                        {t('pass.stamps.open')}: {STAMP_KINDS.filter((kind) => !earned.some((stamp) => stamp.kind === kind)).map((kind) => STAMP_LABEL[kind]).join(', ')}.
-                      </span>
+                      {shownStamp && (
+                        <span className="mt-1 block text-xs text-muted" role="status">
+                          {stampDescription(shownStamp, shownStamp.at ? date(shownStamp.at) : null, t('pass.stamps.open'))}
+                        </span>
+                      )}
                     </span>
                   </li>
                 );

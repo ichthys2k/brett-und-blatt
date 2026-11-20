@@ -92,6 +92,12 @@ export interface GameUi<V = unknown, M = unknown> {
   /** Punktestand eines Platzes, der in der Spielerleiste immer sichtbar bleibt (auch bei laufender Uhr). */
   seatScore?: (view: V, seat: SeatId) => number | string | null;
   /**
+   * Nur für Serienspiele (eine Sitzung = mehrere Runden, z. B. Skat-Serie): Zahl der bereits beendeten Runden.
+   * Endet die Sitzung durch Aufgeben oder Zeitablauf, bevor eine Runde fertig war, zählt sie im Partiebuch nicht
+   * (#560); erst das Ergebnis der ganzen Serie oder einer angefangenen Serie wird erfasst.
+   */
+  seriesRoundsDone?: (view: V) => number;
+  /**
    * Gerade verbergen, wer noch handeln muss? Dann zeigt die Spielerleiste keine Markierung und
    * kein „denkt nach“ – etwa nachts bei geheimen Rollen, wo sich sonst jemand durch Zögern verrät.
    */

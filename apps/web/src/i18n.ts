@@ -643,6 +643,7 @@ const de = {
   'botrating.few': 'noch zu wenige Partien für eine Zahl',
   'botrating.rate': '{p} % Siegquote',
   'botrating.form': 'Form: {points} Punkte aus {games}',
+  'botrating.form.one': 'Form: {points} Punkt aus {games}',
   'botrating.games': '{n} Partien',
   'botrating.empty': 'Noch keine Partie gegen einen Computer-Gegner.',
   'botrating.suggest': 'Vorschläge für die Stufe in der Einrichtung',

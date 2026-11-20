@@ -1,5 +1,6 @@
 import { limit, pin, pinnedList, sanitizeChronik, sanitizeReplay, stashReplay, unpin, type Ablage, type Chronik, type PinResult, type Replay } from './chronik';
 import { sanitizeBook, type Book, type PlayedGame } from './partiebuch';
+import { passBook } from './passes';
 import { passSyncSoon } from './playerPass';
 
 /** Speicher der Chronik im Browser: Block `chronik` und die Ablage der letzten Zuglisten (beides je Pass, `SCOPED_KEYS`). */
@@ -25,8 +26,9 @@ function writeJson(key: string, value: unknown): void {
 export const loadChronik = (): Chronik => sanitizeChronik(readJson(CHRONIK_KEY));
 export const saveChronik = (chronik: Chronik): void => writeJson(CHRONIK_KEY, limit(chronik));
 
-export function loadAblage(): Ablage {
-  const raw = readJson(ABLAGE_KEY);
+export const loadAblage = (): Ablage => parseAblage(readJson(ABLAGE_KEY));
+
+function parseAblage(raw: unknown): Ablage {
   const out: Ablage = {};
   if (raw && typeof raw === 'object') {
     for (const [id, entry] of Object.entries(raw as Record<string, { at?: unknown; replay?: unknown }>)) {
@@ -38,8 +40,19 @@ export function loadAblage(): Ablage {
 }
 
 /** Wird beim Partieende gerufen: merkt die Zugliste, damit man die Partie später anheften kann. */
-export function rememberReplay(id: string, replay: Replay): void {
-  writeJson(ABLAGE_KEY, stashReplay(loadAblage(), id, replay, Date.now()));
+export function rememberReplay(id: string, replay: Replay, passIds: readonly (string | null)[] = [null]): void {
+  // Ein Gast zeichnet nichts auf (#558); sonst bekommt jeder beteiligte Pass die Zugliste in seine Ablage (#561, Hot-Seat).
+  for (const passId of new Set(passIds)) {
+    passBook.updateStored(passId, ABLAGE_KEY, (raw) => {
+      let ablage: Ablage = {};
+      try {
+        ablage = parseAblage(raw ? JSON.parse(raw) : null);
+      } catch {
+        // kaputte Ablage: neu anfangen
+      }
+      return JSON.stringify(stashReplay(ablage, id, replay, Date.now()));
+    });
+  }
 }
 
 export function pinGame(game: PlayedGame): PinResult {

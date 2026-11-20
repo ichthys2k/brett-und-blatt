@@ -169,11 +169,12 @@
   z-index: 2;
 }
 
-/* Siegel für Fallen und Auftrag, links oben am Porträt */
+/* Siegel für Fallen und Auftrag, links oben im Porträt: bündig mit dessen linker Kante, nie nach außen
+   über die Heldenfläche hinaus (sonst liegen sie unter der Leiste links bzw. am Bildschirmrand, #555). */
 .ds-held-seals {
   position: absolute;
-  left: calc(var(--ds-held) * -0.22);
-  top: calc(var(--ds-held) * 0.06);
+  left: 0;
+  top: calc(var(--ds-held) * 0.1);
   display: flex;
   flex-direction: column;
   align-items: flex-start;

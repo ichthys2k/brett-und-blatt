@@ -260,8 +260,11 @@
 
 /* Querformat und Desktop (#472): Der eigene Held steht links unten auf Höhe der Hand, Stapel und
    „Zug beenden“ rechts – keine eigene Zeile mehr, die Spielmatte bekommt die Höhe. Der Held wächst mit
-   der Höhe der Arena. Im schmalen Hochformat (bis 560 px) bleibt die Zone über der Hand (S6). */
-@container ds-arena (min-width: 561px) {
+   der Höhe der Arena, aber höchstens mit 16 % ihrer Breite (#554). Die Hand lässt links genau so viel
+   Platz, wie der Held samt Medaillon, Rüstung und Wimpel braucht (Faktor 2,05 des Porträts, gemessen).
+   Im schmalen Hochformat (bis 560 px) und auf Tablets im Hochformat (561 bis 899 px breit, #554) steht
+   die Zone dagegen über der Hand (S6, weiter unten): Dort fehlt neben dem Helden der Platz für fünf Karten. */
+@container ds-arena (min-width: 900px) or ((min-width: 561px) and (max-height: 470px)) {
   .ds-arena .ds-player-zone.ds-player-zone {
     position: absolute;
     left: 4px;
@@ -285,13 +288,66 @@
   }
 
   .ds-arena .ds-player-zone > .ds-held {
-    --ds-held: clamp(108px, 27cqh, 300px);
+    --ds-held: clamp(108px, min(27cqh, 16cqw), 300px);
   }
 
   /* Die Hand lässt links Platz für den Helden und rechts für Stapel und „Zug beenden“. */
   .ds-arena .ds-hand {
-    padding-left: max(calc(clamp(108px, 27cqh, 300px) * 1.45 + 12px), 200px);
+    padding-left: calc(clamp(108px, min(27cqh, 16cqw), 300px) * 2.05 + 12px);
     padding-right: 330px;
+  }
+}
+
+/* Handy quer (#554): kleines Porträt, die Knappenleiste unter dem Namensband statt daneben – so bleibt
+   der Held schmal und die Handkarten daneben frei. */
+@container ds-arena (min-width: 561px) and (max-height: 470px) {
+  .ds-arena .ds-player-zone > .ds-held {
+    --ds-held: clamp(52px, 17cqh, 68px);
+  }
+
+  .ds-arena .ds-player-zone > .ds-hero-card.ds-held {
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .ds-arena .ds-player-zone .ds-held-mana {
+    padding: 1px 6px;
+  }
+
+  .ds-arena .ds-hand {
+    padding-left: calc(clamp(52px, 17cqh, 68px) * 2.05 + 12px);
+    padding-right: 250px;
+  }
+}
+
+/* Tablet im Hochformat (#554): Der Held steht links über der Hand (Hand liegt unten, Kartenhöhe plus
+   Rand darunter), Stapel und „Zug beenden“ rechts daneben; der Held ist größer als am Handy, deckt
+   aber keine Handkarte zu. */
+@container ds-arena (min-width: 561px) and (max-width: 899px) and (min-height: 471px) {
+  .ds-arena .ds-player-zone.ds-player-zone {
+    position: absolute;
+    left: 4px;
+    right: clamp(4px, 1.5%, 24px);
+    bottom: calc(var(--ds-card-h) + 18px);
+    z-index: 4;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0;
+    pointer-events: none;
+  }
+
+  .ds-arena .ds-player-zone > * {
+    pointer-events: auto;
+  }
+
+  .ds-arena .ds-player-zone .ds-held-row {
+    grid-template-columns: auto auto auto;
+  }
+
+  .ds-arena .ds-player-zone > .ds-held {
+    --ds-held: clamp(84px, 11cqh, 120px);
   }
 }
 

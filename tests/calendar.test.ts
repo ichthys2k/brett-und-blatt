@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildIcs, calendarEvents, icsEscape, icsFold, icsTime, type CalendarLabels, type CalendarSource } from '../apps/web/src/lib/calendar';
+import { buildIcs, calendarEvents, hasCalendarTimes, icsEscape, icsFold, icsTime, type CalendarLabels, type CalendarSource } from '../apps/web/src/lib/calendar';
 
 const START = Date.UTC(2026, 10, 14, 9, 30);
 const labels: CalendarLabels = {
@@ -46,6 +46,22 @@ describe('Kalenderdatei (#243)', () => {
     expect(mine.map((e) => e.uid)).toEqual(['ABC-m1@spiele.lipponer.de', 'ABC-m4@spiele.lipponer.de']);
     expect(mine[1]!.summary).toContain('(Frist)');
     expect(mine[1]!.summary).toContain('offen');
+  });
+
+  it('vor Ort ist eine Phasenfrist kein Termin; ohne Zeitplan keine Knöpfe (#552)', () => {
+    const local = { ...view, settings: { name: 'Abend', mode: 'local' }, matches: view.matches.map(({ plannedAt: _p, ...m }) => m) };
+    expect(calendarEvents(local, labels, { mine: false })).toEqual([]);
+    expect(hasCalendarTimes(local, false)).toBe(false);
+    expect(hasCalendarTimes(local, true)).toBe(false);
+    // mit Zeitplan wieder da
+    expect(hasCalendarTimes({ ...local, matches: view.matches }, false)).toBe(true);
+  });
+
+  it('hasCalendarTimes: „meine“ braucht eigene Kennung und eine offene Partie mit Zeit', () => {
+    expect(hasCalendarTimes(view, true)).toBe(true);
+    expect(hasCalendarTimes({ ...view, you: null }, true)).toBe(false);
+    expect(hasCalendarTimes({ ...view, you: 'p5' }, true)).toBe(false); // nur online mit Phasenfrist, p5 spielt in Phase 0 ohne Frist
+    expect(hasCalendarTimes({ ...view, matches: view.matches.filter((m) => m.id === 'm3') }, false)).toBe(false);
   });
 
   it('„Meine Partien“ ist als Zuschauer leer', () => {

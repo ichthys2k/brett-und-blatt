@@ -12,7 +12,7 @@ import { TavernPage } from '../components/TavernPage';
 import { TrophyCabinet } from '../components/TrophyCabinet';
 import { t } from '../i18n';
 import { pinnedList } from '../lib/chronik';
-import { formOf, levelStats, ratingOf, winRate } from '../lib/botRating';
+import { formKey, formOf, formPointsText, levelStats, ratingOf, winRate } from '../lib/botRating';
 import { hasReplay, loadBook, loadBookRecent, loadChronik, pinGame, unpinGame } from '../lib/chronikStore';
 import { levelLabel } from '../lib/format';
 import type { PlayedGame } from '../lib/partiebuch';
@@ -72,7 +72,7 @@ function BotRating() {
                     .filter((level) => stats[level].played > 0)
                     .map((level) => `${levelLabel(level)}: ${t('botrating.rate', { p: Math.round((winRate(stats[level]) ?? 0) * 100) })} (${stats[level].played})`)
                     .join(' · ')}
-                  {form.games > 0 && ` · ${t('botrating.form', { points: form.points, games: form.games })}`}
+                  {form.games > 0 && ` · ${t(formKey(form.points), { points: formPointsText(form.points), games: form.games })}`}
                 </span>
               </li>
             );

@@ -85,6 +85,16 @@ export function formOf(book: Book, gameId: string, last = 20): Form {
   return { games: recent.length, points: recent.reduce((sum, game) => sum + (game.outcome === 'win' ? 1 : game.outcome === 'draw' ? 0.5 : 0), 0) };
 }
 
+/** Punkte der Form deutsch geschrieben: Komma statt Punkt („3,5“), ganze Zahlen ohne Nachkommastelle. */
+export function formPointsText(points: number): string {
+  return String(points).replace('.', ',');
+}
+
+/** Schlüssel des Form-Textes: genau 1 Punkt heißt „Punkt“, sonst „Punkte“ (auch 0 und 0,5). */
+export function formKey(points: number): 'botrating.form' | 'botrating.form.one' {
+  return points === 1 ? 'botrating.form.one' : 'botrating.form';
+}
+
 export interface Suggestion {
   kind: 'up' | 'down';
   to: BotLevel;
