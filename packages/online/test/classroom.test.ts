@@ -178,6 +178,26 @@ describe('Klassenkarten (#151)', () => {
     expect(classView(state, T(1)).leaderboard).toBe(false);
   });
 
+  it('liefert Rahmen nur aus, wenn die Leitung sie einschaltet (Vorgabe aus)', () => {
+    const state = fresh();
+    joinClass(state, { ...person(1), frame: 'gold-1' }, 2);
+    expect(classView(state, T(0)).frames).toBe(false);
+    for (const t of [0, 1]) expect(classView(state, T(t)).members.some((m) => 'frame' in m)).toBe(false);
+    expect(JSON.stringify(classView(state, T(0)))).not.toContain('gold-1');
+    expect(configureClass(state, T(1), { frames: true }, 3)).toEqual({ error: expect.any(String) });
+    expect(classView(state, T(0)).frames).toBe(false);
+    expect(configureClass(state, T(0), { frames: true }, 3)).toEqual({ ok: true });
+    expect(classView(state, T(1)).frames).toBe(true);
+    expect(classView(state, T(1)).members.find((m) => m.name === 'Kind1')?.frame).toBe('gold-1');
+    // Ändern und Entfernen des Rahmens; ungültige Formen werden verworfen.
+    updateMember(state, T(1), { frame: 'Ungültig!' }, 4);
+    expect(classView(state, T(0)).members.find((m) => m.name === 'Kind1')).not.toHaveProperty('frame');
+    updateMember(state, T(1), { frame: 'silber' }, 5);
+    expect(classView(state, T(0)).members.find((m) => m.name === 'Kind1')?.frame).toBe('silber');
+    expect(configureClass(state, T(0), { frames: false }, 6)).toEqual({ ok: true });
+    expect(JSON.stringify(classView(state, T(1)))).not.toContain('silber');
+  });
+
   it('enthält keine Geräte-Kennung', () => {
     const state = fresh();
     joinClass(state, person(1), 2);
