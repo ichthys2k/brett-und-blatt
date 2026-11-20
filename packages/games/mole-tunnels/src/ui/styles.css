@@ -1,83 +1,655 @@
-/* Platzhalter-Gestaltung (M1); das richtige Brett kommt in M3. Alle Klassen tragen das Präfix mt-. */
-.mt-board {
+/* Maulwurfsgänge – Brett und Bedienung (M3). Alle Klassen tragen das Präfix mt-. */
+
+.mt-wrap {
+  --mt-frame: #3b2817;
+  --mt-soil: #6b4a30;
+  --mt-soil-fixed: #4d3321;
+  --mt-stud: #8f6d49;
+  --mt-rim: #8a6234;
+  --mt-way: #ead3a3;
+  --mt-reach: #ffd84a;
+  --mt-reach-ink: #3a2600;
+  --mt-arrow: #f4dd9a;
+  container: mt / size;
+  width: 100%;
+  height: 100%;
+  min-height: 15rem;
+  color: var(--color-ink);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mt-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas: 'status' 'stage' 'side';
+  gap: 0.5rem;
+  width: 100%;
+  height: 100%;
+}
+
+/* Breites Fenster (Desktop, Handy quer): Brett links, Spalte mit Status, Freiteil und Rüben rechts. */
+@container mt (min-aspect-ratio: 21/20) {
+  .mt-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(13rem, 17rem);
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas: 'stage status' 'stage side';
+    column-gap: 1rem;
+  }
+}
+
+/* ---------------------------------------------------------------- Status */
+
+.mt-status {
+  grid-area: status;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  width: 100%;
-  max-width: 560px;
-  margin: 0 auto;
+  gap: 0.35rem;
 }
 
-.mt-grid {
-  display: grid;
-  gap: 2px;
-  padding: 4px;
-  border-radius: 12px;
-  background: var(--color-line);
+.mt-steps {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.mt-cell {
-  position: relative;
+.mt-steps li {
+  flex: 1 1 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  aspect-ratio: 1;
-  min-width: 0;
-  padding: 0;
-  border: 0;
-  border-radius: 6px;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  padding: 0.2rem 0.5rem;
+  border: 2px solid var(--color-line);
+  border-radius: 999px;
+  color: var(--color-muted);
+  font-weight: 600;
+  font-size: 0.95rem;
   background: var(--color-surface);
-  color: var(--color-text);
-  font-size: clamp(16px, 5vw, 32px);
 }
 
-.mt-cell-reach {
-  background: color-mix(in srgb, var(--color-accent) 25%, var(--color-surface));
+.mt-steps li[data-on] {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+.mt-step-no {
+  display: inline-grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  font-size: 0.85rem;
+}
+
+.mt-status-text,
+.mt-hint-text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+.mt-hint-text {
+  color: var(--color-warning);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------ Brett */
+
+.mt-stage {
+  grid-area: stage;
+  min-height: 0;
+  min-width: 0;
+}
+
+.mt-board {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 14px;
+  background: var(--mt-frame);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.35);
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* Die n × n Teile liegen in der Mitte; rundum bleibt ein halbes Teil für die Pfeile. */
+.mt-field {
+  position: absolute;
+  left: calc(50% / (var(--mt-n) + 1));
+  top: calc(50% / (var(--mt-n) + 1));
+  width: calc(100% * var(--mt-n) / (var(--mt-n) + 1));
+  height: calc(100% * var(--mt-n) / (var(--mt-n) + 1));
+}
+
+.mt-tile,
+.mt-target {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(100% / var(--mt-n));
+  height: calc(100% / var(--mt-n));
+  /* Position per Verschiebung – ab M4 laufen die Teile (Schlüssel = Teil-id) so als Übergang. */
+  transform: translate(calc(var(--mt-c) * 100%), calc(var(--mt-r) * 100%));
+}
+
+.mt-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.mt-tile[data-ghost] {
+  opacity: 0.8;
+  filter: drop-shadow(0 0 4px var(--mt-reach));
+}
+
+.mt-tile[data-soft]::after {
+  content: '';
+  position: absolute;
+  inset: 14%;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--mt-reach) 55%, transparent);
+  pointer-events: none;
+}
+
+.mt-line {
+  position: absolute;
+  background: color-mix(in srgb, var(--mt-reach) 28%, transparent);
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.mt-soil {
+  fill: var(--mt-soil);
+}
+
+.mt-soil-fixed {
+  fill: var(--mt-soil-fixed);
+}
+
+.mt-stud {
+  fill: var(--mt-stud);
+}
+
+.mt-rim line,
+.mt-way line {
+  stroke-width: 46;
+  stroke-linecap: butt;
+}
+
+.mt-rim line {
+  stroke: var(--mt-rim);
+}
+
+.mt-rim circle {
+  fill: var(--mt-rim);
+}
+
+.mt-way line {
+  stroke: var(--mt-way);
+  stroke-width: 38;
+}
+
+.mt-way circle {
+  fill: var(--mt-way);
+}
+
+/* Figuren */
+.mt-halo {
+  fill: #fff;
+  stroke: #fff;
+  stroke-width: 6;
+  stroke-linejoin: round;
+}
+
+.mt-hare-body {
+  stroke: #1a1410;
+  stroke-width: 1.8;
+}
+
+.mt-hare-no {
+  fill: #fff;
+  stroke: #000;
+  stroke-width: 2.6;
+  paint-order: stroke;
+  font: 700 15px/1 system-ui, sans-serif;
+}
+
+.mt-active-ring {
+  fill: none;
+  stroke: var(--mt-reach);
+  stroke-width: 3;
+  stroke-dasharray: 5 4;
+}
+
+.mt-turnip-bulb {
+  fill: #f6e8f3;
+  stroke: #5b1f50;
+  stroke-width: 2.4;
+}
+
+.mt-turnip-cap {
+  fill: #a9449a;
+  stroke: #5b1f50;
+  stroke-width: 1.6;
+}
+
+.mt-turnip-leaf {
+  fill: none;
+  stroke: #1f6b2a;
+  stroke-width: 4.5;
+  stroke-linecap: round;
+}
+
+.mt-mole-shade {
+  fill: rgb(20 10 5 / 0.45);
+}
+
+.mt-mole-body {
+  fill: #4b4f58;
+  stroke: #15171b;
+  stroke-width: 2;
+}
+
+.mt-mole-claw {
+  fill: #f2c9a8;
+  stroke: #15171b;
+  stroke-width: 1.4;
+}
+
+.mt-mole-eye {
+  fill: #fff;
+  stroke: #15171b;
+  stroke-width: 1.4;
+}
+
+.mt-mole-nose {
+  fill: #ee8fa0;
+  stroke: #15171b;
+  stroke-width: 1.4;
+}
+
+.mt-seat-symbol {
+  display: block;
+  width: 1.5rem;
+  height: 1.9rem;
+}
+
+.mt-turnip-icon {
+  display: inline-block;
+  width: 1.15rem;
+  height: 1.5rem;
+  vertical-align: -0.3em;
+}
+
+/* Wegvorschau */
+.mt-path {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.mt-path polyline {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.mt-path-under {
+  stroke: #1a1410;
+  stroke-width: 0.2;
+}
+
+.mt-path-line {
+  stroke: var(--mt-reach);
+  stroke-width: 0.1;
+  stroke-dasharray: 0.16 0.2;
+}
+
+/* Laufziele: leuchtende Felder, auch ohne Farbe als dicker doppelter Rahmen erkennbar. */
+.mt-target {
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--mt-reach) 22%, transparent);
+  box-shadow:
+    inset 0 0 0 3px var(--mt-reach),
+    inset 0 0 0 5px var(--mt-reach-ink);
   cursor: pointer;
 }
 
-.mt-tile-glyph {
-  position: relative;
-  display: inline-flex;
+.mt-target[data-self] {
+  background: transparent;
+  box-shadow:
+    inset 0 0 0 3px #fff,
+    inset 0 0 0 5px var(--mt-reach-ink);
+  border-style: dashed;
 }
 
-.mt-turnip,
-.mt-mole {
+.mt-target[data-harvest] {
+  background: color-mix(in srgb, var(--mt-reach) 40%, transparent);
+  box-shadow:
+    inset 0 0 0 4px var(--mt-reach),
+    inset 0 0 0 6px var(--mt-reach-ink);
+}
+
+.mt-target[data-hint] {
+  outline: 3px dotted #fff;
+  outline-offset: -8px;
+}
+
+.mt-target:hover {
+  background: color-mix(in srgb, var(--mt-reach) 45%, transparent);
+}
+
+.mt-target:focus-visible,
+.mt-arrow:focus-visible,
+.mt-btn:focus-visible,
+.mt-spare:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px var(--color-accent, #2f5d3a);
+}
+
+.mt-target:focus-visible {
+  outline-offset: -3px;
+  box-shadow: inset 0 0 0 7px #111;
+  z-index: 1;
+}
+
+/* Schiebe-Pfeile: Mitte im Randstreifen, Trefferfläche mindestens 44 px. */
+.mt-arrow {
   position: absolute;
-  inset: auto -4px -4px auto;
-  font-size: 0.6em;
+  display: grid;
+  place-items: center;
+  width: max(44px, calc(50% / (var(--mt-n) + 1)));
+  height: max(44px, calc(50% / (var(--mt-n) + 1)));
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  transform: translate(-50%, -50%);
+  color: var(--mt-arrow);
+  cursor: pointer;
+  z-index: 2;
 }
 
-.mt-mole {
-  inset: -4px auto auto -4px;
+.mt-arrow-glyph {
+  display: block;
+  width: calc(50cqmin / (var(--mt-n) + 1) * 0.9);
+  min-width: 18px;
+  max-width: 34px;
+  aspect-ratio: 1;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.6));
 }
 
-.mt-hare {
+.mt-arrow-shape {
+  fill: var(--mt-arrow);
+  stroke: #1a1410;
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+}
+
+.mt-lock {
+  fill: #c9bfae;
+  stroke: #1a1410;
+  stroke-width: 1;
+}
+
+.mt-arrow:disabled {
+  pointer-events: none;
+  cursor: default;
+}
+
+.mt-arrow:disabled:not([data-locked]) .mt-arrow-shape {
+  fill: #8a7a62;
+  opacity: 0.45;
+}
+
+.mt-arrow[data-locked] {
+  opacity: 0.85;
+}
+
+.mt-arrow:not(:disabled):hover .mt-arrow-glyph,
+.mt-arrow[data-selected] .mt-arrow-glyph {
+  transform-box: fill-box;
+  scale: 1.25;
+}
+
+.mt-arrow[data-selected] .mt-arrow-shape {
+  fill: var(--mt-reach);
+}
+
+.mt-arrow[data-hint]::after {
+  content: '';
   position: absolute;
-  top: 2px;
-  right: 4px;
-  font-size: 0.7em;
+  inset: 4px;
+  border: 3px dotted #fff;
+  border-radius: 50%;
+}
+
+/* ------------------------------------------------------------ Seitenleiste */
+
+.mt-side {
+  grid-area: side;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: start;
+  min-height: 0;
+}
+
+@container mt (min-aspect-ratio: 21/20) {
+  .mt-side {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    overflow-y: auto;
+  }
+}
+
+.mt-spare-box {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas: 'title title' 'spare actions';
+  gap: 0.25rem 0.75rem;
+  align-items: center;
+}
+
+.mt-side-title {
+  grid-area: title;
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-muted);
 }
 
 .mt-spare {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 1.4rem;
+  grid-area: spare;
+  position: relative;
+  width: clamp(3.5rem, 18cqmin, 5.5rem);
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: var(--mt-frame);
+  box-shadow: 0 0 0 4px var(--mt-frame);
+  cursor: pointer;
 }
 
-.mt-pushes {
+.mt-spare:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.mt-tile-spare {
+  position: static;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: none;
+}
+
+.mt-actions {
+  grid-area: actions;
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 0.4rem;
 }
 
-.mt-push {
+.mt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
   min-height: 44px;
-  padding: 4px 8px;
-  border: 1px solid var(--color-line);
-  border-radius: 8px;
+  padding: 0.3rem 0.8rem;
+  border: 2px solid var(--color-line);
+  border-radius: 10px;
   background: var(--color-surface);
-  color: var(--color-text);
-  font-size: 0.8rem;
+  color: var(--color-ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mt-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.mt-btn-primary {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+.mt-btn kbd {
+  padding: 0 0.3rem;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+@media (hover: none) {
+  .mt-btn kbd {
+    display: none;
+  }
+}
+
+.mt-scores {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mt-score {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.15rem 0.5rem;
+  border: 2px solid var(--color-line);
+  border-radius: 10px;
+  background: var(--color-surface);
+}
+
+.mt-score[data-active] {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-accent);
+}
+
+.mt-score-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.mt-score-count {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mt-score-goal {
+  font-weight: 400;
+  color: var(--color-muted);
+}
+
+/* Handy hoch: Freiteil oben, Rübenliste darunter, ab drei Plätzen in zwei Spalten. */
+@container mt (max-aspect-ratio: 21/20) {
+  .mt-scores[data-seats='3'],
+  .mt-scores[data-seats='4'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mt-arrow-glyph {
+    scale: none !important;
+  }
+}
+
+/* Niedriges, breites Fenster (Handy quer): alles etwas enger, damit Status, Freiteil und vier Plätze passen. */
+@container mt (min-aspect-ratio: 21/20) and (max-height: 26rem) {
+  .mt-layout {
+    gap: 0.25rem 0.75rem;
+  }
+  .mt-status {
+    gap: 0.2rem;
+  }
+  .mt-steps li {
+    min-height: 1.8rem;
+    font-size: 0.85rem;
+  }
+  .mt-status-text,
+  .mt-hint-text {
+    font-size: 0.8rem;
+    line-height: 1.2;
+  }
+  .mt-side {
+    gap: 0.25rem;
+  }
+  .mt-side-title {
+    display: none;
+  }
+  .mt-spare {
+    width: 3.25rem;
+  }
+  .mt-btn {
+    min-height: 40px;
+    padding: 0.1rem 0.6rem;
+    font-size: 0.9rem;
+  }
+  .mt-scores {
+    gap: 0.15rem;
+  }
+  .mt-score {
+    padding: 0 0.4rem;
+    border-width: 1px;
+  }
+  .mt-seat-symbol {
+    width: 1.1rem;
+    height: 1.4rem;
+  }
+  .mt-turnip-icon {
+    width: 0.9rem;
+    height: 1.15rem;
+  }
 }
