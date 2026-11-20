@@ -21,7 +21,9 @@ import { inspectPosition } from './inspectPosition';
  * - Maus: nach kurzem Verweilen schwebt die Ansicht neben dem Element (nur mit feinem Zeiger und ab
  *   900 px Fensterbreite), Rechtsklick öffnet sie als Fenster.
  * - Finger: lange drücken öffnet das Fenster; der Klick danach wird geschluckt.
- * - Tastatur: Fokus zeigt die schwebende Ansicht, Taste „i“ öffnet das Fenster, Escape schließt.
+ * - Tastatur: Fokus zeigt die schwebende Ansicht, Taste „i“ öffnet das Fenster, Escape schließt. Liegt
+ *   der Mauszeiger über einem Element mit Großansicht, öffnet „i“ dieses (das innerste unter dem Zeiger),
+ *   sonst das fokussierte (#557).
  * Ein Provider zeichnet für alle Elemente darunter genau eine Ansicht.
  */
 
@@ -95,6 +97,8 @@ export interface InspectApi {
   /** Fenster von Hand öffnen; `from` bekommt beim Schließen den Fokus zurück. */
   open: (content: InspectContent, from?: HTMLElement | null) => void;
   close: () => void;
+  /** Öffnet das Fenster des Elements unter dem Mauszeiger (Taste „i“); `false`, wenn keins darunter liegt. */
+  openHovered: () => boolean;
 }
 
 export const INSPECT_HOVER_DELAY_MS = 300;
@@ -109,6 +113,7 @@ const NOOP_API: InspectApi = {
   props: (_source, extra = {}) => extra,
   open: () => undefined,
   close: () => undefined,
+  openHovered: () => false,
 };
 
 const InspectContext = createContext<InspectApi | null>(null);
@@ -131,6 +136,8 @@ export function CardInspectProvider({ children }: { children: ReactNode }) {
   const stopPress = useRef<(() => void) | null>(null);
   /** Fokus kehrt nach dem Schließen zurück: dann nicht gleich wieder schweben. */
   const quietFocus = useRef(false);
+  /** Elemente mit Großansicht unter dem Mauszeiger, das innerste zuletzt (für die Taste „i“, #557). */
+  const hovered = useRef<{ el: HTMLElement; source: InspectSource; options: InspectOptions }[]>([]);
 
   const api = useMemo<InspectApi>(() => {
     const hideFloat = () => {
@@ -202,11 +209,16 @@ export function CardInspectProvider({ children }: { children: ReactNode }) {
           ...extra,
           onPointerEnter: (e) => {
             extra.onPointerEnter?.(e);
+            if (e.pointerType === 'mouse') {
+              hovered.current = hovered.current.filter((h) => h.el !== e.currentTarget);
+              hovered.current.push({ el: e.currentTarget, source, options });
+            }
             // e.buttons ≠ 0: Es wird gerade etwas gezogen, dann stört die Ansicht nur.
             if (e.pointerType === 'mouse' && e.buttons === 0 && options.hover !== false && finePointer() && floatAllowed()) showFloat(source, e.currentTarget, INSPECT_HOVER_DELAY_MS);
           },
           onPointerLeave: (e) => {
             extra.onPointerLeave?.(e);
+            hovered.current = hovered.current.filter((h) => h.el !== e.currentTarget);
             hideFloat();
           },
           onPointerDown: (e) => {
@@ -240,8 +252,33 @@ export function CardInspectProvider({ children }: { children: ReactNode }) {
       },
       open: (content, from = null) => openWith(content, from),
       close: () => setDialog(null),
+      /** Taste „i“ über einem Element unter dem Mauszeiger: öffnet dessen Großansicht. */
+      openHovered: () => {
+        const entry = [...hovered.current].reverse().find((h) => h.el.isConnected);
+        if (!entry) return false;
+        const content = resolveSource(entry.source);
+        if (!content) return false;
+        openWith(content, entry.el, entry.options);
+        return true;
+      },
     };
   }, []);
+
+  // Taste „i“: Der Mauszeiger gewinnt vor dem Fokus. Aufgefangen vor den Elementen, damit nicht zusätzlich
+  // die fokussierte Karte aufgeht; Eingabefelder bleiben unberührt.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || e.key !== 'i' || e.altKey || e.ctrlKey || e.metaKey || e.repeat) return;
+      const target = e.target;
+      if (target instanceof HTMLElement && (target.isContentEditable || /^(input|textarea|select)$/i.test(target.tagName))) return;
+      if (api.openHovered()) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      }
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [api]);
 
   useEffect(() => {
     const off = () => {

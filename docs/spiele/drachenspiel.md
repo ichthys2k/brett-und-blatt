@@ -325,4 +325,4 @@ Auf großen Flächen werden Handkarten und Tiere größer, damit die Kartenbilde
 
 ## Großansicht beim Überfahren (14.11.2026, #418)
 
-Am Desktop erscheint die große Karte schon beim Verweilen mit der Maus (300 ms) neben Handkarte, Tier oder Hauskraft, ohne Klick; Rechtsklick und Taste `i` öffnen sie als Fenster, am Handy langes Drücken. Grundlage ist der gemeinsame Baustein `CardInspect` (`packages/ui`); `CardZoom` und die Stile `.ds-zoom*` sind entfallen.
+Am Desktop erscheint die große Karte schon beim Verweilen mit der Maus (300 ms) neben Handkarte, Tier oder Hauskraft, ohne Klick; Rechtsklick und Taste `i` öffnen sie als Fenster (die Taste öffnet die Karte unter dem Mauszeiger, ohne Mauszeiger die fokussierte, #557), am Handy langes Drücken. Grundlage ist der gemeinsame Baustein `CardInspect` (`packages/ui`); `CardZoom` und die Stile `.ds-zoom*` sind entfallen.
