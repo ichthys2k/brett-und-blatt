@@ -132,6 +132,7 @@ export {
   pickZoneEntryTarget,
   type FocusCandidate,
   type NavDirection,
+  type NavOptions,
   type NavRect,
 } from './input/spatialNav';
 export { stepCarousel, type MoveCarouselItem } from './input/moveCarousel';
@@ -167,3 +168,4 @@ export { VirtualKeyboard } from './input/VirtualKeyboard';
 export { SoftCursor } from './input/SoftCursor';
 export { MoveCarouselBar, type MoveCarouselBarProps } from './input/MoveCarouselBar';
 
+export * from './konsole';

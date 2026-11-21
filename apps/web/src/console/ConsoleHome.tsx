@@ -1,4 +1,5 @@
 import type { GameInfo, SessionSnapshot } from '@brett-und-blatt/engine';
+import { KnsButton, KnsShelf, KnsTile } from '@brett-und-blatt/ui';
 import { useRef, useState } from 'react';
 import { t } from '../i18n';
 import { discardGame } from '../lib/activeGame';
@@ -14,7 +15,6 @@ import { storage } from '../lib/storage';
 import { ConsoleFrame } from './ConsoleFrame';
 import { GameTile, useTileScene } from './GameTile';
 import { recentGameIds } from './recentGames';
-import { Shelf } from './Shelf';
 import { useFavoriteKey } from './useFavoriteKey';
 import { useInitialFocus } from './useInitialFocus';
 
@@ -47,12 +47,12 @@ function ResumePanel({ snapshot, info, onDiscard }: { snapshot: SessionSnapshot;
         <p className="kns-resume-seats">{snapshot.config.seats.map((seat) => seat.name).join(' gegen ')}</p>
       </div>
       <div className="kns-resume-actions">
-        <button type="button" className="kns-button kns-button-primary" data-kns-autofocus data-kns-id="resume" onClick={() => navigate(paths.play)}>
+        <KnsButton variant="primary" data-kns-autofocus data-kns-id="resume" onClick={() => navigate(paths.play)}>
           {t('home.resume.play')}
-        </button>
-        <button type="button" className="kns-button" data-kns-id="discard" onClick={onDiscard}>
+        </KnsButton>
+        <KnsButton data-kns-id="discard" onClick={onDiscard}>
           {t('home.resume.discard')}
-        </button>
+        </KnsButton>
       </div>
     </section>
   );
@@ -100,28 +100,28 @@ export function ConsoleHome() {
     >
       <div ref={ref}>
         {snapshot && resumeInfo && <ResumePanel snapshot={snapshot} info={resumeInfo} onDiscard={discard} />}
-        {recent.length > 0 && <Shelf title={t('console.shelf.recent')}>{recent.map((info) => tile('recent', info))}</Shelf>}
-        {favoriteGames.length > 0 && <Shelf title={t('console.shelf.favorites')}>{favoriteGames.map((info) => tile('favorites', info))}</Shelf>}
+        {recent.length > 0 && <KnsShelf title={t('console.shelf.recent')}>{recent.map((info) => tile('recent', info))}</KnsShelf>}
+        {favoriteGames.length > 0 && <KnsShelf title={t('console.shelf.favorites')}>{favoriteGames.map((info) => tile('favorites', info))}</KnsShelf>}
         {groups.map((group) => (
-          <Shelf key={group.id} title={tavern ? group.room : group.title} subtitle={group.subtitle}>
+          <KnsShelf key={group.id} title={tavern ? group.room : group.title} subtitle={group.subtitle}>
             {group.games.map((info) => tile(group.id, info))}
-          </Shelf>
+          </KnsShelf>
         ))}
-        <Shelf title={t('console.shelf.more')}>
+        <KnsShelf title={t('console.shelf.more')}>
           {MORE.map((entry) => (
             <li key={entry.id}>
-              <a href={entry.to} className="kns-tile kns-linktile" data-kns-id={`more:${entry.id}`} aria-label={`${t(`console.more.${entry.id}` as MessageKey)}. ${t(`console.more.${entry.id}.hint` as MessageKey)}`}>
-                <span className="kns-tile-art" aria-hidden="true">
-                  {entry.emoji}
-                </span>
-                <span className="kns-tile-text" aria-hidden="true">
-                  <span className="kns-tile-name">{t(`console.more.${entry.id}` as MessageKey)}</span>
-                  <span className="kns-tile-meta kns-linktile-hint">{t(`console.more.${entry.id}.hint` as MessageKey)}</span>
-                </span>
-              </a>
+              <KnsTile
+                href={entry.to}
+                variant="link"
+                art={entry.emoji}
+                title={t(`console.more.${entry.id}` as MessageKey)}
+                meta={t(`console.more.${entry.id}.hint` as MessageKey)}
+                data-kns-id={`more:${entry.id}`}
+                aria-label={`${t(`console.more.${entry.id}` as MessageKey)}. ${t(`console.more.${entry.id}.hint` as MessageKey)}`}
+              />
             </li>
           ))}
-        </Shelf>
+        </KnsShelf>
       </div>
     </ConsoleFrame>
   );

@@ -38,7 +38,9 @@ export type Route =
   | { name: 'account'; ticket?: string; provider?: string; error?: string; reason?: string }
   | { name: 'passView'; key: string }
   | { name: 'imprint' }
-  | { name: 'privacy' };
+  | { name: 'privacy' }
+  /** Schauseite der Konsolen-Bausteine (#636), nur für Entwicklung und Abnahme. */
+  | { name: 'gallery' };
 
 function parseQuery(query: string): Record<string, string> {
   const out: Record<string, string> = {};
@@ -100,6 +102,7 @@ export function parseRoute(hash: string): Route {
   }
   if (parts[0] === 'impressum') return { name: 'imprint' };
   if (parts[0] === 'datenschutz') return { name: 'privacy' };
+  if (parts[0] === 'bausteine') return { name: 'gallery' };
   const players = Number(params.spieler);
   // Alte Links wie #/?filter=mathe oder #/?spieler=8 zeigen weiter die Spielübersicht.
   if (!params.filter && !(Number.isInteger(players) && players > 0)) return { name: 'menu' };
@@ -152,6 +155,8 @@ export const paths = {
   account: '#/konto',
   imprint: '#/impressum',
   privacy: '#/datenschutz',
+  /** Schauseite der Konsolen-Bausteine (#636). */
+  gallery: '#/bausteine',
 };
 
 /** Volle Adresse einer Seite der laufenden App (Ursprung + Pfad + Hash); für Anzeigen wie die Tafel (#578). */

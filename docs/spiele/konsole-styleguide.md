@@ -181,6 +181,15 @@ Ort: `packages/ui/src/konsole/`, CSS in `konsole.css` (Präfix `kns-`, nur unter
 
 Fehlt ein Baustein, wird er dort ergänzt und auf der Schauseite gezeigt – nicht auf der Seite nachgebaut.
 
+**Stand nach U1 (#636), Abweichungen vom Plan:**
+- `KnsTile` hat statt `badges` zwei Plätze: `badge` (oben links, z. B. Controller-Eignung) und `mark` (oben rechts, z. B. Stern), dazu `variant: 'game' | 'link'` für Verweis-Kacheln.
+- `KnsListItem` kennt zusätzlich `label` (Vorleser-Text der Hauptaktion), `disabled` und `focusId` (`data-kns-id` für die Fokus-Wiederherstellung).
+- `KnsCode` hat `label` (Vorleser-Text) und `copy` (Knopf „Kopieren“, Standard an); `KnsSubTabs` und `KnsSplit` haben `label` für den Vorleser.
+- `KnsChoiceRow` nimmt optional `mode`, um Knopfleiste oder Fenster zu erzwingen.
+- Text auf `danger`-Knöpfen in `--color-bg` (in beiden Helligkeiten lesbar), nicht in Weiß.
+- Fenster liegen als `position: fixed` im Seitenbaum (kein Portal), damit der Fokus-Rahmen der Konsole greift; Hochformat (`orientation: portrait` oder unter 700 px Breite) zeigt sie von unten über die volle Breite.
+- `useViewportSize()` liefert die Fenstergröße für `KnsSplit` und spätere Layout-Entscheidungen.
+
 ## 12. Navigation (U3)
 
 - **Zwei Ebenen:** fünf Hauptreiter (Start · Bibliothek · Online · Pass · Optionen), darunter Unterreiter (Tabelle in [`konsole-ueberall.md`](konsole-ueberall.md), Abschnitt 3). Eine dritte Ebene gibt es nur innerhalb einer Seite (Unterreiter eines Profils, Kategorien der Einstellungen).

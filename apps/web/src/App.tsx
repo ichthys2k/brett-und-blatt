@@ -43,6 +43,7 @@ import { saveInputSettings, useInputSettings } from './lib/inputSettings';
 import { useActiveLook } from './lib/look';
 import { useActiveShell } from './lib/shell';
 import { consoleScreen } from './console/screens';
+import { GalleryClassicNote } from './console/Gallery';
 
 export function App() {
   const cosmetics = useActiveCardCosmetics(useActiveLook());
@@ -135,6 +136,8 @@ function Screen() {
       return <Impressum />;
     case 'privacy':
       return <Datenschutz />;
+    case 'gallery':
+      return <GalleryClassicNote />;
     case 'home':
       return <Home initialFilter={route.filter} initialPlayers={route.players} />;
     default:

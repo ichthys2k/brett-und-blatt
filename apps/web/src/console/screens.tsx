@@ -4,6 +4,7 @@ import { ConsoleHome } from './ConsoleHome';
 import { ConsoleLibrary } from './ConsoleLibrary';
 import { ConsoleGame } from './ConsoleGame';
 import { ClassicInFrame } from './ClassicInFrame';
+import { Gallery } from './Gallery';
 import { Online } from '../screens/Online';
 import { BoardScreen } from '../screens/Board';
 import { SoundSettingsScreen } from '../screens/SoundSettings';
@@ -45,6 +46,8 @@ export function consoleScreen(route: Route): ReactElement | null {
           <PassScreen />
         </ClassicInFrame>
       );
+    case 'gallery':
+      return <Gallery />;
     default:
       return null;
   }

@@ -262,7 +262,10 @@ export function GlobalSpatialNavigator() {
       // (#622: vom Ablagebänkchen sprang „runter“ sonst quer ins Spielmenü und „hoch“ von dort an den oberen Rand).
       const ownZone = trappedZone || scope !== document.body ? null : zones.find((z) => z.element.contains(active));
       const inOwnZone = ownZone ? others.filter((c) => ownZone.element.contains(byId.get(c.id) ?? null)) : [];
-      const nextId = (inOwnZone.length > 0 ? findNextFocusTarget(curRect, inOwnZone, intent) : null) ?? findNextFocusTarget(curRect, others, intent);
+      // In den Menüs der Konsole sind Zeilen über die volle Breite üblich; dort zählt bei „hoch/runter“ der Abstand (#636).
+      const navOptions = active.closest('.kns-frame, .kns-dialog') ? { verticalAlignedWeight: 0.01 } : undefined;
+      const nextId =
+        (inOwnZone.length > 0 ? findNextFocusTarget(curRect, inOwnZone, intent, navOptions) : null) ?? findNextFocusTarget(curRect, others, intent, navOptions);
       if (nextId) {
         const targetEl = byId.get(nextId);
         targetEl?.focus({ preventScroll: false });

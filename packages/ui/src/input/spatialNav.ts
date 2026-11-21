@@ -15,6 +15,16 @@ export interface FocusCandidate {
 
 export type NavDirection = 'up' | 'down' | 'left' | 'right';
 
+export interface NavOptions {
+  /**
+   * Gewicht des Mittelpunkt-Versatzes bei senkrechten Schritten zwischen Zielen, die sich waagrecht überlappen
+   * (Standard 1 = wie bisher). Die Menüs der Konsole setzen 0,01 (#636): Dort zählt fast nur der Abstand in
+   * Laufrichtung, sonst übersprang „runter“ eine Zeile über die volle Breite oder einen rechtsbündigen Regler.
+   * In den Partien bleibt es bei 1 – ein kleinerer Wert machte die Buchstabenbank von Scrabble unerreichbar.
+   */
+  verticalAlignedWeight?: number;
+}
+
 function centerOf(r: NavRect): { x: number; y: number } {
   return {
     x: r.left + r.width / 2,
@@ -30,7 +40,9 @@ export function findNextFocusTarget(
   current: NavRect,
   candidates: readonly FocusCandidate[],
   direction: NavDirection,
+  options: NavOptions = {},
 ): string | null {
+  const alignedWeight = options.verticalAlignedWeight ?? 1;
   const cur = centerOf(current);
   let bestId: string | null = null;
   let bestScore = Infinity;
@@ -51,14 +63,14 @@ export function findNextFocusTarget(
       case 'up':
         if (dy >= -2) continue;
         primary = -dy;
-        secondary = Math.abs(dx);
         aligns = cand.rect.right > current.left && cand.rect.left < current.right;
+        secondary = aligns ? Math.abs(dx) * alignedWeight : Math.abs(dx);
         break;
       case 'down':
         if (dy <= 2) continue;
         primary = dy;
-        secondary = Math.abs(dx);
         aligns = cand.rect.right > current.left && cand.rect.left < current.right;
+        secondary = aligns ? Math.abs(dx) * alignedWeight : Math.abs(dx);
         break;
       case 'left':
         if (dx >= -2) continue;

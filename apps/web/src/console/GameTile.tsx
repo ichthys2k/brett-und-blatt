@@ -1,4 +1,5 @@
 import type { GameInfo } from '@brett-und-blatt/engine';
+import { KnsTile } from '@brett-und-blatt/ui';
 import { t } from '../i18n';
 import type { ControllerGrade } from '../lib/controllerGrade';
 import { crestUrl } from '../lib/crest';
@@ -32,33 +33,18 @@ export function GameTile({ info, href, favorite, grade, restoreId, autoFocus }: 
     .filter(Boolean)
     .join(', ');
   return (
-    <a
+    <KnsTile
       href={href}
-      className="kns-tile"
+      image={scene}
+      art={crest ? <img src={crest} alt="" loading="lazy" decoding="async" /> : info.emoji}
+      title={info.name}
+      meta={players}
+      badge={grade ? GRADE_BADGE[grade] : undefined}
+      mark={favorite ? '★' : undefined}
       data-kns-game={info.id}
       data-kns-id={restoreId ?? info.id}
       data-kns-autofocus={autoFocus ? '' : undefined}
-      data-image={scene ? '' : undefined}
-      style={scene ? { backgroundImage: `url("${scene}")` } : undefined}
       aria-label={label}
-    >
-      <span className="kns-tile-art" aria-hidden="true">
-        {crest ? <img src={crest} alt="" loading="lazy" decoding="async" /> : info.emoji}
-      </span>
-      {grade && (
-        <span className="kns-grade" aria-hidden="true">
-          {GRADE_BADGE[grade]}
-        </span>
-      )}
-      {favorite && (
-        <span className="kns-tile-star" aria-hidden="true">
-          ★
-        </span>
-      )}
-      <span className="kns-tile-text" aria-hidden="true">
-        <span className="kns-tile-name">{info.name}</span>
-        <span className="kns-tile-meta">{players}</span>
-      </span>
-    </a>
+    />
   );
 }

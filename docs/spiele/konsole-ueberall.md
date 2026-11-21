@@ -1,6 +1,6 @@
 # Konsole überall – die Konsolen-Oberfläche wird Standard (Vorhaben #635)
 
-Stand: 21.11.2026 (Plan; noch nichts umgesetzt). Vorgänger: [Konsolen-Oberfläche](konsole.md) (Vorhaben #607, umgesetzt). Maße, Muster und Bausteine: [Styleguide](konsole-styleguide.md), Abschnitte 9–13.
+Stand: 21.11.2026 (U1 umgesetzt). Vorgänger: [Konsolen-Oberfläche](konsole.md) (Vorhaben #607, umgesetzt). Maße, Muster und Bausteine: [Styleguide](konsole-styleguide.md), Abschnitte 9–13.
 
 > Mir gefällt das Steam UI sehr gut. Ich möchte, dass es der neue Standard wird. Und ich möchte auch, dass alle UI-Elemente im gesamten Spiel, also nicht nur Start und Bibliothek, sondern auch Online und auch die Optionen, neu aufgesetzt werden und ein UI haben, das Ähnliches wie das von SteamOS. Das betrifft alle UI-Elemente in allen Menüs. Außerdem möchte ich später dann auch innerhalb der einzelnen Spiele eine durchgängige UI haben, die sich an SteamOS orientiert. Das aber erst in der nächsten Phase. (Cornelius, 21.11.2026)
 
@@ -83,7 +83,9 @@ Jeder Schritt ist ein Unter-Issue von #635 mit Ziel, Stand, Umsetzung, „Nicht 
 
 ## 6. Umgesetzte Schritte
 
-Noch keine. Jeder Schritt trägt hier Datum, PR und die wichtigsten Dateien ein.
+Jeder Schritt trägt hier Datum, PR und die wichtigsten Dateien ein.
+
+- **U1 Bausteine (#636, 21.11.2026):** `packages/ui/src/konsole/` (Bausteine, `konsole.css`, reine Logik `logic.ts`), Schauseite `/?modus=konsole#/bausteine` (`apps/web/src/console/Gallery.tsx`). Start, Bibliothek und Spielseite nutzen die Bausteine, unverändertes Aussehen. Nebenbei: die räumliche Navigation (`spatialNav.ts`) springt mit „runter“ nicht mehr über Zeilen hinweg, die über die volle Breite gehen.
 
 ## 7. Phase 2 – Vormerkungen
 

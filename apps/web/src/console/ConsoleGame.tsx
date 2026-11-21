@@ -1,4 +1,4 @@
-import { useInputIntent } from '@brett-und-blatt/ui';
+import { KnsButton, useInputIntent } from '@brett-und-blatt/ui';
 import type { BotLevel } from '@brett-und-blatt/engine';
 import { useRef, useState } from 'react';
 import { CardSetNote } from '../components/CardSetNote';
@@ -136,9 +136,7 @@ export function ConsoleGame({ gameId, params }: { gameId: string; params?: Recor
           {panel === 'howto' && (
             <div ref={panelRef} className="kns-panel" tabIndex={-1}>
               <HowToList info={info} />
-              <button type="button" className="kns-button" onClick={close}>
-                {t('console.close')}
-              </button>
+              <KnsButton onClick={close}>{t('console.close')}</KnsButton>
             </div>
           )}
 
