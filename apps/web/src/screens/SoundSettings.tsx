@@ -32,6 +32,7 @@ import {
   useScenesOn,
   useChosenTable,
 } from '../lib/look';
+import { setShell, shellParam, useActiveShell, useChosenShell, type Shell } from '../lib/shell';
 import { music, useMusicPrefs } from '../lib/music';
 import { PushToggle } from '../components/PushToggle';
 import { loadPushWish } from '../lib/push';
@@ -88,6 +89,33 @@ function PieceSets() {
   );
 }
 
+/** Oberfläche „Klassisch“ oder „Konsole“ (#607, K1). */
+function ShellChoice() {
+  const chosen = useChosenShell();
+  const active = useActiveShell();
+  const param = shellParam();
+  const options: readonly { id: Shell; label: string; text: string }[] = [
+    { id: 'classic', label: t('shell.classic'), text: t('shell.classic.text') },
+    { id: 'console', label: t('shell.console'), text: t('shell.console.text') },
+  ];
+  return (
+    <fieldset className="space-y-2 rounded-2xl border border-line bg-surface p-4">
+      <legend className="px-1 font-semibold">{t('shell.title')}</legend>
+      {options.map((option) => (
+        <label key={option.id} className="flex cursor-pointer items-start gap-3 rounded-xl p-2 hover:bg-surface-2">
+          <input type="radio" name="shell" className="mt-1 accent-accent" checked={chosen === option.id} onChange={() => setShell(option.id)} />
+          <span>
+            <span className="block font-medium">{option.label}</span>
+            <span className="block text-sm text-muted">{option.text}</span>
+          </span>
+        </label>
+      ))}
+      {param !== null && <p className="text-sm text-muted">{t('shell.param')}</p>}
+      {param === null && chosen === 'console' && active === 'classic' && <p className="text-sm text-muted">{t('shell.narrow')}</p>}
+    </fieldset>
+  );
+}
+
 /** Ton-Einstellungen mit allen Stücken zum Probehören (#/ton). */
 function LookChoice() {
   const chosen = useChosenLook();
@@ -103,6 +131,7 @@ function LookChoice() {
   ];
   return (
     <div className="space-y-4">
+      <ShellChoice />
       <fieldset className="space-y-2 rounded-2xl border border-line bg-surface p-4">
         <legend className="px-1 font-semibold">{t('look.title')}</legend>
         {options.map((option) => (

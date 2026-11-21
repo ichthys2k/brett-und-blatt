@@ -72,6 +72,14 @@
   filter: brightness(1.08);
 }
 
+/* Fokus mit Tastatur oder Controller (#621): SVG kennt keinen outline-Rahmen, daher ein dicker Strich. */
+.ludo-center-dice:focus-visible,
+:root[data-input-mode='gamepad'] .ludo-center-dice:focus {
+  outline: none;
+  stroke: #f59e0b;
+  stroke-width: 10;
+}
+
 /* Brett mit Würfel darüber: Der Würfel sitzt in der Brettmitte (Brett 1100 bzw. 1360 Einheiten über --ludo-size, Würfel 84, Mitte 26 über der Brettmitte). */
 .ludo-board-wrap {
   position: relative;

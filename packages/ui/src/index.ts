@@ -158,7 +158,8 @@ export {
   type InputSettings,
 } from './input/InputContext';
 export { FocusZone, GlobalSpatialNavigator, collectFocusableCandidates, type FocusZoneProps } from './input/FocusZone';
-export { ButtonPrompt, type ButtonPromptProps, type PromptItem } from './input/ButtonPrompt';
+export { ButtonPrompt, DEFAULT_PROMPTS, PromptProvider, usePromptItems, type ButtonPromptProps, type PromptItem } from './input/ButtonPrompt';
+export { pushPrompt, removePrompt, topPrompt, type PromptEntry } from './input/promptStack';
 export { ScanOverlay } from './input/ScanOverlay';
 export { VirtualKeyboard } from './input/VirtualKeyboard';
 export { SoftCursor } from './input/SoftCursor';

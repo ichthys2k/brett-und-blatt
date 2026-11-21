@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { useInputContext, useInputIntent } from './InputContext';
 import { findNextFocusTarget, pickZoneEntryTarget, type FocusCandidate } from './spatialNav';
+import { nextOptionIndex, nextRangeValue } from './formControls';
 
 const FOCUSABLE_SELECTOR = [
   'button:not([disabled])',
@@ -8,6 +9,7 @@ const FOCUSABLE_SELECTOR = [
   'input:not([disabled]):not([type="hidden"])',
   'select:not([disabled])',
   'textarea:not([disabled])',
+  'summary',
   '[tabindex]:not([tabindex="-1"]):not([disabled])',
   '[role="button"]:not([aria-disabled="true"])',
 ].join(',');
@@ -31,6 +33,8 @@ export function collectFocusableCandidates(root: HTMLElement): {
   const byId = new Map<string, HTMLElement>();
 
   for (const el of elements) {
+    // Die Tastenleiste ist Hinweis, kein Ziel: ihr ✕ bleibt für Maus und Finger, das Steuerkreuz überspringt es.
+    if (el.closest('.bub-prompt-bar')) continue;
     const style = window.getComputedStyle(el);
     if (style.display === 'none' || style.visibility === 'hidden') continue;
     const r = el.getBoundingClientRect();
@@ -86,8 +90,8 @@ export function FocusZone({ id, order = 0, label, trap = false, className = '', 
     const el = ref.current;
     if (!ctx || !el) return;
     const onFocusIn = (e: FocusEvent) => {
-      if (e.target instanceof HTMLElement) {
-        ctx.setZoneLastFocused(id, ensureElementId(e.target));
+      if (e.target instanceof HTMLElement || e.target instanceof SVGElement) {
+        ctx.setZoneLastFocused(id, ensureElementId(e.target as HTMLElement));
       }
     };
     el.addEventListener('focusin', onFocusIn);
@@ -99,6 +103,15 @@ export function FocusZone({ id, order = 0, label, trap = false, className = '', 
       {children}
     </div>
   );
+}
+
+/** Setzt den Wert eines Eingabefelds so, dass React die Änderung bemerkt (wie in VirtualKeyboard.tsx). */
+function setNativeValue(el: HTMLInputElement, value: string): void {
+  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+  if (setter) setter.call(el, value);
+  else el.value = value;
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+  el.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 /**
@@ -114,7 +127,38 @@ export function GlobalSpatialNavigator() {
 
     const zones = ctx.getZones();
     const trappedZone = [...zones].reverse().find((z) => z.trap);
-    const active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    // SVG-Elemente mit tabIndex (Bretter aus SVG, z. B. Nicht ärgern!, Sternhalma) zählen wie HTML-Elemente (#621).
+    const focused = document.activeElement;
+    const active = focused instanceof HTMLElement || focused instanceof SVGElement ? (focused as HTMLElement) : null;
+
+    // Schieberegler und Auswahllisten mit dem Controller bedienen (#613); die Tastatur bedient sie der Browser selbst.
+    if (source === 'gamepad' && active instanceof HTMLInputElement && active.type === 'range' && (intent === 'left' || intent === 'right')) {
+      const next = nextRangeValue(
+        {
+          value: Number(active.value),
+          min: active.min === '' ? 0 : Number(active.min),
+          max: active.max === '' ? 100 : Number(active.max),
+          step: active.step === '' || active.step === 'any' ? 1 : Number(active.step),
+        },
+        intent === 'left' ? -1 : 1,
+      );
+      setNativeValue(active, String(next));
+      ctx.announce(String(next));
+      return true;
+    }
+    if (source === 'gamepad' && active instanceof HTMLSelectElement && intent === 'confirm') {
+      const options = [...active.options];
+      if (options.length > 1) {
+        const index = nextOptionIndex(active.selectedIndex, options.map((o) => o.disabled));
+        if (index !== active.selectedIndex) {
+          active.selectedIndex = index;
+          active.dispatchEvent(new Event('change', { bubbles: true }));
+          active.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        ctx.announce(active.options[active.selectedIndex]?.text ?? '');
+      }
+      return true;
+    }
 
     // Zonenwechsel mit Schultertasten (LB/RB)
     if (intent === 'zoneNext' || intent === 'zonePrev') {
@@ -155,7 +199,9 @@ export function GlobalSpatialNavigator() {
     // Bestätigen per Gamepad A auf dem fokussierten Element
     if (intent === 'confirm' && source === 'gamepad') {
       if (active && active !== document.body) {
-        active.click();
+        // SVG-Elemente haben kein click(); ein Klick-Ereignis erreicht ihre onClick-Handler genauso.
+        if (typeof active.click === 'function') active.click();
+        else active.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
         return true;
       }
       return false;

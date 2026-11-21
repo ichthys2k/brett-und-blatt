@@ -1,6 +1,7 @@
 import { SnesEgg } from './components/SnesEgg';
 import { RewardBanner } from './components/RewardBanner';
 import { UpdateBanner } from './components/UpdateBanner';
+import { ConsoleOffer } from './components/ConsoleOffer';
 import { useRoute } from './lib/router';
 import { DisplayScreen } from './screens/Display';
 import { Home } from './screens/Home';
@@ -31,6 +32,7 @@ import {
   CardCosmeticsProvider,
   GlobalSpatialNavigator,
   InputProvider,
+  PromptProvider,
   ScanOverlay,
   SoftCursor,
   VirtualKeyboard,
@@ -38,12 +40,15 @@ import {
 import { useActiveCardCosmetics } from './lib/cardBacks';
 import { saveInputSettings, useInputSettings } from './lib/inputSettings';
 import { useActiveLook } from './lib/look';
+import { useActiveShell } from './lib/shell';
+import { consoleScreen } from './console/screens';
 
 export function App() {
   const cosmetics = useActiveCardCosmetics(useActiveLook());
   const inputSettings = useInputSettings();
   return (
     <InputProvider settings={inputSettings}>
+      <PromptProvider>
       <CardCosmeticsProvider value={cosmetics}>
         <GlobalSpatialNavigator />
         <ScanOverlay />
@@ -52,15 +57,23 @@ export function App() {
         <SoftCursor />
         <ButtonPrompt onDismiss={() => saveInputSettings({ prompts: false })} />
         <UpdateBanner />
+        <ConsoleOffer />
         <SnesEgg />
         <RewardBanner />
       </CardCosmeticsProvider>
+      </PromptProvider>
     </InputProvider>
   );
 }
 
 function Screen() {
   const route = useRoute();
+  const shell = useActiveShell();
+  // Konsolen-Oberfläche (#607): eigener Bildschirm, wo es einen gibt; sonst die klassische Seite.
+  if (shell === 'console') {
+    const screen = consoleScreen(route);
+    if (screen) return screen;
+  }
   switch (route.name) {
     case 'setup':
       return <Setup key={`${route.gameId}-${JSON.stringify(route.params ?? {})}`} gameId={route.gameId} params={route.params} />;

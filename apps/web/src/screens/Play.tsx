@@ -12,6 +12,10 @@ import {
   useElementSize,
   useInputContext,
   useInputIntent,
+  useInputSource,
+  usePromptItems,
+  collectFocusableCandidates,
+  pickZoneEntryTarget,
   type MoveCarouselItem,
 } from '@brett-und-blatt/ui';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
@@ -37,7 +41,8 @@ import { levelLabel } from '../lib/format';
 import type { AfterState } from '../lib/online';
 import type { LoadedGame } from '../lib/registry';
 import { useGameMusic } from '../lib/music';
-import { categoryOf } from './Home';
+import { categoryOf } from '../lib/rubriken';
+import { boardFocusTarget } from '../lib/turnFocus';
 import { navigate, paths } from '../lib/router';
 import { useSoundSettings } from '../lib/sound';
 import { storage, type Profile } from '../lib/storage';
@@ -208,6 +213,18 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
 
   const seats = session.config.seats;
   const playersRef = useRef<HTMLElement>(null);
+  // Zähler der angenommenen Züge von Menschen an diesem Gerät (#608): steht als `data-human-moves` am Spielfeld,
+  // damit Proben wie `scripts/controller-audit.mjs` erkennen, ob ein Zug gelungen ist. Wird direkt am Element gesetzt
+  // (kein Neuzeichnen); React fasst das Attribut danach nicht mehr an, weil sich sein Wert im JSX nicht ändert.
+  const tableRef = useRef<HTMLElement>(null);
+  const humanMoves = useRef(0);
+  const countHumanMove = (ok: boolean): boolean => {
+    if (ok) {
+      humanMoves.current += 1;
+      tableRef.current?.setAttribute('data-human-moves', String(humanMoves.current));
+    }
+    return ok;
+  };
   const [rootRef, rootSize] = useElementSize<HTMLDivElement>();
   const inputCtx = useInputContext();
   const [sideOpen, setSideOpen] = useState(false);
@@ -392,11 +409,11 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     online.isHost ? (
       <>
         {online.onRestart && (
-          <Button variant="primary" onClick={() => online.onRestart?.(true)}>
+          <Button variant="primary" data-bub-autofocus="result" onClick={() => online.onRestart?.(true)}>
             {t('play.rematch')}
           </Button>
         )}
-        <Button variant={online.onRestart ? 'secondary' : 'primary'} onClick={online.onLobby}>
+        <Button variant={online.onRestart ? 'secondary' : 'primary'} data-bub-autofocus={online.onRestart ? undefined : 'result'} onClick={online.onLobby}>
           {t('online.toLobby')}
         </Button>
       </>
@@ -412,11 +429,11 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   ) : (
     <>
       {endAction ? (
-        <Button variant="primary" onClick={() => navigate(endAction.path)}>
+        <Button variant="primary" data-bub-autofocus="result" onClick={() => navigate(endAction.path)}>
           {endAction.label}
         </Button>
       ) : (
-        <Button variant="primary" onClick={() => local?.onRestart(true)}>
+        <Button variant="primary" data-bub-autofocus="result" onClick={() => local?.onRestart(true)}>
           {t('play.rematch')}
         </Button>
       )}
@@ -450,6 +467,77 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
       {replayButton}
       {resultActionsBase}
     </>
+  );
+
+  // Controller am Spieltisch (#618): Fokus bei Zugbeginn, Übergabe und Partieende; B verlässt nie die Partie.
+  const { inputSource } = useInputSource();
+  const inputSettings = useInputSettings();
+  const placeBoardFocus = (requireLost: boolean) => {
+    if (typeof document === 'undefined') return;
+    const focused = document.activeElement;
+    const active = focused instanceof HTMLElement || focused instanceof SVGElement ? (focused as HTMLElement) : null;
+    const zone = document.querySelector<HTMLElement>('[data-focus-zone="play-board"]');
+    const menuZone = document.querySelector<HTMLElement>('[data-focus-zone="play-menu"]');
+    const focusLost = !active || active === document.body || !active.isConnected || (active as HTMLButtonElement).disabled === true;
+    const target = boardFocusTarget({
+      source: inputSource,
+      focusLost,
+      // Wer bewusst im Menü ist (Start, LB/RB), bleibt dort; nur ein verlorener Fokus oder einer außerhalb des Tischs springt ins Spielfeld.
+      focusInBoard: requireLost ? !focusLost : Boolean(active && (zone?.contains(active) || menuZone?.contains(active))),
+      menuOpen: sideOpen,
+      dialogOpen: showHowTo || document.querySelector('.bub-vkb-key, .bub-inspect-panel') !== null,
+      handover: handoverSeat !== null,
+      result: Boolean(result),
+      yourMove,
+    });
+    if (target === 'handover' || target === 'result') {
+      const el = [...document.querySelectorAll<HTMLElement>(`[data-bub-autofocus="${target}"]`)].find((e) => e.getClientRects().length > 0);
+      const fallback = target === 'result' && !ceremonyClosed ? document.querySelector<HTMLElement>('.bub-ceremony-x') : null;
+      const goal = el ?? fallback;
+      if (goal && goal !== active) goal.focus({ preventScroll: true });
+      return;
+    }
+    if (target !== 'board' || !zone) return;
+    const { candidates, byId } = collectFocusableCandidates(zone);
+    const entry = inputCtx?.getZones().find((z) => z.id === 'play-board');
+    const id = pickZoneEntryTarget(candidates, entry?.lastFocusedId ?? null);
+    if (id) byId.get(id)?.focus({ preventScroll: true });
+  };
+  // Zustandswechsel: eigener Zug beginnt, Übergabe, Ergebnis, Menü oder Fenster zu, Eingabe wechselt.
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => placeBoardFocus(false));
+    return () => cancelAnimationFrame(frame);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [yourMove, handoverSeat, Boolean(result), ceremonyClosed, sideOpen, showHowTo, inputSource]);
+  // Nach jedem Zug: nur eingreifen, wenn der Fokus verloren ging (z. B. das gewählte Feld verschwand).
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => placeBoardFocus(true));
+    return () => cancelAnimationFrame(frame);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session.version]);
+  // B vom Controller verlässt nie die Partie: Was kein anderer Baustein verbraucht (Fenster, Menü, Auswahl), endet hier.
+  useInputIntent((intent, source) => intent === 'cancel' && source === 'gamepad', -5);
+  usePromptItems(
+    handoverSeat !== null
+      ? [{ key: 'A', label: t('play.prompt.reveal') }]
+      : result
+        ? [
+            { key: 'A', label: t('play.prompt.select') },
+            { key: '☰', label: t('play.prompt.menu') },
+          ]
+        : inputSettings.mode === 'legalMoves'
+          ? [
+              { key: '◀▶', label: t('play.prompt.chooseMove') },
+              { key: 'A', label: t('play.prompt.execute') },
+              { key: '☰', label: t('play.prompt.menu') },
+            ]
+          : [
+              { key: 'A', label: t('play.prompt.select') },
+              { key: 'B', label: t('play.prompt.cancel') },
+              { key: 'X', label: t('play.prompt.inspect') },
+              { key: 'LB/RB', label: t('play.prompt.zone') },
+              { key: '☰', label: t('play.prompt.menu') },
+            ],
   );
 
   const humanSeats = seats.filter((seat) => seat.kind === 'human');
@@ -836,6 +924,8 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
         </div>
       )}
       <main
+        ref={tableRef}
+        data-human-moves={0}
         className={`bub-table relative min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain ${fullBleed ? 'p-0' : collapsedSide ? 'px-1 py-0' : 'px-3 side:py-2 side:px-4'}`}
         data-category={categoryOf(info.id)}
         data-collapsed={collapsedSide || undefined}
@@ -850,6 +940,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
               const seat = actingSeat !== undefined ? actingSeat : (typeof viewer === 'number' ? viewer : undefined);
               if (seat === undefined) return;
               const ok = session.submit(seat, move);
+              countHumanMove(ok);
               triggerGamepadHaptic(ok ? 'confirm' : 'error', loadHapticsPref());
             }}
           />
@@ -861,6 +952,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
             const seat = actingSeat !== undefined ? actingSeat : (typeof viewer === 'number' ? viewer : undefined);
             if (seat === undefined) return false;
             const ok = session.submit(seat, move);
+            countHumanMove(ok);
             triggerGamepadHaptic(ok ? 'confirm' : 'error', loadHapticsPref());
             return ok;
           }}
@@ -881,7 +973,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
           onLeaveSeat={session.leaveSeat ? (seat) => session.leaveSeat!(seat) : undefined}
           humanSeats={
             !online && !needsHandover && humans.length > 1
-              ? humans.map((seat) => ({ seat, legalMoves: session.isAway(seat) || session.paused ? [] : session.legalMoves(seat), onMove: (move: unknown) => session.submit(seat, move) }))
+              ? humans.map((seat) => ({ seat, legalMoves: session.isAway(seat) || session.paused ? [] : session.legalMoves(seat), onMove: (move: unknown) => countHumanMove(session.submit(seat, move)) }))
               : undefined
           }
         />
@@ -940,6 +1032,7 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
               <p className="text-muted">{t('play.handoverHint')}</p>
               <Button
                 variant="primary"
+                data-bub-autofocus="handover"
                 onClick={() => {
                   setRevealedFor(handoverSeat);
                   session.resume();

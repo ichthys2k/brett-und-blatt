@@ -64,7 +64,7 @@
 }
 
 /* Zierschrift nur für große Überschriften des Rahmens; Spiele und kleine Titel bleiben in der Systemschrift. */
-[data-look='tavern'] :is(h1:not(.bub-room-code), .bub-home h2, .bub-ceremony-title) {
+[data-look='tavern'] :is(h1:not(.bub-room-code), .bub-home h2, .bub-ceremony-title, .kns-brand) {
   font-family: Almendra, Georgia, 'Noto Serif', serif;
 }
 

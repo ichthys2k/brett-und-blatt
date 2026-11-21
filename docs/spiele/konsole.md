@@ -10,7 +10,7 @@ Auftrag (Cornelius, 20.11.2026): eine Oberfläche in der Art des Steam Deck, als
 2. **Eine Logik, zwei Darstellungen.** Die Konsole ersetzt nur den Weg zum Spiel (Hauptmenü, Spielübersicht, Partie-Vorbereitung). Spieltisch und Spiele bleiben eine Fassung. Seltene Bereiche (Klassen, Turniere, Lernen, Pass, Betreiber) bleiben klassisch.
 3. **Gleiche Adressen** in beiden Darstellungen: `#/`, `#/einzelspieler`, `#/neu/<id>`, `#/partie`.
 4. **Schalter** unter Optionen (`#/ton`, „Oberfläche“), gespeichert in `brett-und-blatt:oberflaeche`; Startparameter `?modus=konsole` / `?modus=klassisch` gilt nur für den Aufruf.
-5. **Nur im Querformat ab 700 × 400 px**; sonst gilt automatisch die klassische Oberfläche.
+5. **Nur im Querformat ab 700 × 360 px**; sonst gilt automatisch die klassische Oberfläche.
 6. **Beide Aussehen** („Schlicht“, „Taverne“, hell, dunkel, erhöhter Kontrast) über die vorhandenen Farbvariablen.
 7. **Keine neuen Bilder, keine neuen Klänge.** Kacheln nutzen Wappen und Kulissen, nie größer als die Datei.
 8. **Feste Tastenbelegung**, B verlässt nie eine laufende Partie (Tabelle im Styleguide).
@@ -117,4 +117,29 @@ Beim Planen aufgefallen, jeweils einem Schritt zugeordnet:
 
 ## Umgesetzte Schritte
 
-Noch keine. Jeder Schritt trägt hier nach der Umsetzung Datum, Issue und die wichtigsten Dateien ein.
+Jeder Schritt trägt hier nach der Umsetzung Datum, Issue und die wichtigsten Dateien ein (ausführlich in `docs/CHRONIK.md`).
+
+- **K1 (#609, 21.11.2026):** Schalter „Oberfläche“ unter Optionen, Startparameter `?modus=konsole|klassisch`, `data-shell="console"`, Weiche `consoleScreen` – `apps/web/src/lib/shellCore.ts`, `shell.ts`, `apps/web/src/console/screens.tsx`.
+- **K2a (#610, 21.11.2026):** Spielkatalog ohne Oberfläche – `apps/web/src/lib/gameCatalog.ts`, `mathPresets.ts`, `categoryOf` in `rubriken.ts`.
+- **K3a (#612, 21.11.2026):** Tastenhinweise je Bildschirm – `usePromptItems`, `PromptProvider` (`packages/ui/src/input/ButtonPrompt.tsx`, `promptStack.ts`).
+- **K3c (#613, 21.11.2026):** Schieberegler, Auswahllisten und Aufklapper per Controller – `packages/ui/src/input/formControls.ts`, `FocusZone.tsx`.
+- **K2b (#611, 21.11.2026):** Partie-Vorbereitung als `useSetupDraft` und `SetupForm` – `apps/web/src/lib/setupDraftCore.ts`, `setupDraft.ts`, `useSetupDraft.ts`, `components/SetupForm.tsx`.
+- **K0 (#608, 21.11.2026):** Messwerkzeug und Daten – `scripts/controller-audit.mjs`, `scripts/lib/virtual-pad.mjs`, `apps/web/src/lib/controllerGrades.json`, Bericht [`konsole-eignung.md`](konsole-eignung.md).
+- **K3b (#614, 21.11.2026):** Rahmen, Kachel, Regal, Anfangsfokus – `apps/web/src/console/`. Mindesthöhe der Konsole 360 px statt 400 px (sonst fiele Handy quer 844 × 390 heraus).
+- **K4 (#615, 21.11.2026):** Start mit Regalen – `console/ConsoleHome.tsx`.
+- **K5 (#616, 21.11.2026):** Bibliothek – `console/ConsoleLibrary.tsx`.
+- **K6 (#617, 21.11.2026):** Spielseite – `console/ConsoleGame.tsx`.
+- **K7 (#618, 21.11.2026):** Spieltisch mit Controller – `lib/turnFocus.ts`, `screens/Play.tsx`.
+- **K9 (#623, 21.11.2026):** Klassische Seiten und Lobby im Rahmen – `console/ClassicInFrame.tsx`.
+- **K10 (#624, 21.11.2026):** Hinweis „Controller erkannt“ – `components/ConsoleOffer.tsx`.
+- **K8 (#619–#622, 21.11.2026, Durchgang 1):** SVG-Bretter mit Controller (Fokus und A in `FocusZone.tsx`), Würfel bei Nicht ärgern!, Menü-Fokus am Spieltisch, Tastenleiste kein Ziel; Neumessung in [`konsole-eignung.md`](konsole-eignung.md).
+- **K11 (#625, 21.11.2026):** `scripts/konsole-probe.mjs`, beide Proben in der CI, [`../steam-deck.md`](../steam-deck.md).
+
+## Offen (Stand 21.11.2026)
+
+- **Am Gerät prüfen (#625):** Steam Deck und echter Controller; die Anleitung trägt bis dahin einen Warnkasten.
+- **K8 von Hand (#619–#622):** Die Prüfliste der Issues ist nicht für jedes Spiel einzeln abgearbeitet. Geprüft sind: Messung aller Spiele, Suche nach Teilen ohne Fokus in allen Spielen (Startzustand), Steuern mit dem Controller in Skat, Nicht ärgern!, Rübenacker, Sternhalma, Grafschaft, Schiffe versenken, Farbe & Form, Rechenmauer. Offen sind Sonderzüge in späteren Phasen (Umwandlung im Schach, Skat drücken, Farbwahl, Mulligan im Drachenspiel …) und die Spiele mit Texteingabe oder Echtzeit.
+- **Zufallslauf unterschätzt mehrschrittige Spiele (#608):** Spiele, deren Züge aus mehreren Schritten bestehen (Schiffe setzen und bestätigen, Stein und Feld wählen), landen bei `carousel`, obwohl jedes Ziel erreichbar ist. Eine Probe, die Ziele gezielt ansteuert, wäre genauer.
+- **Online-Partie aus der Konsolen-Lobby (#623):** bis zum Spieltisch nicht im Browser durchgespielt; Beitreten mit Code, Pass-Namen, Schwarzes Brett „Zettel anlegen“ nicht einzeln geprüft.
+- **Go: `SetupExtra` mit dem Controller (#617)** nicht geprüft.
+- **Controller-Probe:** scheiterte einmal direkt nach einem Bau und war danach viermal grün; Ursache unklar.

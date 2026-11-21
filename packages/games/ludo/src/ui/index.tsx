@@ -554,6 +554,20 @@ function Board({ view, legalMoves, onMove, events }: BoardProps<LudoState, LudoM
               strokeWidth="4"
               className={canRoll ? 'ludo-center-dice' : ''}
               onClick={canRoll ? () => onMove({ type: 'roll' }) : undefined}
+              // Mit Tastatur und Controller erreichbar (#621): A bzw. Enter würfelt.
+              role={canRoll ? 'button' : undefined}
+              tabIndex={canRoll ? 0 : undefined}
+              aria-label={canRoll ? 'Würfeln' : undefined}
+              onKeyDown={
+                canRoll
+                  ? (event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        onMove({ type: 'roll' });
+                      }
+                    }
+                  : undefined
+              }
             />
 
             {view.phase === 'roll' && (

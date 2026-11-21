@@ -14,105 +14,12 @@ import { APP_VERSION } from '../lib/appUpdate';
 import { navigate, paths } from '../lib/router';
 import { storage } from '../lib/storage';
 
-import { CATEGORIES, type CategoryId, type CategorySpec } from '../lib/rubriken';
+import { CATEGORIES, categoryOf, type CategoryId, type CategorySpec } from '../lib/rubriken';
+import { FILTER_TABS, PLAYER_COUNTS, fitsPlayers, groupGames, loadPlayerCount, parseFilter, savePlayerCount, searchGames, visibleGroups as pickVisibleGroups, type FilterId } from '../lib/gameCatalog';
+import { mathPresetsFor } from '../lib/mathPresets';
 
-export { CATEGORIES };
+export { CATEGORIES, categoryOf };
 export type { CategoryId, CategorySpec };
-type FilterId = 'all' | CategoryId;
-
-interface MathPresetCard {
-  id: string;
-  gameId: string;
-  emoji: string;
-  title: string;
-  description: string;
-  badge: string;
-  params: Record<string, string>;
-}
-
-const MATH_CLASSIC_PRESETS: readonly MathPresetCard[] = [
-  {
-    id: 'math-bingo',
-    gameId: 'bingo',
-    emoji: '🎱',
-    title: 'Mathe-Bingo',
-    description: 'Kleines & großes 1×1, Kopfrechnen, Größen, Teiler, Brüche oder Ganze Zahlen für bis zu 30 Plätze.',
-    badge: '1–30 Spieler · 7 Themenpakete',
-    params: { content: 'einmaleins' },
-  },
-  {
-    id: 'math-pairs',
-    gameId: 'pairs',
-    emoji: '🃏',
-    title: 'Mathe-Paare finden',
-    description: 'Wertgleiche Brüche & Prozente, Einheiten, Potenzen oder Einmaleins-Paare im Gedächtnisspiel aufdecken.',
-    badge: '1–6 Spieler · 7 Themenpakete',
-    params: { content: 'brueche' },
-  },
-  {
-    id: 'math-battleship',
-    gameId: 'battleship',
-    emoji: '🚢',
-    title: 'Koordinaten-Schiffe-versenken',
-    description: 'Schiffe im 1. Quadranten P(1|1)..P(10|10) oder im Achsenkreuz aller 4 Quadranten (−5 bis +5) orten.',
-    badge: '2 Spieler · Koordinatensystem',
-    params: { coords: 'quadrants4' },
-  },
-  {
-    id: 'math-dominoes',
-    gameId: 'dominoes',
-    emoji: '🁣',
-    title: 'Mathe-Domino',
-    description: 'Dominosteine mit Rechentermen (Kl. 5) oder Brüchen & Dezimalzahlen (Kl. 6) passend anlegen.',
-    badge: '2–4 Spieler · Terme & Brüche',
-    params: { display: 'terms' },
-  },
-  {
-    id: 'math-uno',
-    gameId: 'uno',
-    emoji: '🃏',
-    title: 'Mathe-Eins!',
-    description: 'Zahlenkarten (0–9) zeigen Kopfrechenaufgaben, Potenzen und Brüche statt der Ziffer.',
-    badge: '2–10 Spieler · Kopfrechnen',
-    params: { mathLabels: 'on' },
-  },
-  {
-    id: 'math-quartett',
-    gameId: 'quartett',
-    emoji: '📐',
-    title: 'Geometrie-Quartett',
-    description: '32 ebene Figuren und räumliche Körper nach Ecken, Kanten, Flächen, Symmetrien und Größe vergleichen.',
-    badge: '2–6 Spieler · 32 Geometrie-Karten',
-    params: { set: 'geometrie' },
-  },
-  {
-    id: 'math-black-peter',
-    gameId: 'black-peter',
-    emoji: '🎩',
-    title: 'Mathe-Schwarzer-Peter',
-    description: 'Aufgabe und passende Lösung als Kartenpaare ablegen – wer behält am Ende den Schwarzen Peter?',
-    badge: '2–6 Spieler · 7 Themenpakete',
-    params: { content: 'kopfrechnen' },
-  },
-  {
-    id: 'math-hangman',
-    gameId: 'hangman',
-    emoji: '🔤',
-    title: 'Mathe-Galgenmännchen',
-    description: 'Mathematische Fachbegriffe aus Geometrie, Arithmetik und Bruchrechnung (Kl. 5/6) Buchstabe für Buchstabe erraten.',
-    badge: '1–8 Spieler · Fachbegriffe Kl. 5/6',
-    params: { category: 'mathe' },
-  },
-  {
-    id: 'math-word-salad',
-    gameId: 'word-salad',
-    emoji: '🥗',
-    title: 'Mathe-Wort-Salat',
-    description: 'Aus langen Mathe-Stammwörtern wie KOORDINATENSYSTEM oder RECHENDREIECK möglichst viele Teilwörter bilden.',
-    badge: '1–30 Spieler · Wortjagd',
-    params: { category: 'mathe' },
-  },
-];
 
 /**
  * Eigenständige Spiele von Cornelius außerhalb der Sammlung. Sie laufen auf
@@ -139,45 +46,6 @@ const EXTERNAL_GAMES: readonly ExternalGameLink[] = [
   },
 ];
 
-/** Die Rubrik eines Spiels; nicht zugeordnete zählen wie auf der Startseite zur Familie. */
-export function categoryOf(gameId: string): CategoryId {
-  return CATEGORIES.find((category) => category.gameIds.includes(gameId))?.id ?? 'family';
-}
-
-const FILTER_TABS: readonly { id: FilterId; icon: string; label: string }[] = [
-  { id: 'all', icon: '🎲', label: 'Alle' },
-  { id: 'board', icon: '♟️', label: 'Strategie & Brett' },
-  { id: 'cards', icon: '🃏', label: 'Karten & Stich' },
-  { id: 'family', icon: '🎲', label: 'Familie & Gesellschaft' },
-  { id: 'math', icon: '📐', label: 'Mathe (Kl. 5/6)' },
-];
-
-/** Auswahl „Wie viele spielt ihr?“ – zeigt nur Spiele, deren Platzzahl die Anzahl zulässt. */
-const PLAYER_COUNTS: readonly number[] = [1, 2, 3, 4, 5, 6, 8, 10, 20, 30];
-const PLAYER_COUNT_KEY = 'bub.home.players';
-
-/** Passt ein Spiel für so viele Spieler? (`null` = keine Auswahl, alles passt) */
-function fitsPlayers(info: GameInfo, count: number | null): boolean {
-  return count === null || (info.players.min <= count && count <= info.players.max);
-}
-
-function loadPlayerCount(): number | null {
-  try {
-    const value = Number(sessionStorage.getItem(PLAYER_COUNT_KEY));
-    return PLAYER_COUNTS.includes(value) ? value : null;
-  } catch {
-    return null;
-  }
-}
-
-function savePlayerCount(count: number | null): void {
-  try {
-    if (count === null) sessionStorage.removeItem(PLAYER_COUNT_KEY);
-    else sessionStorage.setItem(PLAYER_COUNT_KEY, String(count));
-  } catch {
-    // Ohne Speicher gilt die Auswahl nur bis zum Neuladen.
-  }
-}
 
 function playerCount(info: GameInfo): string {
   const { min, max } = info.players;
@@ -264,67 +132,16 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
   useEffect(() => {
     if (initialPlayers !== undefined) setPlayersState(initialPlayers);
   }, [initialPlayers]);
-  const [activeFilter, setActiveFilter] = useState<FilterId>(() => {
-    if (
-      initialFilter === 'board' ||
-      initialFilter === 'cards' ||
-      initialFilter === 'family' ||
-      initialFilter === 'math'
-    ) {
-      return initialFilter;
-    }
-    if (initialFilter === 'mathe') return 'math';
-    return 'all';
-  });
+  const [activeFilter, setActiveFilter] = useState<FilterId>(() => parseFilter(initialFilter));
 
   useEffect(() => {
-    if (
-      initialFilter === 'board' ||
-      initialFilter === 'cards' ||
-      initialFilter === 'family' ||
-      initialFilter === 'math'
-    ) {
-      setActiveFilter(initialFilter);
-    } else if (initialFilter === 'mathe') {
-      setActiveFilter('math');
-    }
+    const parsed = parseFilter(initialFilter);
+    if (parsed !== 'all') setActiveFilter(parsed);
   }, [initialFilter]);
 
-  const categorizedGames = useMemo(() => {
-    const byId = new Map(games.map((g) => [g.id, g]));
-    const assigned = new Set<string>();
-    const groups = CATEGORIES.map((cat) => {
-      const list: GameInfo[] = [];
-      for (const id of cat.gameIds) {
-        const g = byId.get(id);
-        if (g) {
-          list.push(g);
-          assigned.add(id);
-        }
-      }
-      return { ...cat, games: list.filter((g) => fitsPlayers(g, players)) };
-    });
-    // Falls weitere Spiele hinzukommen, die noch keiner Liste zugeordnet sind: in Familie einsortieren
-    const unassigned = games.filter((g) => !assigned.has(g.id));
-    if (unassigned.length > 0) {
-      const fam = groups.find((g) => g.id === 'family');
-      if (fam) fam.games.push(...unassigned.filter((g) => fitsPlayers(g, players)));
-    }
-    return groups;
-  }, [players]);
+  const categorizedGames = useMemo(() => groupGames(games, players), [players]);
 
-  const filteredGamesBySearch = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return null;
-    return games.filter((game) => {
-      if (!fitsPlayers(game, players)) return false;
-      if (game.name.toLowerCase().includes(query)) return true;
-      if (game.description.toLowerCase().includes(query)) return true;
-      if (game.id.toLowerCase().includes(query)) return true;
-      if (game.howToPlay.some((rule) => rule.toLowerCase().includes(query))) return true;
-      return false;
-    });
-  }, [searchQuery, players]);
+  const filteredGamesBySearch = useMemo(() => searchGames(games, searchQuery, players), [searchQuery, players]);
 
   const visibleGroups = useMemo(() => {
     if (filteredGamesBySearch !== null) {
@@ -338,15 +155,13 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
           title: 'Suchergebnisse',
           room: 'Suchergebnisse',
           subtitle: `${filteredGamesBySearch.length} ${filteredGamesBySearch.length === 1 ? 'Spiel' : 'Spiele'} gefunden`,
+          gameIds: [],
           games: filteredGamesBySearch,
         },
       ];
     }
-    const groups = activeFilter === 'all' ? categorizedGames : categorizedGames.filter((g) => g.id === activeFilter);
-    // Mit Spielerzahl-Auswahl leere Rubriken weglassen
-    return players === null ? groups : groups.filter((g) => g.games.length > 0);
+    return pickVisibleGroups(categorizedGames, activeFilter, players);
   }, [activeFilter, categorizedGames, filteredGamesBySearch, players]);
-  const gameById = useMemo(() => new Map(games.map((g) => [g.id, g])), []);
   // Lieblingsspiele stehen oben, gefiltert wie die Rubriken darunter (bei Suche nicht).
   const favoriteGames = useMemo(() => {
     if (filteredGamesBySearch !== null) return [];
@@ -354,10 +169,7 @@ export function Home({ initialFilter, initialPlayers }: { initialFilter?: string
       (g) => fitsPlayers(g, players) && (activeFilter === 'all' || categoryOf(g.id) === activeFilter),
     );
   }, [favorites, filteredGamesBySearch, players, activeFilter]);
-  const mathPresets = MATH_CLASSIC_PRESETS.filter((preset) => {
-    const info = gameById.get(preset.gameId);
-    return !info || fitsPlayers(info, players);
-  });
+  const mathPresets = mathPresetsFor(games, players);
 
   return (
     <TavernPage title="Lokales Spiel" subtitle="Allein gegen den Computer oder zu mehreren an einem Gerät." wide>

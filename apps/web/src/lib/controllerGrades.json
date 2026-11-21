@@ -1,0 +1,466 @@
+{
+  "battleship": {
+    "focusLost": 0,
+    "grade": "carousel",
+    "left": 0,
+    "note": "",
+    "presses": 6,
+    "textInput": false
+  },
+  "bible-quiz": {
+    "focusLost": 21,
+    "grade": "cursor",
+    "left": 0,
+    "note": "",
+    "presses": null,
+    "textInput": false
+  },
+  "bingo": {
+    "focusLost": 182,
+    "grade": "cursor",
+    "left": 0,
+    "note": "",
+    "presses": null,
+    "textInput": false
+  },
+  "binokel": {
+    "focusLost": 2,
+    "grade": "direct",
+    "left": 1,
+    "note": "",
+    "presses": 34,
+    "textInput": false
+  },
+  "black-peter": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 10,
+    "textInput": false
+  },
+  "category-sprint": {
+    "focusLost": 246,
+    "grade": "cursor",
+    "left": 0,
+    "note": "",
+    "presses": null,
+    "textInput": true
+  },
+  "checkers": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 77,
+    "textInput": false
+  },
+  "chess": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 273,
+    "textInput": false
+  },
+  "chinese-checkers": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 72,
+    "textInput": false
+  },
+  "color-and-shape": {
+    "focusLost": 0,
+    "grade": "carousel",
+    "left": 0,
+    "note": "",
+    "presses": 11,
+    "textInput": false
+  },
+  "color-sorter": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 112,
+    "textInput": false
+  },
+  "describe-duel": {
+    "focusLost": 249,
+    "grade": "carousel",
+    "left": 0,
+    "note": "",
+    "presses": 9,
+    "textInput": true
+  },
+  "dominoes": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 10,
+    "textInput": false
+  },
+  "doppelkopf": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 16,
+    "textInput": false
+  },
+  "drachenspiel": {
+    "focusLost": 10,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 98,
+    "textInput": false
+  },
+  "dragon-towers": {
+    "focusLost": 0,
+    "grade": "carousel",
+    "left": 1,
+    "note": "",
+    "presses": 8,
+    "textInput": false
+  },
+  "duck-rally": {
+    "focusLost": 0,
+    "grade": "cursor",
+    "left": 0,
+    "note": "",
+    "presses": null,
+    "textInput": false
+  },
+  "elevens": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 59,
+    "textInput": false
+  },
+  "estimate": {
+    "focusLost": 233,
+    "grade": "cursor",
+    "left": 0,
+    "note": "",
+    "presses": null,
+    "textInput": true
+  },
+  "factor-grid": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 11,
+    "textInput": false
+  },
+  "four-in-a-row": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 16,
+    "textInput": false
+  },
+  "four-player-chess": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 106,
+    "textInput": false
+  },
+  "go": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 15,
+    "textInput": false
+  },
+  "gomoku": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 6,
+    "textInput": false
+  },
+  "grafschaft": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 41,
+    "textInput": false
+  },
+  "hangman": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 10,
+    "textInput": false
+  },
+  "kniffel": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 7,
+    "textInput": false
+  },
+  "ligretto": {
+    "focusLost": 14,
+    "grade": "direct",
+    "left": 8,
+    "note": "",
+    "presses": 187,
+    "textInput": false
+  },
+  "low-flight": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 6,
+    "textInput": false
+  },
+  "ludo": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 10,
+    "textInput": false
+  },
+  "maexle": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 16,
+    "textInput": false
+  },
+  "majority": {
+    "focusLost": 236,
+    "grade": "carousel",
+    "left": 0,
+    "note": "",
+    "presses": 8,
+    "textInput": false
+  },
+  "market-stalls": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 26,
+    "textInput": false
+  },
+  "marketplace": {
+    "focusLost": 0,
+    "grade": "carousel",
+    "left": 0,
+    "note": "",
+    "presses": 8,
+    "textInput": false
+  },
+  "mau-mau": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 14,
+    "textInput": false
+  },
+  "mill": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 11,
+    "textInput": false
+  },
+  "mole-tunnels": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 14,
+    "textInput": false
+  },
+  "number-wall": {
+    "focusLost": 0,
+    "grade": "cursor",
+    "left": 0,
+    "note": "",
+    "presses": null,
+    "textInput": false
+  },
+  "pairs": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 7,
+    "textInput": false
+  },
+  "poker": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 57,
+    "textInput": false
+  },
+  "president": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 113,
+    "textInput": false
+  },
+  "quartett": {
+    "focusLost": 6,
+    "grade": "carousel",
+    "left": 0,
+    "note": "",
+    "presses": 6,
+    "textInput": false
+  },
+  "reversi": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 5,
+    "textInput": false
+  },
+  "schafkopf": {
+    "focusLost": 0,
+    "grade": "carousel",
+    "left": 0,
+    "note": "",
+    "presses": 6,
+    "textInput": false
+  },
+  "scrabble": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 42,
+    "textInput": false
+  },
+  "skat": {
+    "focusLost": 0,
+    "grade": "carousel",
+    "left": 0,
+    "note": "",
+    "presses": 10,
+    "textInput": false
+  },
+  "solitaire": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 243,
+    "textInput": false
+  },
+  "speed": {
+    "focusLost": 5,
+    "grade": "direct",
+    "left": 3,
+    "note": "",
+    "presses": 49,
+    "textInput": false
+  },
+  "symbol-match": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 10,
+    "textInput": false
+  },
+  "target-number": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 29,
+    "textInput": false
+  },
+  "tic-tac-toe": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 10,
+    "textInput": false
+  },
+  "timeline": {
+    "focusLost": 237,
+    "grade": "cursor",
+    "left": 0,
+    "note": "",
+    "presses": null,
+    "textInput": false
+  },
+  "turnip-patch": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 5,
+    "textInput": false
+  },
+  "ultimate-tic-tac-toe": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 10,
+    "textInput": false
+  },
+  "uno": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 10,
+    "textInput": false
+  },
+  "who-am-i": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 30,
+    "textInput": false
+  },
+  "wolves-sheep": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 24,
+    "textInput": false
+  },
+  "word-salad": {
+    "focusLost": 0,
+    "grade": "direct",
+    "left": 0,
+    "note": "",
+    "presses": 133,
+    "textInput": false
+  }
+}
