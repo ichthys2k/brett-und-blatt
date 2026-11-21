@@ -1,4 +1,4 @@
-import { useInputIntent } from '@brett-und-blatt/ui';
+import { KnsButton, KnsDialog, KnsEmpty, KnsGrid, KnsTile, knsLayout, useInputIntent, useViewportSize } from '@brett-und-blatt/ui';
 import { useEffect, useRef, useState } from 'react';
 import { t } from '../i18n';
 import { controllerGrade } from '../lib/controllerGrade';
@@ -20,6 +20,9 @@ export function ConsoleLibrary({ initialFilter, initialPlayers }: { initialFilte
   const [players, setPlayersState] = useState<number | null>(() => initialPlayers ?? loadPlayerCount());
   const [query, setQuery] = useState('');
   const { favorites, toggle } = useFavorites();
+  const [filterOpen, setFilterOpen] = useState(false);
+  const viewport = useViewportSize();
+  const portrait = knsLayout(viewport.width, viewport.height) === 'portrait';
   useFavoriteKey(favorites, toggle);
   useInitialFocus(ref, 'bibliothek');
 
@@ -49,6 +52,25 @@ export function ConsoleLibrary({ initialFilter, initialPlayers }: { initialFilte
     requestAnimationFrame(() => ref.current?.querySelector<HTMLElement>('.kns-tile')?.focus());
   };
 
+  const searchField = (
+    <span className="kns-search-wrap">
+      <input
+        ref={searchRef}
+        type="search"
+        className="kns-search"
+        value={query}
+        placeholder={t('console.search')}
+        aria-label={t('console.search')}
+        onChange={(event) => setQuery(event.target.value)}
+      />
+      {query && (
+        <button type="button" className="kns-chip kns-chip-small" aria-label={t('console.search.clear')} onClick={() => setQuery('')}>
+          ✕
+        </button>
+      )}
+    </span>
+  );
+
   return (
     <ConsoleFrame
       tab="library"
@@ -61,59 +83,66 @@ export function ConsoleLibrary({ initialFilter, initialPlayers }: { initialFilte
     >
       <div ref={ref}>
         <div className="kns-filters">
-          <div className="kns-chips" role="group" aria-label={t('console.categories')}>
-            {FILTER_TABS.map((tab) => (
-              <button key={tab.id} type="button" className="kns-chip" aria-pressed={filter === tab.id} data-kns-id={`filter:${tab.id}`} onClick={() => setFilter(tab.id)}>
-                <span aria-hidden="true">{tab.icon} </span>
-                {tab.label}
-              </button>
-            ))}
-          </div>
-          <div className="kns-chips" role="group" aria-label={t('console.players')}>
-            {[null, ...PLAYER_COUNTS].map((count) => (
-              <button
-                key={count ?? 'any'}
-                type="button"
-                className="kns-chip kns-chip-small"
-                aria-pressed={players === count}
-                aria-label={count === null ? t('console.players.any') : t('console.players.n', { count })}
-                data-kns-id={`players:${count ?? 'any'}`}
-                onClick={() => setPlayers(count)}
-              >
-                {count ?? t('console.players.any')}
-              </button>
-            ))}
-            <span className="kns-search-wrap">
-              <input
-                ref={searchRef}
-                type="search"
-                className="kns-search"
-                value={query}
-                placeholder={t('console.search')}
-                aria-label={t('console.search')}
-                onChange={(event) => setQuery(event.target.value)}
-              />
-              {query && (
-                <button type="button" className="kns-chip kns-chip-small" aria-label={t('console.search.clear')} onClick={() => setQuery('')}>
-                  ✕
+          {portrait ? (
+            <>
+              {searchField}
+              <div className="kns-chips kns-chips-scroll" role="group" aria-label={t('console.categories')}>
+                {FILTER_TABS.map((tab) => (
+                  <button key={tab.id} type="button" className="kns-chip" aria-pressed={filter === tab.id} data-kns-id={`filter:${tab.id}`} onClick={() => setFilter(tab.id)}>
+                    <span aria-hidden="true">{tab.icon} </span>
+                    {tab.label}
+                  </button>
+                ))}
+                <button type="button" className="kns-chip" aria-haspopup="dialog" data-kns-id="filter:players" onClick={() => setFilterOpen(true)}>
+                  <span aria-hidden="true">👥 </span>
+                  {players === null ? t('console.filter') : t('console.players.n', { count: players })}
                 </button>
-              )}
-            </span>
-          </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="kns-chips" role="group" aria-label={t('console.categories')}>
+                {FILTER_TABS.map((tab) => (
+                  <button key={tab.id} type="button" className="kns-chip" aria-pressed={filter === tab.id} data-kns-id={`filter:${tab.id}`} onClick={() => setFilter(tab.id)}>
+                    <span aria-hidden="true">{tab.icon} </span>
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+              <div className="kns-chips" role="group" aria-label={t('console.players')}>
+                {[null, ...PLAYER_COUNTS].map((count) => (
+                  <button
+                    key={count ?? 'any'}
+                    type="button"
+                    className="kns-chip kns-chip-small"
+                    aria-pressed={players === count}
+                    aria-label={count === null ? t('console.players.any') : t('console.players.n', { count })}
+                    data-kns-id={`players:${count ?? 'any'}`}
+                    onClick={() => setPlayers(count)}
+                  >
+                    {count ?? t('console.players.any')}
+                  </button>
+                ))}
+                {searchField}
+              </div>
+            </>
+          )}
           <p className="kns-count" aria-live="polite">
             {list.length === 1 ? t('console.count.one') : t('console.count', { count: list.length })}
           </p>
         </div>
 
         {list.length === 0 && presets.length === 0 ? (
-          <div className="kns-empty">
-            <p>{t('console.empty')}</p>
-            <button type="button" className="kns-button kns-button-primary" onClick={reset}>
-              {t('console.reset')}
-            </button>
-          </div>
+          <KnsEmpty
+            title={t('console.empty')}
+            action={
+              <KnsButton variant="primary" onClick={reset}>
+                {t('console.reset')}
+              </KnsButton>
+            }
+          />
         ) : (
-          <ul className="kns-grid">
+          <KnsGrid>
             {list.map((info, index) => (
               <li key={info.id}>
                 <GameTile info={info} href={paths.setup(info.id)} favorite={favorites.includes(info.id)} grade={controllerGrade(info.id)} autoFocus={index === 0} />
@@ -121,18 +150,41 @@ export function ConsoleLibrary({ initialFilter, initialPlayers }: { initialFilte
             ))}
             {presets.map((preset) => (
               <li key={preset.id}>
-                <a href={paths.setup(preset.gameId, preset.params)} className="kns-tile kns-linktile" data-kns-id={`preset:${preset.id}`} aria-label={`${preset.title}. ${preset.badge}`}>
-                  <span className="kns-tile-art" aria-hidden="true">
-                    {preset.emoji}
-                  </span>
-                  <span className="kns-tile-text" aria-hidden="true">
-                    <span className="kns-tile-name">{preset.title}</span>
-                    <span className="kns-tile-meta kns-linktile-hint">{preset.badge}</span>
-                  </span>
-                </a>
+                <KnsTile
+                  href={paths.setup(preset.gameId, preset.params)}
+                  variant="link"
+                  art={preset.emoji}
+                  title={preset.title}
+                  meta={preset.badge}
+                  data-kns-id={`preset:${preset.id}`}
+                  aria-label={`${preset.title}. ${preset.badge}`}
+                />
               </li>
             ))}
-          </ul>
+          </KnsGrid>
+        )}
+        {filterOpen && (
+          <KnsDialog title={t('console.players')} size="s" onClose={() => setFilterOpen(false)}>
+            <div className="kns-chips" role="group" aria-label={t('console.players')}>
+              {[null, ...PLAYER_COUNTS].map((count) => (
+                <button
+                  key={count ?? 'any'}
+                  type="button"
+                  className="kns-chip kns-chip-small"
+                  aria-pressed={players === count}
+                  aria-label={count === null ? t('console.players.any') : t('console.players.n', { count })}
+                  data-kns-id={`players:${count ?? 'any'}`}
+                  data-bub-autofocus={players === count ? '' : undefined}
+                  onClick={() => {
+                    setPlayers(count);
+                    setFilterOpen(false);
+                  }}
+                >
+                  {count ?? t('console.players.any')}
+                </button>
+              ))}
+            </div>
+          </KnsDialog>
         )}
       </div>
     </ConsoleFrame>

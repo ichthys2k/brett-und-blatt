@@ -1017,3 +1017,85 @@
     transition: none;
   }
 }
+
+/* ---------- Hochformat (#637, U2) ---------- */
+
+/* Am Handy hochkant: Einheit 8 px bei 390 px Breite, kleinere Schriftstufen, Ziele mindestens 44 px. */
+:root[data-shell='console'][data-kns-layout='portrait'] {
+  --kns-u: clamp(7px, 2.05vw, 10px);
+  --kns-gutter: calc(2 * var(--kns-u));
+  --kns-gap: calc(1.5 * var(--kns-u));
+  --kns-bar: calc(6 * var(--kns-u));
+  --kns-nav: calc(8 * var(--kns-u));
+  --kns-text-s: calc(1.75 * var(--kns-u));
+  --kns-text: calc(2 * var(--kns-u));
+  --kns-text-l: calc(2.25 * var(--kns-u));
+  --kns-title: calc(3 * var(--kns-u));
+  --kns-hero: calc(5 * var(--kns-u));
+  --kns-radius: calc(1.5 * var(--kns-u));
+  --kns-target: max(44px, calc(6 * var(--kns-u)));
+  /* Regal: zwei Kacheln sichtbar, die dritte angeschnitten. */
+  --kns-tile-w: calc((100vw - 2 * var(--kns-gutter) - 2 * var(--kns-gap)) / 2.3);
+  --kns-tile-h: calc(var(--kns-tile-w) * 0.72);
+}
+
+/* Raster: zwei Spalten, ab 600 px drei; die Kachel füllt ihre Spalte. */
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: calc(1 * var(--kns-u)) 0;
+}
+
+@media (min-width: 600px) {
+  :root[data-shell='console'][data-kns-layout='portrait'] .kns-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-grid .kns-tile {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 0.72;
+}
+
+/* Die Bildfläche ist absolut gesetzt und damit fest hoch; als Flex-Behälter löst sich `height: 100%` des Bilds auf. */
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-tile-art {
+  bottom: calc(6.5 * var(--kns-u));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-tile-art img {
+  height: 100%;
+  max-height: calc(11 * var(--kns-u));
+  object-fit: contain;
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-shelf-row {
+  margin: 0 calc(-1 * var(--kns-gutter));
+  padding: calc(1 * var(--kns-u)) var(--kns-gutter);
+  scroll-padding-inline: var(--kns-gutter);
+}
+
+/* Zeilen: das Bedienelement rutscht unter die Beschriftung, wenn es nicht daneben passt. */
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-row-wide .kns-row-control {
+  flex: 1 1 100%;
+  justify-content: flex-end;
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-slider {
+  flex: 1 1 auto;
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-input {
+  width: 100%;
+}
+
+/* Die Tastenleiste sitzt über der Leiste unten. */
+:root[data-shell='console'][data-kns-layout='portrait'] .bub-prompt-bar {
+  bottom: calc(var(--kns-nav) + env(safe-area-inset-bottom) + 8px);
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-banner-floating {
+  bottom: calc(var(--kns-nav) + env(safe-area-inset-bottom) + calc(2 * var(--kns-u)));
+}

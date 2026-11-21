@@ -7,11 +7,11 @@ import { paths } from '../lib/router';
 
 export type ConsoleTab = 'start' | 'library' | 'online' | 'options';
 
-export const CONSOLE_TABS: readonly { id: ConsoleTab; labelKey: string; path: string }[] = [
-  { id: 'start', labelKey: 'console.tab.start', path: paths.menu },
-  { id: 'library', labelKey: 'console.tab.library', path: paths.home },
-  { id: 'online', labelKey: 'console.tab.online', path: paths.online },
-  { id: 'options', labelKey: 'console.tab.options', path: paths.sound },
+export const CONSOLE_TABS: readonly { id: ConsoleTab; labelKey: string; icon: string; path: string }[] = [
+  { id: 'start', labelKey: 'console.tab.start', icon: '🏠', path: paths.menu },
+  { id: 'library', labelKey: 'console.tab.library', icon: '🎲', path: paths.home },
+  { id: 'online', labelKey: 'console.tab.online', icon: '🌐', path: paths.online },
+  { id: 'options', labelKey: 'console.tab.options', icon: '⚙️', path: paths.sound },
 ];
 
 /** Der Reiter, der zu einer Route gehört: menu → start; home, setup → library; online, room, board → online; sound → options; sonst null. */

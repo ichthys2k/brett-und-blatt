@@ -32,7 +32,7 @@ import {
   useScenesOn,
   useChosenTable,
 } from '../lib/look';
-import { setShell, shellParam, useActiveShell, useChosenShell, type Shell } from '../lib/shell';
+import { setShell, shellParam, useChosenShell, type Shell } from '../lib/shell';
 import { music, useMusicPrefs } from '../lib/music';
 import { PushToggle } from '../components/PushToggle';
 import { loadPushWish } from '../lib/push';
@@ -92,7 +92,6 @@ function PieceSets() {
 /** Oberfläche „Klassisch“ oder „Konsole“ (#607, K1). */
 function ShellChoice() {
   const chosen = useChosenShell();
-  const active = useActiveShell();
   const param = shellParam();
   const options: readonly { id: Shell; label: string; text: string }[] = [
     { id: 'classic', label: t('shell.classic'), text: t('shell.classic.text') },
@@ -111,7 +110,6 @@ function ShellChoice() {
         </label>
       ))}
       {param !== null && <p className="text-sm text-muted">{t('shell.param')}</p>}
-      {param === null && chosen === 'console' && active === 'classic' && <p className="text-sm text-muted">{t('shell.narrow')}</p>}
     </fieldset>
   );
 }

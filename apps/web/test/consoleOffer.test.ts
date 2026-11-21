@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { shouldOfferConsole } from '../src/lib/consoleOffer';
 
-const base = { chosen: 'classic' as const, param: null, alreadyAsked: false, source: 'gamepad' as const, width: 1280, height: 800, routeName: 'menu' };
+const base = { chosen: 'classic' as const, param: null, alreadyAsked: false, source: 'gamepad' as const, routeName: 'menu' };
 
 describe('Hinweis „Controller erkannt“ (#624)', () => {
   it('erscheint unter allen Bedingungen', () => expect(shouldOfferConsole(base)).toBe(true));
@@ -11,10 +11,6 @@ describe('Hinweis „Controller erkannt“ (#624)', () => {
   it('nur nach Controller-Eingabe', () => {
     expect(shouldOfferConsole({ ...base, source: 'keyboard' })).toBe(false);
     expect(shouldOfferConsole({ ...base, source: 'pointer' })).toBe(false);
-  });
-  it('nicht, wo die Konsole nicht passt', () => {
-    expect(shouldOfferConsole({ ...base, width: 390, height: 844 })).toBe(false);
-    expect(shouldOfferConsole({ ...base, width: 640, height: 360 })).toBe(false);
   });
   it('nur auf Start, Bibliothek, Spielseite und Optionen', () => {
     for (const routeName of ['menu', 'home', 'setup', 'sound']) expect(shouldOfferConsole({ ...base, routeName })).toBe(true);

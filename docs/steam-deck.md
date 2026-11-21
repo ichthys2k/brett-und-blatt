@@ -11,7 +11,7 @@ Brett & Blatt hat eine zweite Oberfläche für Controller, Handhelds und Fernseh
 - In Chrome, Chromium oder Edge **https://spiele.lipponer.de/?modus=konsole** öffnen. Der Zusatz `?modus=konsole` gilt nur für diesen Aufruf.
 - Dauerhaft: **Optionen → Oberfläche → Konsole**. Zurück geht es an derselben Stelle mit „Klassisch“.
 - Wer zum ersten Mal einen Controller benutzt, bekommt die Konsole einmal angeboten.
-- Die Konsole erscheint nur im Querformat ab 700 × 360 Pixeln, am Handy hochkant gilt immer die klassische Oberfläche.
+- Die Konsole gilt in jeder Fenstergröße; am Handy hochkant stehen die Reiter als Leiste am unteren Rand.
 
 ## 3. Auf dem Steam Deck einrichten
 

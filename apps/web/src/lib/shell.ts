@@ -27,7 +27,7 @@ let active: Shell = 'classic';
 
 function compute(): Shell {
   if (typeof window === 'undefined') return 'classic';
-  return resolveShell({ chosen, param, width: window.innerWidth, height: window.innerHeight });
+  return resolveShell({ chosen, param });
 }
 
 function apply(): void {
@@ -39,7 +39,7 @@ function apply(): void {
   for (const listener of listeners) listener();
 }
 
-/** Die gespeicherte Wahl (ohne Startparameter und Fenstergröße). */
+/** Die gespeicherte Wahl (ohne Startparameter). */
 export function chosenShell(): Shell {
   return chosen;
 }
@@ -75,9 +75,6 @@ export const useActiveShell = (): Shell => useSyncExternalStore(subscribe, () =>
 
 if (typeof window !== 'undefined') {
   apply();
-  window.addEventListener('resize', () => {
-    if (compute() !== active) apply();
-  });
   window.addEventListener('storage', (event) => {
     if (event.key !== SHELL_KEY) return;
     chosen = loadShell();

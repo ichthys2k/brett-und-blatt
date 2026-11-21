@@ -24,3 +24,4 @@ export { KnsList, KnsListItem, type KnsListItemProps } from './KnsList';
 export { KnsSplit, KnsSubTabs, useViewportSize, type KnsSplitNavItem, type KnsSplitProps, type KnsSubTab } from './nav';
 export { KnsGrid, KnsShelf, KnsTile, type KnsTileProps } from './tiles';
 export { CHOICE_INLINE_MAX, SPLIT_SIDE_MIN_WIDTH, choiceRowMode, splitMode, stepperValue } from './logic';
+export { KNS_PORTRAIT_MAX_WIDTH, knsColumns, knsLayout, knsUnit, type KnsLayout } from './layout';

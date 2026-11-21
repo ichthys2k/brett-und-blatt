@@ -6,10 +6,6 @@
 
 export type Shell = 'classic' | 'console';
 
-/** Unter dieser Fenstergröße gilt immer die klassische Oberfläche (#607, Festlegung 5). */
-export const CONSOLE_MIN_WIDTH = 700;
-export const CONSOLE_MIN_HEIGHT = 360;
-
 /** Liest `?modus=konsole` bzw. `?modus=klassisch` aus `location.search`; alles andere ergibt `null`. */
 export function parseShellParam(search: string): Shell | null {
   const value = new URLSearchParams(search).get('modus');
@@ -23,9 +19,10 @@ export function parseStoredShell(raw: string | null): Shell {
   return raw === 'konsole' ? 'console' : 'classic';
 }
 
-/** Die Darstellung, die wirklich gilt: Parameter vor gespeicherter Wahl; Konsole nur im Querformat ab der Mindestgröße. */
-export function resolveShell(input: { chosen: Shell; param: Shell | null; width: number; height: number }): Shell {
-  const wanted = input.param ?? input.chosen;
-  const fits = input.width >= CONSOLE_MIN_WIDTH && input.height >= CONSOLE_MIN_HEIGHT && input.width > input.height;
-  return wanted === 'console' && fits ? 'console' : 'classic';
+/**
+ * Die Darstellung, die wirklich gilt: Parameter vor gespeicherter Wahl. Seit #637 (Hochformat der Konsole) gilt
+ * die Konsole in jeder Fenstergröße; die frühere Mindestgröße 700 × 360 im Querformat ist entfallen.
+ */
+export function resolveShell(input: { chosen: Shell; param: Shell | null }): Shell {
+  return input.param ?? input.chosen;
 }

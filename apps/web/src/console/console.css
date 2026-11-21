@@ -354,3 +354,174 @@
 :root[data-shell='console'] .kns-classic .bub-tav {
   overflow: hidden;
 }
+
+/* ---------- Hochformat (#637, U2) ---------- */
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-bar {
+  gap: calc(2 * var(--kns-u));
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-status-avatar {
+  width: calc(4 * var(--kns-u));
+  height: calc(4 * var(--kns-u));
+}
+
+/* Leiste am unteren Rand: je Reiter Symbol über dem Namen. */
+:root[data-shell='console'] .kns-nav {
+  display: flex;
+  flex: none;
+  justify-content: space-around;
+  min-height: var(--kns-nav);
+  padding: 0 max(var(--kns-gutter), env(safe-area-inset-right)) env(safe-area-inset-bottom) max(var(--kns-gutter), env(safe-area-inset-left));
+  border-top: 1px solid var(--color-line);
+  background: var(--color-surface);
+}
+
+:root[data-shell='console'] .kns-nav-tab {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(0.25 * var(--kns-u));
+  min-width: 0;
+  min-height: var(--kns-nav);
+  color: var(--color-muted);
+  text-decoration: none;
+}
+
+:root[data-shell='console'] .kns-nav-icon {
+  font-size: var(--kns-text-l);
+  line-height: 1;
+  filter: grayscale(0.6);
+  opacity: 0.8;
+}
+
+:root[data-shell='console'] .kns-nav-label {
+  overflow: hidden;
+  max-width: 100%;
+  font-size: var(--kns-text-s);
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+:root[data-shell='console'] .kns-nav-tab[aria-current='page'] {
+  color: var(--color-accent);
+}
+
+:root[data-shell='console'] .kns-nav-tab[aria-current='page'] .kns-nav-icon {
+  filter: none;
+  opacity: 1;
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-main {
+  padding-bottom: calc(3 * var(--kns-u));
+  scroll-padding-bottom: calc(2 * var(--kns-u));
+}
+
+/* Mit Controller steht die Tastenleiste über dem Inhalt: Platz dafür lassen. */
+:root[data-shell='console'][data-kns-layout='portrait'][data-input-mode='gamepad'] .kns-main {
+  padding-bottom: calc(var(--kns-legend) + calc(3 * var(--kns-u)));
+  scroll-padding-bottom: calc(var(--kns-legend) + calc(2 * var(--kns-u)));
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-classic .bub-tav-inner,
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-classic .bub-lobby {
+  padding-bottom: 1rem;
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'][data-input-mode='gamepad'] .kns-classic .bub-tav-inner,
+:root[data-shell='console'][data-kns-layout='portrait'][data-input-mode='gamepad'] .kns-classic .bub-lobby {
+  padding-bottom: calc(var(--kns-legend) + 1rem);
+}
+
+/* Laufende Partie: Wappen über dem Text, Knöpfe nebeneinander in voller Breite. */
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-resume {
+  flex-wrap: wrap;
+  gap: calc(2 * var(--kns-u));
+  min-height: 0;
+  padding: calc(2 * var(--kns-u));
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-resume-art img {
+  height: calc(9 * var(--kns-u));
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-resume-text {
+  flex: 1 1 calc(20 * var(--kns-u));
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-resume-actions {
+  flex: 1 1 100%;
+  flex-direction: row;
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-resume-actions > * {
+  flex: 1 1 0;
+}
+
+/* Bibliothek: Suche in voller Breite, Rubriken einzeilig rollend. */
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-filters {
+  top: calc(-3 * var(--kns-u));
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-chips-scroll {
+  flex-wrap: nowrap;
+  margin: 0 calc(-1 * var(--kns-gutter));
+  padding: calc(0.5 * var(--kns-u)) var(--kns-gutter);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-chips-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-chips-scroll > * {
+  flex: none;
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-search-wrap {
+  flex: 1 1 100%;
+}
+
+/* Spielseite: einspaltig; Kopf, dann Aktionen, dann die Beschreibung. */
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-game {
+  display: flex;
+  flex-direction: column;
+  gap: calc(2 * var(--kns-u));
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-game-info {
+  display: contents;
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-game-art {
+  order: 1;
+  margin: 0;
+  font-size: var(--kns-hero);
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-game-art img {
+  max-height: calc(11 * var(--kns-u));
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-game .kns-title {
+  order: 2;
+  margin: calc(-1 * var(--kns-u)) 0 0;
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-game-info .kns-game-meta {
+  order: 3;
+  margin: calc(-1.5 * var(--kns-u)) 0 0;
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-actions {
+  order: 4;
+}
+
+:root[data-shell='console'][data-kns-layout='portrait'] .kns-game-desc {
+  order: 5;
+  margin: 0;
+}

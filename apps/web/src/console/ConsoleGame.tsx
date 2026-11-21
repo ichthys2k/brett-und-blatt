@@ -101,7 +101,7 @@ export function ConsoleGame({ gameId, params }: { gameId: string; params?: Recor
             {crest ? <img src={crest} alt="" decoding="async" /> : info.emoji}
           </span>
           <h1 className="kns-title">{info.name}</h1>
-          <p>{info.description}</p>
+          <p className="kns-game-desc">{info.description}</p>
           <p className="kns-game-meta">{playerCountText(info)}</p>
           {grade && (
             <p className="kns-game-meta">

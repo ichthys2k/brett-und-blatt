@@ -118,7 +118,7 @@ Regeln dazu:
 - Bedienelemente sind `<button>` oder `<a href>`; sonst `tabIndex={0}`, `role="button"`, `aria-label` und Enter/Leertaste. Dann findet sie die räumliche Navigation von selbst.
 - Keine eigene Pfeiltasten-Logik je Bildschirm. Kurzbefehle über `useInputIntent(handler, 5)`; wer eine Taste verbraucht, gibt `true` zurück.
 - Sichere Ränder beachten: `env(safe-area-inset-*)` zusätzlich zu `--kns-gutter`.
-- Prüfgrößen: 1280 × 800, 1920 × 1080, 844 × 390; dazu 390 × 844 (bis U2 von #635 klassisch, danach Hochformat der Konsole, Abschnitt 9). Jeweils „Taverne“ und „Schlicht“, hell und dunkel.
+- Prüfgrößen: 390 × 844, 360 × 640, 768 × 1024 (Hochformat, Abschnitt 9), 844 × 390, 1280 × 800, 1920 × 1080. Jeweils „Taverne“ und „Schlicht“, hell und dunkel.
 
 ---
 
@@ -126,8 +126,11 @@ Die Abschnitte 9–13 gehören zum Vorhaben „Konsole überall“ (#635, Plan i
 
 ## 9. Hochformat (U2)
 
-- Hochformat gilt, wenn das Fenster höher als breit oder schmaler als 700 px ist (`knsLayout`); `<html>` trägt `data-kns-layout="portrait|landscape"`.
-- Maße im Hochformat: `--kns-u: clamp(7px, 2.05vw, 10px)` (8 px bei 390 px Breite), `--kns-gutter` 2 u, Kacheln zweispaltig (ab 600 px Breite dreispaltig), Seitenverhältnis der Kachel 1 : 0,72.
+- Hochformat gilt, wenn das Fenster höher als breit oder schmaler als 700 px ist (`knsLayout` in `packages/ui/src/konsole/layout.ts`); `useKnsLayout()` (`apps/web/src/console/`) setzt `data-kns-layout="portrait|landscape"` an `<html>`.
+- Maße im Hochformat: `--kns-u: clamp(7px, 2.05vw, 10px)` (8 px bei 390 px Breite), `--kns-gutter` 2 u, `--kns-gap` 1,5 u. Schriftstufen kleiner als im Querformat: Text 2 u (16 px), klein 1,75 u, groß 2,25 u, Titel 3 u; `--kns-target` mindestens 44 px.
+- Raster zweispaltig (ab 600 px Breite dreispaltig), die Kachel füllt ihre Spalte im Verhältnis 1 : 0,72. Im Regal sind zwei Kacheln ganz und die dritte angeschnitten zu sehen (`--kns-tile-w` = verfügbare Breite / 2,3).
+- Bibliothek: Suche in voller Breite, Rubriken als rollende Chip-Zeile, am Ende ein Chip „Spielerzahl“, der ein Fenster mit den Spielerzahlen öffnet.
+- Spielseite einspaltig in der Reihenfolge Wappen, Name, Spielerzahl, Aktionen, Beschreibung.
 - **Leiste unten** statt Reitern oben: Höhe 8 u plus `env(safe-area-inset-bottom)`, je Reiter Symbol über Name, aktiver Reiter in `--color-accent`. Oben eine schmale Kopfzeile (6 u) mit Schriftzug, „☰“ und Pass-Avatar.
 - Unterreiter und Kategorien werden zu einer waagrecht rollenden Zeile unter der Kopfzeile.
 - Zweispaltige Seiten (Detail, Einstellungen) werden einspaltig; die Hauptaktion steht ohne Rollen im sichtbaren Bereich.

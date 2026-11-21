@@ -24,25 +24,14 @@ function saveAsked(): void {
   }
 }
 
-function useWindowSize(): { width: number; height: number } {
-  const [size, setSize] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
-  useEffect(() => {
-    const onResize = () => setSize({ width: window.innerWidth, height: window.innerHeight });
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
-  return size;
-}
-
 /** Einmaliger Hinweis „Controller erkannt“ mit „Einschalten“ und „Nein danke“ (#607, K10). */
 export function ConsoleOffer() {
   const { inputSource } = useInputSource();
   const chosen = useChosenShell();
   const route = useRoute();
-  const { width, height } = useWindowSize();
   const [asked, setAsked] = useState(loadAsked);
   const previous = useRef<HTMLElement | null>(null);
-  const visible = shouldOfferConsole({ chosen, param: shellParam(), alreadyAsked: asked, source: inputSource, width, height, routeName: route.name });
+  const visible = shouldOfferConsole({ chosen, param: shellParam(), alreadyAsked: asked, source: inputSource, routeName: route.name });
 
   useEffect(() => {
     if (!visible) return;

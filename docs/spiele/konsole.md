@@ -10,7 +10,7 @@ Auftrag (Cornelius, 20.11.2026): eine Oberfläche in der Art des Steam Deck, als
 2. **Eine Logik, zwei Darstellungen.** Die Konsole ersetzt nur den Weg zum Spiel (Hauptmenü, Spielübersicht, Partie-Vorbereitung). Spieltisch und Spiele bleiben eine Fassung. Seltene Bereiche (Klassen, Turniere, Lernen, Pass, Betreiber) bleiben klassisch.
 3. **Gleiche Adressen** in beiden Darstellungen: `#/`, `#/einzelspieler`, `#/neu/<id>`, `#/partie`.
 4. **Schalter** unter Optionen (`#/ton`, „Oberfläche“), gespeichert in `brett-und-blatt:oberflaeche`; Startparameter `?modus=konsole` / `?modus=klassisch` gilt nur für den Aufruf.
-5. **Nur im Querformat ab 700 × 360 px**; sonst gilt automatisch die klassische Oberfläche.
+5. ~~Nur im Querformat ab 700 × 360 px~~ – seit #637 (21.11.2026) gilt die Konsole in jeder Fenstergröße; im Hochformat stehen die Reiter als Leiste unten (Styleguide Abschnitt 9).
 6. **Beide Aussehen** („Schlicht“, „Taverne“, hell, dunkel, erhöhter Kontrast) über die vorhandenen Farbvariablen.
 7. **Keine neuen Bilder, keine neuen Klänge.** Kacheln nutzen Wappen und Kulissen, nie größer als die Datei.
 8. **Feste Tastenbelegung**, B verlässt nie eine laufende Partie (Tabelle im Styleguide).
