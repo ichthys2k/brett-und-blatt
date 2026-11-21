@@ -105,6 +105,21 @@ try {
     throw new Error(`Erwartet prompts: false in localStorage, erhalten: ${savedPrompts}, raw: ${rawStorage}`);
   }
 
+  // Schieberegler der Stick-Totzone mit Links/Rechts verstellen (#613)
+  const deadzone = page.locator('input[type="range"][min="15"][max="45"]');
+  await deadzone.focus();
+  const dzBefore = Number(await deadzone.inputValue());
+  await pressPad(15); // D-Pad Right
+  const dzAfter = Number(await deadzone.inputValue());
+  if (!(dzAfter > dzBefore)) {
+    throw new Error(`Totzone sollte mit Rechts steigen: vorher ${dzBefore}, nachher ${dzAfter}`);
+  }
+  await pressPad(14); // D-Pad Left
+  const dzBack = Number(await deadzone.inputValue());
+  if (dzBack !== dzBefore) {
+    throw new Error(`Totzone sollte mit Links zurückgehen: vorher ${dzBefore}, jetzt ${dzBack}`);
+  }
+
   // 2. Startseite (#/einzelspieler): Zonenwechsel per RB (Button 5)
   await page.goto(`${baseUrl}/#/einzelspieler`, { waitUntil: 'networkidle' });
   await page.evaluate(() => window.dispatchEvent(new Event('gamepadconnected')));
@@ -134,7 +149,7 @@ try {
   if (errors.length > 0) {
     throw new Error(`Browser-Fehler: ${errors.join('; ')}`);
   }
-  console.log('✓ Controller-Browser-Probe erfolgreich (Optionen, Startseite-Zonen, Schach-Karussell).');
+  console.log('✓ Controller-Browser-Probe erfolgreich (Optionen, Schieberegler, Startseite-Zonen, Schach-Karussell).');
 } finally {
   await browser.close();
   server.close();
