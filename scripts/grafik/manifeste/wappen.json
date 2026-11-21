@@ -272,6 +272,11 @@
       "prompt": "Emblem motif: a purple-and-white turnip half in the soil with green leaves."
     },
     {
+      "id": "mole-tunnels",
+      "titel": "Maulwurfsgänge",
+      "prompt": "Emblem motif: a friendly mole with tiny spectacles peeking out of a round hole in the middle of a labyrinth of crossing earth tunnels, a purple-and-white turnip beside it; deep earthy brown and teal palette with gold accents."
+    },
+    {
       "id": "ultimate-tic-tac-toe",
       "titel": "Ultimate Tic-Tac-Toe",
       "prompt": "Emblem motif: a large three-by-three grid made of nine small grids with X and O."
