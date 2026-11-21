@@ -275,6 +275,11 @@
       "prompt": "A young panda student holding a white stone."
     },
     {
+      "id": "wuehlmaus",
+      "titel": "Wühlmaus (Maulwurfsgänge)",
+      "prompt": "A round-faced reddish-brown vole (not a mole: blunt rounded snout, small round ears, chubby cheeks, bright eyes) in a small dusty waistcoat and a miner's cap with a tiny unlit brass lantern, a little wooden shovel resting on its shoulder, a few crumbs of earth on its fur."
+    },
+    {
       "id": "zufall",
       "titel": "allgemeine Bots der Engine (Zufall u. a.)",
       "prompt": "A cheerful jester's monkey tossing a die in the air (pips only).",
