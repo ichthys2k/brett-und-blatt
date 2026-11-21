@@ -140,6 +140,8 @@ Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis:
 
 Die 56 Wappen auf den Kacheln der Startseite (`apps/web/src/wappen/*.webp`): **KI-erzeugt** mit einem Gemini-Bildmodell (Google, „gemini-3.1-flash-image“) nach eigenen Bildbeschreibungen, November 2026. Auswahl und Zuschnitt durch Cornelius Lipponer; Werkzeuge in `scripts/grafik/`. Sie zeigen allgemeine Sinnbilder (Schachpferd, Würfel, Drache u. a.), keine echten Personen und keine fremden Marken. Die Spiele selbst sind eigene Fassungen.
 
+Das Wappen von Maulwurfsgänge (`apps/web/src/wappen/mole-tunnels.webp`, #568): **KI-erzeugt** mit der Bilderzeugung von Canva nach eigener Bildbeschreibung, November 2026. Auswahl aus drei Varianten und Zuschnitt durch Cornelius Lipponer; Eintrag `mole-tunnels` in `scripts/grafik/manifeste/wappen.json`, das Original in voller Auflösung liegt im privaten Repo `ichthys2k/brett-und-blatt-grafik`. Eigene Erfindung (Maulwurf mit Brille, Gängelabyrinth, Rübe), keine echten Personen und keine fremden Marken.
+
 ## Tischflächen (KI-erzeugt)
 
 Die Tischflächen des Tavernen-Aussehens (`apps/web/src/assets/tische/*.webp`: Eichenholz, Nussholz, grüner Spielfilz): **KI-erzeugt** mit einem Gemini-Bildmodell (Google, „gemini-3.1-flash-image“) nach eigenen Bildbeschreibungen, November 2026. Auswahl und Zuschnitt durch Cornelius Lipponer; Werkzeuge und Beschreibungen in `scripts/grafik/` (Manifest `tische.json`). Sie zeigen schlichte, nahtlos kachelbare Oberflächenstrukturen ohne Gegenstände oder Personen.

@@ -24,7 +24,7 @@ const folderOf = (path: string) => path.split('/')[3]!;
  * Ausnahme nur mit Cornelius' Zustimmung (20.11.2026, Maulwurfsgänge, #568); sobald das Wappen da ist,
  * den Eintrag streichen – der Test unten meldet einen überflüssigen Eintrag.
  */
-const WITHOUT_CREST = new Set<string>(['mole-tunnels']);
+const WITHOUT_CREST = new Set<string>();
 
 const games = Object.entries(metas).map(([path, info]) => ({ folder: folderOf(path), info }));
 
