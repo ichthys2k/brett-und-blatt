@@ -41,7 +41,7 @@ await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
 const baseUrl = `http://127.0.0.1:${server.address().port}`;
 const browser = await chromium.launch(process.env.RAUCHTEST_CHROMIUM ? { executablePath: process.env.RAUCHTEST_CHROMIUM } : {});
 
-const A = 0, B = 1, X = 2, RB = 5, START = 9, UP = 12, DOWN = 13, LEFT = 14, RIGHT = 15;
+const A = 0, B = 1, X = 2, LB = 4, RB = 5, START = 9, UP = 12, DOWN = 13, LEFT = 14, RIGHT = 15;
 
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
@@ -123,6 +123,24 @@ try {
     return !!el?.hasAttribute('data-kns-game') && getComputedStyle(el).outlineStyle !== 'none';
   });
 
+  // 2b. Schnellzugriff mit Start ☰ und B; fünf Hauptreiter mit RB/LB (#638)
+  await press(START);
+  await expectState('Schnellzugriff offen', () => !!document.querySelector('.kns-quick[aria-modal="true"]') && !!document.activeElement?.closest('.kns-quick'));
+  await press(B);
+  await expectState('Schnellzugriff zu', () => !document.querySelector('.kns-quick'));
+  const tabHashes = ['#/einzelspieler', '#/online', '#/pass', '#/ton'];
+  for (const hash of tabHashes) {
+    await press(RB);
+    await expectState(`Reiter ${hash}`, (h) => location.hash === h && !!document.querySelector('.kns-frame'), hash);
+  }
+  await expectState('Unterreiter fehlen bei Optionen', () => !document.querySelector('.kns-subbar'));
+  await press(LB);
+  await expectState('Unterreiter beim Pass', () => location.hash === '#/pass' && document.querySelector('.kns-subtab[aria-current="page"]')?.textContent === 'Pass');
+  for (const hash of ['#/online', '#/einzelspieler', '#/']) {
+    await press(LB);
+    await expectState(`zurück zu ${hash}`, (h) => location.hash === h, hash);
+  }
+
   // 3. Bibliothek, Suche „TIC“ über die Bildschirmtastatur
   await press(RB);
   await expectState('Bibliothek', () => location.hash === '#/einzelspieler' && !!document.querySelector('.kns-grid'));
@@ -183,7 +201,7 @@ try {
   await expectState('Weiterspielen', () => !!document.querySelector('.kns-resume') && document.activeElement?.getAttribute('data-kns-id') === 'resume');
 
   if (errors.length > 0) throw new Error(`Browser-Fehler: ${errors.join('; ')}`);
-  console.log('✓ Konsolen-Probe erfolgreich (Start, Bibliothek, Suche, Spielseite, Partie, Menü, Weiterspielen).');
+  console.log('✓ Konsolen-Probe erfolgreich (Start, Schnellzugriff, fünf Reiter, Bibliothek, Suche, Spielseite, Partie, Menü, Weiterspielen).');
 } finally {
   await browser.close();
   server.close();

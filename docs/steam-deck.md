@@ -36,7 +36,7 @@ Brett & Blatt hat eine zweite Oberfläche für Controller, Handhelds und Fernseh
 | **X** | Bibliothek: Suche | Großansicht der Karte oder Figur |
 | **Y** | Lieblingsspiel an/aus | – |
 | **LB / RB** | Reiter wechseln | Bereich wechseln (Spielfeld ↔ Menü) |
-| **Start ☰** | – | Menü der Partie öffnen und schließen |
+| **Start ☰** | Schnellzugriff (Lautstärke, Musik, Pass, Weiterspielen) | Menü der Partie öffnen und schließen |
 | rechter Stick, LT / RT | Seite rollen | Spielfeld rollen |
 | L3 / Select | Zeiger ein/aus (Notlösung) | Zeiger ein/aus |
 

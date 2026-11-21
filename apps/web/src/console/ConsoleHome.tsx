@@ -1,5 +1,5 @@
 import type { GameInfo, SessionSnapshot } from '@brett-und-blatt/engine';
-import { KnsButton, KnsShelf, KnsTile } from '@brett-und-blatt/ui';
+import { KnsButton, KnsShelf } from '@brett-und-blatt/ui';
 import { useRef, useState } from 'react';
 import { t } from '../i18n';
 import { discardGame } from '../lib/activeGame';
@@ -17,19 +17,6 @@ import { GameTile, useTileScene } from './GameTile';
 import { recentGameIds } from './recentGames';
 import { useFavoriteKey } from './useFavoriteKey';
 import { useInitialFocus } from './useInitialFocus';
-
-/** Verweise im Regal „Mehr“ auf die übrigen Bereiche der App. */
-const MORE: readonly { id: string; emoji: string; to: string }[] = [
-  { id: 'online', emoji: '🌐', to: paths.online },
-  { id: 'board', emoji: '📌', to: paths.board },
-  { id: 'tournaments', emoji: '🏆', to: paths.tournaments },
-  { id: 'learn', emoji: '📚', to: paths.learn },
-  { id: 'pass', emoji: '🪪', to: paths.pass },
-  { id: 'helpers', emoji: '🎲', to: paths.helpers },
-  { id: 'options', emoji: '⚙️', to: paths.sound },
-];
-
-type MessageKey = Parameters<typeof t>[0];
 
 /** Breites Feld „Laufende Partie“ mit Weiterspielen und Verwerfen. */
 function ResumePanel({ snapshot, info, onDiscard }: { snapshot: SessionSnapshot; info: GameInfo; onDiscard: () => void }) {
@@ -58,7 +45,7 @@ function ResumePanel({ snapshot, info, onDiscard }: { snapshot: SessionSnapshot;
   );
 }
 
-/** Start-Bildschirm der Konsole (#607, K4): laufende Partie, Regale mit Spielen, Regal „Mehr“. */
+/** Start-Bildschirm der Konsole (#607, K4): laufende Partie und Regale mit Spielen; die übrigen Bereiche erreicht man über die Reiter (#638). */
 export function ConsoleHome() {
   const ref = useRef<HTMLDivElement>(null);
   const tavern = useActiveLook() === 'tavern';
@@ -107,21 +94,6 @@ export function ConsoleHome() {
             {group.games.map((info) => tile(group.id, info))}
           </KnsShelf>
         ))}
-        <KnsShelf title={t('console.shelf.more')}>
-          {MORE.map((entry) => (
-            <li key={entry.id}>
-              <KnsTile
-                href={entry.to}
-                variant="link"
-                art={entry.emoji}
-                title={t(`console.more.${entry.id}` as MessageKey)}
-                meta={t(`console.more.${entry.id}.hint` as MessageKey)}
-                data-kns-id={`more:${entry.id}`}
-                aria-label={`${t(`console.more.${entry.id}` as MessageKey)}. ${t(`console.more.${entry.id}.hint` as MessageKey)}`}
-              />
-            </li>
-          ))}
-        </KnsShelf>
       </div>
     </ConsoleFrame>
   );

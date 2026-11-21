@@ -1,6 +1,6 @@
 # Konsole überall – die Konsolen-Oberfläche wird Standard (Vorhaben #635)
 
-Stand: 21.11.2026 (U1 und U2 umgesetzt). Vorgänger: [Konsolen-Oberfläche](konsole.md) (Vorhaben #607, umgesetzt). Maße, Muster und Bausteine: [Styleguide](konsole-styleguide.md), Abschnitte 9–13.
+Stand: 21.11.2026 (U1–U3 umgesetzt). Vorgänger: [Konsolen-Oberfläche](konsole.md) (Vorhaben #607, umgesetzt). Maße, Muster und Bausteine: [Styleguide](konsole-styleguide.md), Abschnitte 9–13.
 
 > Mir gefällt das Steam UI sehr gut. Ich möchte, dass es der neue Standard wird. Und ich möchte auch, dass alle UI-Elemente im gesamten Spiel, also nicht nur Start und Bibliothek, sondern auch Online und auch die Optionen, neu aufgesetzt werden und ein UI haben, das Ähnliches wie das von SteamOS. Das betrifft alle UI-Elemente in allen Menüs. Außerdem möchte ich später dann auch innerhalb der einzelnen Spiele eine durchgängige UI haben, die sich an SteamOS orientiert. Das aber erst in der nächsten Phase. (Cornelius, 21.11.2026)
 
@@ -87,6 +87,7 @@ Jeder Schritt trägt hier Datum, PR und die wichtigsten Dateien ein.
 
 - **U1 Bausteine (#636, 21.11.2026):** `packages/ui/src/konsole/` (Bausteine, `konsole.css`, reine Logik `logic.ts`), Schauseite `/?modus=konsole#/bausteine` (`apps/web/src/console/Gallery.tsx`). Start, Bibliothek und Spielseite nutzen die Bausteine, unverändertes Aussehen. Nebenbei: die räumliche Navigation (`spatialNav.ts`) springt mit „runter“ nicht mehr über Zeilen hinweg, die über die volle Breite gehen.
 - **U2 Hochformat (#637, 21.11.2026):** `knsLayout`/`knsColumns` (`packages/ui/src/konsole/layout.ts`), `useKnsLayout`, Leiste unten im Rahmen, Hochformat für Start, Bibliothek (Fenster „Spielerzahl“) und Spielseite; die Konsole gilt in jeder Fenstergröße.
+- **U3 Navigation (#638, 21.11.2026):** Navigationsplan `console/consoleTabs.ts` (fünf Hauptreiter, Unterreiter), Unterreiter im Rahmen, Schnellzugriff `console/QuickAccess.tsx`; jede Menü-Route steht im Rahmen (`screens/classicScreen.tsx` + `ClassicInFrame`).
 
 ## 7. Phase 2 – Vormerkungen
 

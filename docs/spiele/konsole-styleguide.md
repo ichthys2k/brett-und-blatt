@@ -73,7 +73,7 @@ Namen nach dem Xbox-Schema („Standard-Gamepad“); auf dem Steam Deck sind die
 | **X** (`i`) | Bibliothek: Suche | Großansicht der Karte oder Figur |
 | **Y** | Lieblingsspiel an/aus | – |
 | **LB / RB** (`[` `]`, Bild↑ Bild↓) | Reiter wechseln | Bereich wechseln (Spielfeld ↔ Menü) |
-| **Start ☰** | – | Menü der Partie öffnen und schließen |
+| **Start ☰** | Schnellzugriff (#638) | Menü der Partie öffnen und schließen |
 | rechter Stick, LT / RT | Seite rollen | Spielfeld rollen |
 | L3 / Select | Zeiger ein/aus (Notlösung) | Zeiger ein/aus |
 
@@ -200,7 +200,9 @@ Fehlt ein Baustein, wird er dort ergänzt und auf der Schauseite gezeigt – nic
 - **B** geht eine Ebene zurück: Fenster zu → vorige Seite → Start. B verlässt nie die App und nie eine Partie.
 - **Start ☰** öffnet in den Menüs den Schnellzugriff (Lautstärke, Musik, Pass, Weiterspielen, „Alle Optionen“); am Spieltisch das Menü der Partie. In der Kopfleiste gibt es denselben Knopf für Finger und Maus.
 - **X** ist die Nebenaktion der fokussierten Zeile (z. B. Ausblenden, Ergebnis eintragen), **Y** das Anheften (Lieblingsspiel). Beides steht in der Tastenleiste und ist immer auch als sichtbarer Knopf vorhanden.
-- Jede Route gehört zu genau einem Platz (`placeForRoute`); ein Test verhindert vergessene Routen.
+- Jede Route gehört zu genau einem Platz (`placeForRoute` in `apps/web/src/console/consoleTabs.ts`) oder steht in `ROUTES_WITHOUT_PLACE` (Partie, Tisch-Bildschirm, Beamer, Einbettungen, Schauseite); ein Test verhindert vergessene Routen.
+- Die Unterreiter stehen in einer eigenen Zeile unter der Kopfleiste (`kns-subbar`), im Hochformat ebenso, waagrecht rollend. Impressum, Datenschutz und Betreiber gehören zu „Optionen“ ohne eigenen Unterreiter.
+- Der Schnellzugriff ist ein `KnsDialog` der Größe `s`; im Querformat dockt er rechts über die volle Höhe an, im Hochformat kommt er von unten.
 
 ## 13. Meldungen, Zustände und Texte der Menüs (U15)
 

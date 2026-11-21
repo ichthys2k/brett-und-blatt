@@ -1,10 +1,11 @@
-import { useInputIntent, useInputSource, usePromptItems, type PromptItem } from '@brett-und-blatt/ui';
+import { KnsSubTabs, useInputIntent, useInputSource, usePromptItems, type PromptItem } from '@brett-und-blatt/ui';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Avatar } from '../components/Avatar';
 import { t } from '../i18n';
-import { navigate } from '../lib/router';
+import { navigate, useRoute } from '../lib/router';
 import { storage } from '../lib/storage';
-import { CONSOLE_TABS, neighborTab, type ConsoleTab } from './consoleTabs';
+import { CONSOLE_TABS, neighborTab, placeForRoute, type ConsoleTab } from './consoleTabs';
+import { QuickAccess } from './QuickAccess';
 import { useKnsLayout } from './useKnsLayout';
 import './console.css';
 
@@ -13,7 +14,10 @@ export const CONSOLE_PROMPTS: readonly PromptItem[] = [
   { key: 'A', label: t('console.prompt.select') },
   { key: 'B', label: t('console.prompt.back') },
   { key: 'LB/RB', label: t('console.prompt.tabs') },
+  { key: '☰', label: t('console.prompt.quick') },
 ];
+
+type MessageKey = Parameters<typeof t>[0];
 
 function clockText(): string {
   const now = new Date();
@@ -46,8 +50,6 @@ function ConsoleStatus({ compact }: { compact: boolean }) {
   );
 }
 
-type MessageKey = Parameters<typeof t>[0];
-
 /**
  * Rahmen der Konsolen-Oberfläche (#607, K3b): Kopfleiste mit Reitern, rollender Inhalt, Platz für die
  * Tastenleiste unten. LB/RB wechselt den Reiter. Im Hochformat (#637) stehen die Reiter als Leiste am unteren
@@ -56,9 +58,22 @@ type MessageKey = Parameters<typeof t>[0];
 export function ConsoleFrame({ tab, prompts, children }: { tab: ConsoleTab | null; prompts?: readonly PromptItem[]; children: ReactNode }) {
   const layout = useKnsLayout();
   const portrait = layout === 'portrait';
+  const route = useRoute();
+  const place = placeForRoute(route.name);
+  const entry = CONSOLE_TABS.find((candidate) => candidate.id === tab);
+  const subTabs = entry?.sub ?? [];
+  const sub = place && place.tab === tab ? place.sub : null;
+  const [quickOpen, setQuickOpen] = useState(false);
   usePromptItems(prompts ?? CONSOLE_PROMPTS);
+  // Start ☰ öffnet und schließt den Schnellzugriff (#638); am Spieltisch gibt es keinen Rahmen, dort gilt das Menü der Partie.
+  useInputIntent((intent) => {
+    if (intent !== 'menu') return false;
+    setQuickOpen((open) => !open);
+    return true;
+  }, 5);
   useInputIntent((intent) => {
     if (intent !== 'zonePrev' && intent !== 'zoneNext') return false;
+    if (quickOpen) return false;
     const next = neighborTab(tab, intent === 'zonePrev' ? -1 : 1);
     if (next !== tab) navigate(CONSOLE_TABS.find((entry) => entry.id === next)!.path);
     return true;
@@ -83,11 +98,24 @@ export function ConsoleFrame({ tab, prompts, children }: { tab: ConsoleTab | nul
         <span className="kns-brand">Brett &amp; Blatt</span>
         {!portrait && tabs}
         <ConsoleStatus compact={portrait} />
+        <button type="button" className="kns-quick-button" aria-label={t('console.quick')} aria-haspopup="dialog" onClick={() => setQuickOpen(true)}>
+          ☰
+        </button>
       </header>
+      {subTabs.length > 0 && (
+        <div className="kns-subbar">
+          <KnsSubTabs
+            label={t('console.subtabs')}
+            current={sub}
+            tabs={subTabs.map((subTab) => ({ id: subTab.id, label: t(subTab.labelKey as MessageKey), href: subTab.path }))}
+          />
+        </div>
+      )}
       <main className="kns-main" data-scroll-container>
         {children}
       </main>
       {portrait && tabs}
+      {quickOpen && <QuickAccess onClose={() => setQuickOpen(false)} />}
     </div>
   );
 }
