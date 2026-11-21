@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { categoryOf } from '../screens/Home';
+import { categoryOf } from './rubriken';
 import { SCENE_BY_CATEGORY, SCENE_BY_GAME } from './sceneTable';
 
 /**

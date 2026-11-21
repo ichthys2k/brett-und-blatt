@@ -37,7 +37,7 @@ import { levelLabel } from '../lib/format';
 import type { AfterState } from '../lib/online';
 import type { LoadedGame } from '../lib/registry';
 import { useGameMusic } from '../lib/music';
-import { categoryOf } from './Home';
+import { categoryOf } from '../lib/rubriken';
 import { navigate, paths } from '../lib/router';
 import { useSoundSettings } from '../lib/sound';
 import { storage, type Profile } from '../lib/storage';

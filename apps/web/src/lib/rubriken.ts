@@ -85,3 +85,8 @@ export const CATEGORIES: readonly CategorySpec[] = [
 export function familyGameIds(): readonly string[] {
   return CATEGORIES.find((category) => category.id === 'family')?.gameIds ?? [];
 }
+
+/** Die Rubrik eines Spiels; nicht zugeordnete zählen wie auf der Startseite zur Familie. */
+export function categoryOf(gameId: string): CategoryId {
+  return CATEGORIES.find((category) => category.gameIds.includes(gameId))?.id ?? 'family';
+}
