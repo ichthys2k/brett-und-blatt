@@ -845,7 +845,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
 
       {/* 4. Farbwahl-Modal bei Jokern */}
       {selectedWildCard && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-label="Wunschfarbe wählen">
           <div className="bg-zinc-900 border border-white/20 p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-4 max-w-xs w-full text-center">
             <h3 className="text-lg font-extrabold text-white">Wähle eine Wunschfarbe</h3>
             <div className="grid grid-cols-2 gap-3 w-full">
@@ -874,7 +874,7 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
 
       {/* 5. 7er-Handtausch Modal */}
       {selectedSevenCard && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-label="Mit wem Handkarten tauschen?">
           <div className="bg-zinc-900 border border-white/20 p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-4 max-w-xs w-full text-center">
             <h3 className="text-lg font-extrabold text-white">Mit wem Handkarten tauschen?</h3>
             <div className="flex flex-col gap-2 w-full">

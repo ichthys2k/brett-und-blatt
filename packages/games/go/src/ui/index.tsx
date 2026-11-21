@@ -242,6 +242,7 @@ function Board({ view, legalMoves, onMove, hint, activeSeat, seatNames }: BoardP
 function SetupExtra({ setOption }: { options: Record<string, string>; seats: number; setOption: (id: string, value: string) => void }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [loadedInfo, setLoadedInfo] = useState<string | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   return (
     <div className="space-y-2 rounded-2xl border border-line bg-surface p-4 shadow-sm">
@@ -253,6 +254,7 @@ function SetupExtra({ setOption }: { options: Record<string, string>; seats: num
           </p>
         </div>
         <button
+          ref={triggerRef}
           type="button"
           className="rounded-xl border border-line bg-bg px-3 py-1.5 font-medium text-sm hover:bg-line cursor-pointer flex-none"
           onClick={() => setModalOpen(true)}
@@ -269,7 +271,11 @@ function SetupExtra({ setOption }: { options: Record<string, string>; seats: num
             setOption('komi', String(state.komi));
             setLoadedInfo(`${state.size}×${state.size}, ${state.record.length} Züge`);
           }}
-          onClose={() => setModalOpen(false)}
+          onClose={() => {
+            setModalOpen(false);
+            // Fokus zurück auf den Auslöser (#619).
+            requestAnimationFrame(() => triggerRef.current?.focus());
+          }}
         />
       )}
     </div>

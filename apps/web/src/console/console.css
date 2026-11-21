@@ -114,6 +114,9 @@
   overflow-y: auto;
   padding: calc(3 * var(--kns-u)) max(var(--kns-gutter), env(safe-area-inset-right)) calc(var(--kns-legend) + env(safe-area-inset-bottom) + calc(2 * var(--kns-u))) max(var(--kns-gutter), env(safe-area-inset-left));
   scroll-behavior: smooth;
+  /* Rollt der Fokus ins Bild, bleibt er über der Tastenleiste und unter dem oberen Rand (#623). */
+  scroll-padding-top: calc(2 * var(--kns-u));
+  scroll-padding-bottom: calc(var(--kns-legend) + env(safe-area-inset-bottom) + calc(2 * var(--kns-u)));
 }
 
 :root[data-shell='console'] .kns-title {

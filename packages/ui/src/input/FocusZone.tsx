@@ -2,6 +2,7 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { useInputContext, useInputIntent } from './InputContext';
 import { findNextFocusTarget, pickZoneEntryTarget, type FocusCandidate } from './spatialNav';
 import { nextOptionIndex, nextRangeValue } from './formControls';
+import { topModal } from './ModalFocus';
 
 const FOCUSABLE_SELECTOR = [
   'button:not([disabled])',
@@ -162,7 +163,7 @@ export function GlobalSpatialNavigator() {
 
     // Zonenwechsel mit Schultertasten (LB/RB)
     if (intent === 'zoneNext' || intent === 'zonePrev') {
-      if (trappedZone || zones.length === 0) return false;
+      if (trappedZone || topModal() || zones.length === 0) return false;
       const nonEmptyZones = zones.filter((z) => collectFocusableCandidates(z.element).candidates.length > 0);
       if (nonEmptyZones.length === 0) return false;
 
@@ -221,11 +222,23 @@ export function GlobalSpatialNavigator() {
 
     // Räumliche 2D-Navigation
     if (intent === 'up' || intent === 'down' || intent === 'left' || intent === 'right') {
-      const scope = trappedZone?.element ?? document.body;
+      // Ein offenes Fenster (`aria-modal`) hält das Steuerkreuz fest wie ein Bereich mit `trap` (#619).
+      const scope = trappedZone?.element ?? topModal() ?? document.body;
       const { candidates, byId } = collectFocusableCandidates(scope);
       if (candidates.length === 0) return false;
 
       if (!active || active === document.body || !scope.contains(active)) {
+        // Ohne Fokus beginnt die Navigation im ersten Bereich (kleinste `order`), am Spieltisch also im Spielfeld (#622).
+        if (!trappedZone && scope === document.body) {
+          for (const zone of zones) {
+            const inZone = collectFocusableCandidates(zone.element);
+            const entryId = pickZoneEntryTarget(inZone.candidates, zone.lastFocusedId);
+            if (entryId) {
+              inZone.byId.get(entryId)?.focus({ preventScroll: false });
+              return true;
+            }
+          }
+        }
         const firstId = pickZoneEntryTarget(candidates, trappedZone?.lastFocusedId);
         if (firstId) {
           byId.get(firstId)?.focus({ preventScroll: false });
@@ -245,7 +258,11 @@ export function GlobalSpatialNavigator() {
         height: curRectRaw.height,
       };
       const others = candidates.filter((c) => c.id !== activeId);
-      const nextId = findNextFocusTarget(curRect, others, intent);
+      // Im eigenen Bereich bleiben, solange es dort in der Richtung ein Ziel gibt; sonst darf der Fokus hinüberwechseln
+      // (#622: vom Ablagebänkchen sprang „runter“ sonst quer ins Spielmenü und „hoch“ von dort an den oberen Rand).
+      const ownZone = trappedZone || scope !== document.body ? null : zones.find((z) => z.element.contains(active));
+      const inOwnZone = ownZone ? others.filter((c) => ownZone.element.contains(byId.get(c.id) ?? null)) : [];
+      const nextId = (inOwnZone.length > 0 ? findNextFocusTarget(curRect, inOwnZone, intent) : null) ?? findNextFocusTarget(curRect, others, intent);
       if (nextId) {
         const targetEl = byId.get(nextId);
         targetEl?.focus({ preventScroll: false });

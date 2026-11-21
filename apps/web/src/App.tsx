@@ -32,6 +32,7 @@ import {
   CardCosmeticsProvider,
   GlobalSpatialNavigator,
   InputProvider,
+  ModalFocusManager,
   PromptProvider,
   ScanOverlay,
   SoftCursor,
@@ -51,6 +52,7 @@ export function App() {
       <PromptProvider>
       <CardCosmeticsProvider value={cosmetics}>
         <GlobalSpatialNavigator />
+        <ModalFocusManager />
         <ScanOverlay />
         <Screen />
         <VirtualKeyboard />
