@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { FocusZone, useInputIntent } from '@brett-und-blatt/ui';
+import { useEffect, useRef, useState } from 'react';
 import { loadFromSgf, parseSgf, type GoState } from '../rules';
 
 interface SgfImportProps {
@@ -10,6 +11,16 @@ export function SgfImportModal({ onImport, onClose }: SgfImportProps) {
   const [text, setText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<{ size: number; komi: number; handicap: number; moves: number } | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  // Controller und Tastatur (#619): Beim Öffnen liegt der Fokus im Fenster, B schließt es.
+  useEffect(() => {
+    (panelRef.current?.querySelector<HTMLElement>('textarea') ?? panelRef.current?.querySelector<HTMLElement>('button'))?.focus();
+  }, []);
+  useInputIntent((intent) => {
+    if (intent !== 'cancel') return false;
+    onClose();
+    return true;
+  }, 10);
 
   const checkSgf = (content: string) => {
     setText(content);
@@ -55,7 +66,9 @@ export function SgfImportModal({ onImport, onClose }: SgfImportProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="sgf-title">
-      <div className="flex max-h-[90vh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-2xl border border-line bg-surface p-5 shadow-xl">
+      {/* Fokus-Falle: Steuerkreuz und Tab bleiben im Fenster (#619). */}
+      <FocusZone id="go-sgf-import" order={900} trap label="SGF-Partie importieren" className="w-full max-w-lg">
+      <div ref={panelRef} className="flex max-h-[90vh] w-full flex-col gap-4 overflow-y-auto rounded-2xl border border-line bg-surface p-5 shadow-xl">
         <div className="flex items-center justify-between">
           <h2 id="sgf-title" className="text-xl font-bold">
             📥 SGF-Partie importieren
@@ -129,6 +142,7 @@ export function SgfImportModal({ onImport, onClose }: SgfImportProps) {
           </button>
         </div>
       </div>
+      </FocusZone>
     </div>
   );
 }

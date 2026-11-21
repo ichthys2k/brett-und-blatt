@@ -180,6 +180,196 @@ async function stayOnTable(page, stats) {
   await page.waitForTimeout(200);
 }
 
+/** Ziele im Spielfeld, die ein Mensch ansteuern würde; Kopf, Menü und Aufgeben bleiben außen vor. */
+const SKIP_LABEL = /aufgeben|remis|zeitmaschine|notiz|regeln|anleitung|zurück|zum menü|tipp|verlassen|neue partie|alle leeren|zurücknehmen|tafel/i;
+
+/** Nummeriert die erreichbaren Ziele im Spielfeld (`data-cp`) und gibt ihre Kennzeichen zurück. */
+const listTargets = (page) =>
+  page.evaluate((skip) => {
+    const zone = document.querySelector('[data-focus-zone="play-board"]');
+    if (!zone) return [];
+    const re = new RegExp(skip, 'i');
+    const sel = 'button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"], [role="button"]:not([aria-disabled="true"])';
+    const list = [...zone.querySelectorAll(sel)].filter((e) => e.getClientRects().length > 0 && !re.test(e.getAttribute('aria-label') ?? e.textContent ?? ''));
+    return list.map((e, i) => {
+      e.setAttribute('data-cp', String(i));
+      const tag = e.tagName.toLowerCase();
+      const text = tag === 'input' || tag === 'textarea' ? `${tag}:${e.getAttribute('type') ?? 'text'}` : (e.getAttribute('aria-label') ?? e.textContent ?? '').trim().slice(0, 40);
+      return `${i}|${tag}|${text}`;
+    });
+  }, SKIP_LABEL.source);
+
+/**
+ * Steuert den Fokus nur mit dem Steuerkreuz auf das Ziel `data-cp=<i>`: Bestensuche über die Wege der räumlichen
+ * Navigation. Von einem erreichten Element werden die vier Richtungen gedrückt; als Nächstes erweitert wird immer
+ * das erreichte, aber noch nicht erweiterte Element, das dem Ziel am nächsten liegt (höchstens 40 Erweiterungen). Zurück auf ein schon erreichtes Element
+ * springt die Suche per `focus()` – dorthin hatte sie das Steuerkreuz ja bereits gebracht. Gibt zurück, ob das Ziel
+ * erreicht wurde.
+ */
+async function steerTo(page, index, count) {
+  const state = () =>
+    page.evaluate((idx) => {
+      const target = document.querySelector(`[data-cp="${idx}"]`);
+      const current = document.activeElement;
+      if (!target) return { gone: true };
+      if (current === target) return { here: true };
+      if (!current || current === document.body) return { outside: true };
+      if (!current.hasAttribute('data-sv')) current.setAttribute('data-sv', String(document.querySelectorAll('[data-sv]').length));
+      const a = target.getBoundingClientRect();
+      const b = current.getBoundingClientRect();
+      return { id: current.getAttribute('data-sv'), dist: Math.hypot(a.left + a.width / 2 - b.left - b.width / 2, a.top + a.height / 2 - b.top - b.height / 2) };
+    }, index);
+  try {
+    // Ohne Fokus (gleichzeitige Runden setzen keinen) holt ein Druck aufs Steuerkreuz ihn auf die Seite, dann RB ins Spielfeld.
+    for (const button of [13, 5, 5]) {
+      const s = await state();
+      if (!s.outside) break;
+      await pressPad(page, button, 50, 50);
+      count.presses += 1;
+    }
+    let s = await state();
+    if (s.here) return true;
+    if (s.gone || s.outside) return false;
+    // Vorrat: alle bisher erreichten, noch nicht erweiterten Elemente; erweitert wird immer das dem Ziel nächste.
+    const seen = new Set([s.id]);
+    const frontier = [s];
+    for (let step = 0; step < 40 && frontier.length > 0; step++) {
+      frontier.sort((a, b) => a.dist - b.dist);
+      const current = frontier.shift();
+      for (const button of [12, 13, 14, 15]) {
+        await page.evaluate((id) => document.querySelector(`[data-sv="${id}"]`)?.focus(), current.id);
+        await pressPad(page, button, 40, 40);
+        count.presses += 1;
+        const r = await state();
+        if (r.here) return true;
+        if (r.gone) return false;
+        if (r.outside || seen.has(r.id)) continue;
+        seen.add(r.id);
+        frontier.push(r);
+      }
+    }
+    // Rückfall: Breitensuche über alle Wege von Steuerkreuz und LB/RB (höchstens 150 Elemente). Ein Mensch fände den Weg auch.
+    const queue = [...seen];
+    const done = new Set();
+    while (queue.length > 0 && done.size < 150) {
+      const id = queue.shift();
+      if (done.has(id)) continue;
+      done.add(id);
+      // Hier auch LB/RB: Aus dem Menü führt ein Mensch den Fokus mit RB zurück ins Spielfeld.
+      for (const button of [12, 13, 14, 15, 4, 5]) {
+        await page.evaluate((v) => document.querySelector(`[data-sv="${v}"]`)?.focus(), id);
+        await pressPad(page, button, 30, 30);
+        count.presses += 1;
+        const r = await state();
+        if (r.here) return true;
+        if (r.gone) return false;
+        if (!r.outside && !seen.has(r.id)) {
+          seen.add(r.id);
+          queue.push(r.id);
+        }
+      }
+    }
+    return false;
+  } finally {
+    await page.evaluate(() => document.querySelectorAll('[data-sv]').forEach((e) => e.removeAttribute('data-sv'))).catch(() => {});
+  }
+}
+
+/** Tippt eine kurze Eingabe auf der Bildschirmtastatur (Steuerkreuz und A) und übernimmt sie mit ✓. */
+async function typeOnKeyboard(page, text, count) {
+  for (const ch of [...text, '✓']) {
+    for (let i = 0; i < 30; i++) {
+      const move = await page.evaluate((key) => {
+        const target = [...document.querySelectorAll('.bub-vkb-key')].find((b) => b.textContent.trim() === key);
+        const current = document.activeElement;
+        if (!target || !current?.classList?.contains('bub-vkb-key')) return 'missing';
+        if (target === current) return 'here';
+        const a = target.getBoundingClientRect();
+        const b = current.getBoundingClientRect();
+        if (Math.abs(a.top - b.top) > 4) return a.top < b.top ? 'up' : 'down';
+        return a.left < b.left ? 'left' : 'right';
+      }, ch);
+      if (move === 'missing') return false;
+      if (move === 'here') break;
+      await pressPad(page, { up: 12, down: 13, left: 14, right: 15 }[move], 50, 40);
+      count.presses += 1;
+    }
+    await pressPad(page, 0, 50, 60);
+    count.presses += 1;
+  }
+  return true;
+}
+
+/**
+ * Gezielter Durchgang (seit K8, #619–#622): Jedes Ziel im Spielfeld wird mit dem Steuerkreuz angesteuert und mit A
+ * ausgelöst. Wird kein Zug angenommen, aber die Ziele ändern sich (Auswahl begonnen), geht es eine Stufe tiefer
+ * (höchstens drei). Textfelder werden über die Bildschirmtastatur gefüllt („5“). Erfolg bei drei angenommenen Zügen.
+ */
+async function targetedRun(id, stats) {
+  const opened = await openGame(id, 'standard');
+  if (!opened) return { started: false };
+  const { context, page } = opened;
+  const humanMoves = moveCounter(page);
+  const waitForTurn = turnWaiter(page);
+  const count = { presses: 0 };
+  const unreachable = new Set();
+  const deadline = Date.now() + 150000;
+  try {
+    let idleTurns = 0;
+    while (Date.now() < deadline && idleTurns < 6) {
+      await humanMoves();
+      await stayOnTable(page, stats);
+      await waitForTurn();
+      if ((await humanMoves()) >= 3) return { started: true, ok: true, presses: count.presses, unreachable: unreachable.size };
+      const before = await humanMoves();
+      let progressed = false;
+      let attempts = 0;
+      const explore = async (depth) => {
+        const targets = await listTargets(page);
+        const signature = targets.join('\n');
+        for (const entry of targets) {
+          if (progressed || attempts >= 40 || Date.now() > deadline) return;
+          const [index, tag, label] = entry.split('|');
+          if (!(await steerTo(page, index, count))) {
+            if (await page.evaluate((i) => Boolean(document.querySelector(`[data-cp="${i}"]`)), index)) {
+              unreachable.add(label);
+              if (process.env.AUDIT_DEBUG) {
+                const where = await page.evaluate(() => `${document.activeElement?.tagName} ${(document.activeElement?.getAttribute('aria-label') ?? document.activeElement?.textContent ?? '').trim().slice(0, 30)} zone=${document.activeElement?.closest('[data-focus-zone]')?.getAttribute('data-focus-zone')}`);
+                console.log(`  ${id}: nicht erreicht „${label}“ (Fokus: ${where})`);
+              }
+            }
+            continue;
+          }
+          attempts += 1;
+          await pressPad(page, 0, 50, 220);
+          count.presses += 1;
+          if (tag === 'input' || tag === 'textarea') {
+            if (await page.locator('.bub-vkb-key').first().isVisible().catch(() => false)) {
+              stats.textInput = true;
+              await typeOnKeyboard(page, '5', count);
+            }
+          }
+          if ((await humanMoves()) > before) {
+            progressed = true;
+            return;
+          }
+          const now = (await listTargets(page)).join('\n');
+          if (now !== signature && depth < 3) {
+            await explore(depth + 1);
+            return;
+          }
+        }
+      };
+      await explore(1);
+      idleTurns = progressed ? 0 : idleTurns + 1;
+    }
+    return { started: true, ok: (await humanMoves()) >= 3, presses: count.presses, unreachable: unreachable.size };
+  } finally {
+    stats.unreachable = Math.max(stats.unreachable ?? 0, unreachable.size);
+    await context.close();
+  }
+}
+
 async function directRun(id, stats) {
   const opened = await openGame(id, 'standard');
   if (!opened) return { started: false };
@@ -248,11 +438,16 @@ async function carouselRun(id, stats) {
 }
 
 async function audit(id) {
-  const stats = { focusLost: 0, left: 0, textInput: false };
+  const stats = { focusLost: 0, left: 0, textInput: false, unreachable: 0 };
   let grade = 'cursor';
   let presses = null;
   let note = '';
-  const direct = await directRun(id, stats);
+  // Erst der schnelle Zufallslauf, bei Misserfolg der gezielte (mehrschrittige Züge, Texteingabe).
+  let direct = await directRun(id, stats);
+  if (direct.started && !direct.ok) {
+    const targeted = await targetedRun(id, stats);
+    if (targeted.ok) direct = targeted;
+  }
   if (!direct.started) note = 'startFailed';
   else if (direct.ok) {
     grade = 'direct';
@@ -264,7 +459,7 @@ async function audit(id) {
       presses = carousel.presses;
     }
   }
-  return { focusLost: stats.focusLost, grade, left: stats.left, note, presses, textInput: stats.textInput };
+  return { focusLost: stats.focusLost, grade, left: stats.left, note, presses, textInput: stats.textInput, unreachable: stats.unreachable };
 }
 
 const results = {};
@@ -278,7 +473,7 @@ try {
         const result = await audit(id);
         results[id] = result;
         console.log(
-          `${id.padEnd(22)} ${result.grade.padEnd(8)} Drücke ${String(result.presses ?? '–').padStart(4)}  Fokus verloren ${String(result.focusLost).padStart(3)}  verlassen ${result.left}${result.textInput ? '  Texteingabe' : ''}${result.note ? `  ${result.note}` : ''}`,
+          `${id.padEnd(22)} ${result.grade.padEnd(8)} Drücke ${String(result.presses ?? '–').padStart(4)}  Fokus verloren ${String(result.focusLost).padStart(3)}  verlassen ${result.left}  unerreichbar ${result.unreachable}${result.textInput ? '  Texteingabe' : ''}${result.note ? `  ${result.note}` : ''}`,
         );
       }
     }),
@@ -296,7 +491,7 @@ if (jsonOut) {
   const sorted = {};
   for (const id of Object.keys(results).sort()) {
     const r = results[id];
-    sorted[id] = { focusLost: r.focusLost, grade: r.grade, left: r.left, note: r.note, presses: r.presses, textInput: r.textInput };
+    sorted[id] = { focusLost: r.focusLost, grade: r.grade, left: r.left, note: r.note, presses: r.presses, textInput: r.textInput, unreachable: r.unreachable };
   }
   fs.writeFileSync(jsonOut, `${JSON.stringify(sorted, null, 2)}\n`);
 }

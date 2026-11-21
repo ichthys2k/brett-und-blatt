@@ -515,6 +515,37 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
     return () => cancelAnimationFrame(frame);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session.version]);
+  // Fokus-Rettung (#621): Zeichnet das Spielfeld ein fokussiertes Element neu (z. B. nach dem Legen eines Steins),
+  // fiele der Fokus auf <body>. Bei Controller oder Tastatur springt er dann auf das Ziel, das der alten Stelle am nächsten liegt.
+  useEffect(() => {
+    if (inputSource === 'pointer') return undefined;
+    const zone = document.querySelector<HTMLElement>('[data-focus-zone="play-board"]');
+    if (!zone) return undefined;
+    let frame = 0;
+    const onFocusOut = (event: FocusEvent) => {
+      if (event.relatedTarget) return;
+      const lost = event.target instanceof Element ? event.target.getBoundingClientRect() : null;
+      if (!lost) return;
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        if (document.activeElement && document.activeElement !== document.body) return;
+        const { candidates, byId } = collectFocusableCandidates(zone);
+        const cx = lost.left + lost.width / 2;
+        const cy = lost.top + lost.height / 2;
+        let best: { id: string; d: number } | null = null;
+        for (const c of candidates) {
+          const d = Math.hypot(c.rect.left + c.rect.width / 2 - cx, c.rect.top + c.rect.height / 2 - cy);
+          if (!best || d < best.d) best = { id: c.id, d };
+        }
+        if (best) byId.get(best.id)?.focus({ preventScroll: true });
+      });
+    };
+    zone.addEventListener('focusout', onFocusOut);
+    return () => {
+      cancelAnimationFrame(frame);
+      zone.removeEventListener('focusout', onFocusOut);
+    };
+  }, [inputSource]);
   // B vom Controller verlässt nie die Partie: Was kein anderer Baustein verbraucht (Fenster, Menü, Auswahl), endet hier.
   useInputIntent((intent, source) => intent === 'cancel' && source === 'gamepad', -5);
   usePromptItems(

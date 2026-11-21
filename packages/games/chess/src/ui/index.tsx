@@ -656,7 +656,7 @@ function Board({ view, legalMoves: allMoves, onMove, viewer, activeSeat, hint: a
           />
         )}
         {promotion && (
-          <div className="ch-promotion" role="dialog" aria-label="Umwandlung wählen">
+          <div className="ch-promotion" role="dialog" aria-modal="true" aria-label="Umwandlung wählen">
             {promotion.map((m) => (
               <button key={m.promotion} type="button" onClick={() => onMove(m)} aria-label={PIECE_NAMES[m.promotion ?? 'q']}>
                 <span className={`ch-piece ${whiteToMove ? 'ch-white' : 'ch-black'}`}><PieceFace type={m.promotion ?? 'q'} white={whiteToMove} set={pieceSet} /></span>

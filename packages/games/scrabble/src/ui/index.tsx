@@ -290,7 +290,7 @@ function Board({ view, legalMoves, onMove, viewer, hint, seatNames, events }: Bo
       )}
 
       {blankFor && canCompose && (
-        <div className="wg-blank-picker" role="dialog" aria-label="Buchstaben für den Joker wählen">
+        <div className="wg-blank-picker" role="dialog" aria-modal="true" aria-label="Buchstaben für den Joker wählen">
           <div className="wg-blank-title">Welcher Buchstabe soll der Joker sein?</div>
           <div className="wg-blank-grid">
             {LETTERS.map((letter) => (

@@ -93,7 +93,7 @@ K3c ───────────────────► K6, K8d, K9
 | K8c | `ludo`, `marketplace`, `turnip-patch`, `dominoes`, `color-and-shape`, `battleship`, `maexle`, `kniffel`, `low-flight`, `pairs`, `bingo`, `grafschaft`, `scrabble` |
 | K8d | `word-salad`, `hangman`, `category-sprint`, `describe-duel`, `who-am-i`, `bible-quiz`, `estimate`, `majority`, `timeline`, `symbol-match`, `wolves-sheep`, `duck-rally`, `target-number`, `factor-grid`, `number-wall` |
 
-Das sind alle 57 fertigen Spiele (Stand 20.11.2026; `mole-tunnels` ist noch Entwurf und bringt Controller-Bedienung schon mit). Ein neues Spiel kommt in die passende Gruppe bzw. misst seine Eignung beim Anlegen selbst (Regel ab K11).
+Das waren alle 57 fertigen Spiele am 20.11.2026. Seit dem 21.11.2026 ist auch `mole-tunnels` (Maulwurfsgänge) freigeschaltet; es bringt eigene Controller-Bedienung mit und wird mit den übrigen gemessen. Ein neues Spiel kommt in die passende Gruppe bzw. misst seine Eignung beim Anlegen selbst (Regel ab K11).
 
 ## Bekannte Lücken der Controller-Schicht (Stand 20.11.2026)
 
@@ -134,12 +134,12 @@ Jeder Schritt trägt hier nach der Umsetzung Datum, Issue und die wichtigsten Da
 - **K10 (#624, 21.11.2026):** Hinweis „Controller erkannt“ – `components/ConsoleOffer.tsx`.
 - **K8 (#619–#622, 21.11.2026, Durchgang 1):** SVG-Bretter mit Controller (Fokus und A in `FocusZone.tsx`), Würfel bei Nicht ärgern!, Menü-Fokus am Spieltisch, Tastenleiste kein Ziel; Neumessung in [`konsole-eignung.md`](konsole-eignung.md).
 - **K11 (#625, 21.11.2026):** `scripts/konsole-probe.mjs`, beide Proben in der CI, [`../steam-deck.md`](../steam-deck.md).
+- **K8 Durchgang 2 (#619–#622, 21.11.2026):** Fenster mit Controller (`ModalFocus.tsx`), Bereichsvorrang der Pfeile, Fokus-Rettung am Spieltisch, Bildschirmtastatur nur für Textfelder, Go-SGF-Fenster, Rollabstand der Konsole, gezielter Messlauf; Online-Partie aus der Konsole durchgespielt.
 
-## Offen (Stand 21.11.2026)
+## Offen (Stand 21.11.2026, nach K8 Durchgang 2)
 
-- **Am Gerät prüfen (#625):** Steam Deck und echter Controller; die Anleitung trägt bis dahin einen Warnkasten.
-- **K8 von Hand (#619–#622):** Die Prüfliste der Issues ist nicht für jedes Spiel einzeln abgearbeitet. Geprüft sind: Messung aller Spiele, Suche nach Teilen ohne Fokus in allen Spielen (Startzustand), Steuern mit dem Controller in Skat, Nicht ärgern!, Rübenacker, Sternhalma, Grafschaft, Schiffe versenken, Farbe & Form, Rechenmauer. Offen sind Sonderzüge in späteren Phasen (Umwandlung im Schach, Skat drücken, Farbwahl, Mulligan im Drachenspiel …) und die Spiele mit Texteingabe oder Echtzeit.
-- **Zufallslauf unterschätzt mehrschrittige Spiele (#608):** Spiele, deren Züge aus mehreren Schritten bestehen (Schiffe setzen und bestätigen, Stein und Feld wählen), landen bei `carousel`, obwohl jedes Ziel erreichbar ist. Eine Probe, die Ziele gezielt ansteuert, wäre genauer.
-- **Online-Partie aus der Konsolen-Lobby (#623):** bis zum Spieltisch nicht im Browser durchgespielt; Beitreten mit Code, Pass-Namen, Schwarzes Brett „Zettel anlegen“ nicht einzeln geprüft.
-- **Go: `SetupExtra` mit dem Controller (#617)** nicht geprüft.
-- **Controller-Probe:** scheiterte einmal direkt nach einem Bau und war danach viermal grün; Ursache unklar.
+- **Am Gerät prüfen (#625):** Steam Deck und echter Controller; die Anleitung trägt bis dahin einen Warnkasten. Das kann nur jemand mit dem Gerät.
+- **SGF-Code bei Go per Bildschirmtastatur:** Die Bildschirmtastatur hat keine Klammern und kein Semikolon; eine Partie lädt man mit dem Controller über den Dateidialog.
+- **Echtzeit und Texteingabe:** Enten-Rallye, Fix gefunden!, Ligretto und Speed laufen gegen die Uhr; Kategorien-Sprint, Schätzmeister und Beschreib-Duell brauchen die Bildschirmtastatur. Beides ist bedienbar, aber im Nachteil gegenüber Finger und Tastatur.
+- **Messung:** Der gezielte Lauf meldet bei einigen Spielen „nicht angesteuert“, wo Stichproben von Hand einen Weg fanden; die Zahl ist ein Hinweis, kein Beweis.
+- **Controller-Probe:** scheiterte einmal direkt nach einem Bau und war danach immer grün; Ursache unklar.

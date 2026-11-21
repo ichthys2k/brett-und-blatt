@@ -538,7 +538,7 @@ function Board({ view, legalMoves, onMove, viewer, activeSeat, hint }: BoardProp
           )}
           {promotion && (
             <div className="fc-promotion-backdrop" onClick={() => setPromotion(null)}>
-              <div className="fc-promotion" role="dialog" aria-label="Umwandlung wählen" onClick={(e) => e.stopPropagation()}>
+              <div className="fc-promotion" role="dialog" aria-modal="true" aria-label="Umwandlung wählen" onClick={(e) => e.stopPropagation()}>
                 <div className="fc-promotion-choices">
                   {promotion.map((m) => (
                     <button

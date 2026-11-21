@@ -148,6 +148,20 @@ try {
     throw new Error('B im Menü darf die Partie nicht verlassen');
   }
 
+  // 4b. Fenster (#619–#622): Die Anleitung öffnet mit Fokus im Fenster, B schließt sie, die Partie bleibt.
+  await page.locator('button[aria-label="Anleitung anzeigen"]').first().focus();
+  await pressPad(0);
+  await page.waitForTimeout(300);
+  if (!(await page.evaluate(() => Boolean(document.activeElement?.closest('[aria-modal="true"]'))))) {
+    throw new Error('Das Fenster der Anleitung sollte den Fokus bekommen');
+  }
+  await pressPad(1);
+  await page.waitForTimeout(300);
+  const afterModal = await page.evaluate(() => ({ open: document.querySelectorAll('[aria-modal="true"]').length, hash: location.hash }));
+  if (afterModal.open !== 0 || !afterModal.hash.startsWith('#/partie')) {
+    throw new Error(`B sollte die Anleitung schließen und in der Partie bleiben: ${JSON.stringify(afterModal)}`);
+  }
+
   // 5. Hinweis „Controller erkannt“ (#624): erscheint einmal, A schaltet die Konsole ein.
   const offerPage = await browser.newPage({ viewport: { width: 1280, height: 800 } });
   offerPage.on('pageerror', (err) => errors.push(err.message));
@@ -174,7 +188,7 @@ try {
   if (errors.length > 0) {
     throw new Error(`Browser-Fehler: ${errors.join('; ')}`);
   }
-  console.log('✓ Controller-Browser-Probe erfolgreich (Optionen, Schieberegler, Startseite-Zonen, Schach-Karussell, Tic-Tac-Toe mit Steuerkreuz, Hinweis Konsole).');
+  console.log('✓ Controller-Browser-Probe erfolgreich (Optionen, Schieberegler, Startseite-Zonen, Schach-Karussell, Tic-Tac-Toe mit Steuerkreuz, Fenster, Hinweis Konsole).');
 } finally {
   await browser.close();
   server.close();

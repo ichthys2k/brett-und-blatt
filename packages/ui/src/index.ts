@@ -161,6 +161,8 @@ export { FocusZone, GlobalSpatialNavigator, collectFocusableCandidates, type Foc
 export { ButtonPrompt, DEFAULT_PROMPTS, PromptProvider, usePromptItems, type ButtonPromptProps, type PromptItem } from './input/ButtonPrompt';
 export { pushPrompt, removePrompt, topPrompt, type PromptEntry } from './input/promptStack';
 export { ScanOverlay } from './input/ScanOverlay';
+export { ModalFocusManager, topModal } from './input/ModalFocus';
+export { isCloseLabel, pickModalEntry } from './input/modalFocus';
 export { VirtualKeyboard } from './input/VirtualKeyboard';
 export { SoftCursor } from './input/SoftCursor';
 export { MoveCarouselBar, type MoveCarouselBarProps } from './input/MoveCarouselBar';

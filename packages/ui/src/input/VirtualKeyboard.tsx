@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { FocusZone } from './FocusZone';
 import { useInputContext, useInputIntent } from './InputContext';
 
+/** Nur Felder für Text und Zahlen öffnen die Bildschirmtastatur; Datei, Farbe, Datum u. a. behalten ihren eigenen Dialog (#619). */
+const TEXT_INPUT_TYPES: ReadonlySet<string> = new Set(['text', 'search', 'number', 'tel', 'email', 'url', 'password']);
+
 const ROWS: readonly (readonly string[])[] = [
   ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
   ['Q', 'W', 'E', 'R', 'T', 'Z', 'U', 'I', 'O', 'P', 'Ü'],
@@ -33,10 +36,7 @@ export function VirtualKeyboard() {
     const active = document.activeElement;
     if (
       intent === 'confirm' &&
-      (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) &&
-      active.type !== 'checkbox' &&
-      active.type !== 'radio' &&
-      active.type !== 'range'
+      (active instanceof HTMLTextAreaElement || (active instanceof HTMLInputElement && TEXT_INPUT_TYPES.has(active.type)))
     ) {
       setPreview(active.value);
       setTargetInput(active);
