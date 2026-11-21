@@ -587,7 +587,7 @@ const list: ModDef[] = [
   {
     key: 'cupbearer',
     name: 'Der Mundschenk',
-    emoji: '🍷',
+    emoji: '🫖',
     rarity: 'common',
     price: 5,
     text: '+3 Lachen je gewertete Karte, solange du in dieser Audienz noch nicht getauscht hast',

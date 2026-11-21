@@ -220,7 +220,7 @@ export function CardBack({
               <circle cx="125" cy="175" r="46" fill="#1c0a02" stroke="#d97706" strokeWidth="3" />
               <circle cx="125" cy="175" r="38" fill="none" stroke="#b45309" strokeWidth="1.5" strokeDasharray="3 3" />
               <text x="125" y="187" textAnchor="middle" fontSize="34" aria-hidden="true">
-                🍺
+                ☕
               </text>
             </>
           )}
