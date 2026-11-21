@@ -31,6 +31,7 @@ import {
   CardCosmeticsProvider,
   GlobalSpatialNavigator,
   InputProvider,
+  PromptProvider,
   ScanOverlay,
   SoftCursor,
   VirtualKeyboard,
@@ -46,6 +47,7 @@ export function App() {
   const inputSettings = useInputSettings();
   return (
     <InputProvider settings={inputSettings}>
+      <PromptProvider>
       <CardCosmeticsProvider value={cosmetics}>
         <GlobalSpatialNavigator />
         <ScanOverlay />
@@ -57,6 +59,7 @@ export function App() {
         <SnesEgg />
         <RewardBanner />
       </CardCosmeticsProvider>
+      </PromptProvider>
     </InputProvider>
   );
 }
