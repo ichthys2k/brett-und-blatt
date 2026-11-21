@@ -38,6 +38,8 @@ import {
 import { useActiveCardCosmetics } from './lib/cardBacks';
 import { saveInputSettings, useInputSettings } from './lib/inputSettings';
 import { useActiveLook } from './lib/look';
+import { useActiveShell } from './lib/shell';
+import { consoleScreen } from './console/screens';
 
 export function App() {
   const cosmetics = useActiveCardCosmetics(useActiveLook());
@@ -61,6 +63,12 @@ export function App() {
 
 function Screen() {
   const route = useRoute();
+  const shell = useActiveShell();
+  // Konsolen-Oberfläche (#607): eigener Bildschirm, wo es einen gibt; sonst die klassische Seite.
+  if (shell === 'console') {
+    const screen = consoleScreen(route);
+    if (screen) return screen;
+  }
   switch (route.name) {
     case 'setup':
       return <Setup key={`${route.gameId}-${JSON.stringify(route.params ?? {})}`} gameId={route.gameId} params={route.params} />;

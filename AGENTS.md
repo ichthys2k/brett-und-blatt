@@ -53,6 +53,8 @@ node scripts/platz-messen.mjs                         # misst Spielfeld- und Por
 
 Karten, Plättchen oder Porträts groß zeigen nur über den Baustein `CardInspect` (`packages/ui`, #418; Einzelheiten in `CLAUDE.md` unter „Technik in Kürze“), keine eigenen Zoom-Fenster.
 
+Die Konsolen-Oberfläche (#607, `apps/web/src/console/`, Schalter in `lib/shell.ts`) ist eine zweite Darstellung über derselben Logik: keine Regeln aus `Home.tsx` oder `Setup.tsx` abschreiben, sondern gemeinsame Module nutzen; Plan und Styleguide unter `docs/spiele/konsole*.md`.
+
 Neue Spielordner findet ein laufender Dev-Server erst nach einem Neustart. Mehrspieler-Spiele (ab 2 Plätzen) zusätzlich in `apps/server/src/games.ts` und `apps/server/package.json` eintragen.
 
 ## Wo was steht

@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import { startAppUpdates } from './lib/appUpdate';
 import './lib/look';
+import './lib/shell';
 import './lib/avatarRender';
 import './lib/pieceImages';
 import './lib/pairArt';

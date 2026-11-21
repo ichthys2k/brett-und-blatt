@@ -117,4 +117,6 @@ Beim Planen aufgefallen, jeweils einem Schritt zugeordnet:
 
 ## Umgesetzte Schritte
 
-Noch keine. Jeder Schritt trägt hier nach der Umsetzung Datum, Issue und die wichtigsten Dateien ein.
+Jeder Schritt trägt hier nach der Umsetzung Datum, Issue und die wichtigsten Dateien ein (ausführlich in `docs/CHRONIK.md`).
+
+- **K1 (#609, 21.11.2026):** Schalter „Oberfläche“ unter Optionen, Startparameter `?modus=konsole|klassisch`, `data-shell="console"`, Weiche `consoleScreen` – `apps/web/src/lib/shellCore.ts`, `shell.ts`, `apps/web/src/console/screens.tsx`.
