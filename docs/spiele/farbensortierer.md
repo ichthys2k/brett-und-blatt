@@ -364,7 +364,7 @@ Damit sinkt die Zahl der Narren von 58 auf etwa 52, und keine Gruppe entspricht 
 
 | Familie | Bisher | Neu |
 |---|---|---|
-| Zeitpunkt in der Audienz | Frühaufsteher, Doppelgesichtiger | 🎺 Fanfarenbläser (erste Vorführung +12 Lachen), 🛌 Schlafmütze (letzte ×2), 🕯️ Kerzenzieher (+3 je übrige Vorführung), 🍷 Mundschenk (+3 je Karte ohne Tauschen) |
+| Zeitpunkt in der Audienz | Frühaufsteher, Doppelgesichtiger | 🎺 Fanfarenbläser (erste Vorführung +12 Lachen), 🛌 Schlafmütze (letzte ×2), 🕯️ Kerzenzieher (+3 je übrige Vorführung), 🫖 Mundschenk (+3 je Karte ohne Tauschen) |
 | Karten in der Hand | Lässiger | 🐕 Hofhund (+6 Witz je Karte), 🐦 Nachtigall (+3 Lachen je Herz), 👵 Königinmutter (×1,25 je Dame) |
 | Rechnen mit Rängen | Einsundnuller, Aufrechter, Querkopf | 🧮 Rechenlehrling (Summe ist Primzahl: ×2), 🔟 Zehnerfreund (Summe durch 10 teilbar: +20), 🧚 Märchenerzählerin (+7 je 7) |
 | Farben gemischt | Meistermaler | ⚖️ Hofrichter (gleich viele rote wie schwarze: ×2), 🦢 Schwanenjungfer (nur rote: ×1,5) |
