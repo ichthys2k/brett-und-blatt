@@ -19,7 +19,9 @@
     "rauchtest": "node scripts/rauchtest.mjs",
     "pruefstand": "vitest run tests/pruefstand.test.ts",
     "platz-messen": "node scripts/platz-messen.mjs",
-    "controller-audit": "node scripts/controller-audit.mjs"
+    "controller-audit": "node scripts/controller-audit.mjs",
+    "controller-probe": "node scripts/controller-probe.mjs",
+    "konsole-probe": "node scripts/konsole-probe.mjs"
   },
   "devDependencies": {
     "@bokuweb/zstd-wasm": "0.0.27",

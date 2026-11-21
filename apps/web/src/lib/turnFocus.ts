@@ -9,7 +9,7 @@ export interface BoardFocusInput {
   source: 'pointer' | 'keyboard' | 'gamepad';
   /** Liegt der Fokus auf <body>, auf einem entfernten oder gesperrten Element, oder gar nicht im Dokument? */
   focusLost: boolean;
-  /** Liegt der Fokus innerhalb des Spielfelds (`play-board`)? */
+  /** Liegt der Fokus am Tisch, also im Spielfeld (`play-board`) oder im Menü (`play-menu`)? Dann bleibt er dort. */
   focusInBoard: boolean;
   menuOpen: boolean;
   /** Ist ein Fenster offen (Anleitung, Großansicht, Bildschirmtastatur)? */

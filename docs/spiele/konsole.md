@@ -132,3 +132,14 @@ Jeder Schritt trägt hier nach der Umsetzung Datum, Issue und die wichtigsten Da
 - **K7 (#618, 21.11.2026):** Spieltisch mit Controller – `lib/turnFocus.ts`, `screens/Play.tsx`.
 - **K9 (#623, 21.11.2026):** Klassische Seiten und Lobby im Rahmen – `console/ClassicInFrame.tsx`.
 - **K10 (#624, 21.11.2026):** Hinweis „Controller erkannt“ – `components/ConsoleOffer.tsx`.
+- **K8 (#619–#622, 21.11.2026, Durchgang 1):** SVG-Bretter mit Controller (Fokus und A in `FocusZone.tsx`), Würfel bei Nicht ärgern!, Menü-Fokus am Spieltisch, Tastenleiste kein Ziel; Neumessung in [`konsole-eignung.md`](konsole-eignung.md).
+- **K11 (#625, 21.11.2026):** `scripts/konsole-probe.mjs`, beide Proben in der CI, [`../steam-deck.md`](../steam-deck.md).
+
+## Offen (Stand 21.11.2026)
+
+- **Am Gerät prüfen (#625):** Steam Deck und echter Controller; die Anleitung trägt bis dahin einen Warnkasten.
+- **K8 von Hand (#619–#622):** Die Prüfliste der Issues ist nicht für jedes Spiel einzeln abgearbeitet. Geprüft sind: Messung aller Spiele, Suche nach Teilen ohne Fokus in allen Spielen (Startzustand), Steuern mit dem Controller in Skat, Nicht ärgern!, Rübenacker, Sternhalma, Grafschaft, Schiffe versenken, Farbe & Form, Rechenmauer. Offen sind Sonderzüge in späteren Phasen (Umwandlung im Schach, Skat drücken, Farbwahl, Mulligan im Drachenspiel …) und die Spiele mit Texteingabe oder Echtzeit.
+- **Zufallslauf unterschätzt mehrschrittige Spiele (#608):** Spiele, deren Züge aus mehreren Schritten bestehen (Schiffe setzen und bestätigen, Stein und Feld wählen), landen bei `carousel`, obwohl jedes Ziel erreichbar ist. Eine Probe, die Ziele gezielt ansteuert, wäre genauer.
+- **Online-Partie aus der Konsolen-Lobby (#623):** bis zum Spieltisch nicht im Browser durchgespielt; Beitreten mit Code, Pass-Namen, Schwarzes Brett „Zettel anlegen“ nicht einzeln geprüft.
+- **Go: `SetupExtra` mit dem Controller (#617)** nicht geprüft.
+- **Controller-Probe:** scheiterte einmal direkt nach einem Bau und war danach viermal grün; Ursache unklar.

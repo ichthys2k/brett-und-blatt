@@ -38,10 +38,7 @@ await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
 const { port } = server.address();
 const baseUrl = `http://127.0.0.1:${port}`;
 
-const browser = await chromium.launch({
-  executablePath: process.env.RAUCHTEST_CHROMIUM || '/usr/bin/chromium',
-  headless: true,
-});
+const browser = await chromium.launch(process.env.RAUCHTEST_CHROMIUM ? { executablePath: process.env.RAUCHTEST_CHROMIUM } : {});
 
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });

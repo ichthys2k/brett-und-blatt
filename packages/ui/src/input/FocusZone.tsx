@@ -33,6 +33,8 @@ export function collectFocusableCandidates(root: HTMLElement): {
   const byId = new Map<string, HTMLElement>();
 
   for (const el of elements) {
+    // Die Tastenleiste ist Hinweis, kein Ziel: ihr ✕ bleibt für Maus und Finger, das Steuerkreuz überspringt es.
+    if (el.closest('.bub-prompt-bar')) continue;
     const style = window.getComputedStyle(el);
     if (style.display === 'none' || style.visibility === 'hidden') continue;
     const r = el.getBoundingClientRect();
@@ -88,8 +90,8 @@ export function FocusZone({ id, order = 0, label, trap = false, className = '', 
     const el = ref.current;
     if (!ctx || !el) return;
     const onFocusIn = (e: FocusEvent) => {
-      if (e.target instanceof HTMLElement) {
-        ctx.setZoneLastFocused(id, ensureElementId(e.target));
+      if (e.target instanceof HTMLElement || e.target instanceof SVGElement) {
+        ctx.setZoneLastFocused(id, ensureElementId(e.target as HTMLElement));
       }
     };
     el.addEventListener('focusin', onFocusIn);
@@ -125,7 +127,9 @@ export function GlobalSpatialNavigator() {
 
     const zones = ctx.getZones();
     const trappedZone = [...zones].reverse().find((z) => z.trap);
-    const active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    // SVG-Elemente mit tabIndex (Bretter aus SVG, z. B. Nicht ärgern!, Sternhalma) zählen wie HTML-Elemente (#621).
+    const focused = document.activeElement;
+    const active = focused instanceof HTMLElement || focused instanceof SVGElement ? (focused as HTMLElement) : null;
 
     // Schieberegler und Auswahllisten mit dem Controller bedienen (#613); die Tastatur bedient sie der Browser selbst.
     if (source === 'gamepad' && active instanceof HTMLInputElement && active.type === 'range' && (intent === 'left' || intent === 'right')) {
@@ -195,7 +199,9 @@ export function GlobalSpatialNavigator() {
     // Bestätigen per Gamepad A auf dem fokussierten Element
     if (intent === 'confirm' && source === 'gamepad') {
       if (active && active !== document.body) {
-        active.click();
+        // SVG-Elemente haben kein click(); ein Klick-Ereignis erreicht ihre onClick-Handler genauso.
+        if (typeof active.click === 'function') active.click();
+        else active.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
         return true;
       }
       return false;

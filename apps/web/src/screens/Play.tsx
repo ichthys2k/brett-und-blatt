@@ -474,14 +474,17 @@ export function GameTable({ session, game, local, online }: GameTableProps) {
   const inputSettings = useInputSettings();
   const placeBoardFocus = (requireLost: boolean) => {
     if (typeof document === 'undefined') return;
-    const active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const focused = document.activeElement;
+    const active = focused instanceof HTMLElement || focused instanceof SVGElement ? (focused as HTMLElement) : null;
     const zone = document.querySelector<HTMLElement>('[data-focus-zone="play-board"]');
+    const menuZone = document.querySelector<HTMLElement>('[data-focus-zone="play-menu"]');
     const focusLost = !active || active === document.body || !active.isConnected || (active as HTMLButtonElement).disabled === true;
     const target = boardFocusTarget({
       source: inputSource,
       focusLost,
-      focusInBoard: requireLost ? !focusLost : Boolean(zone && active && zone.contains(active)),
-      menuOpen: sideOpen && collapsedSide,
+      // Wer bewusst im Menü ist (Start, LB/RB), bleibt dort; nur ein verlorener Fokus oder einer außerhalb des Tischs springt ins Spielfeld.
+      focusInBoard: requireLost ? !focusLost : Boolean(active && (zone?.contains(active) || menuZone?.contains(active))),
+      menuOpen: sideOpen,
       dialogOpen: showHowTo || document.querySelector('.bub-vkb-key, .bub-inspect-panel') !== null,
       handover: handoverSeat !== null,
       result: Boolean(result),

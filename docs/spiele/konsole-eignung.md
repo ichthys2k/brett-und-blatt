@@ -21,55 +21,64 @@ node scripts/controller-audit.mjs --json apps/web/src/lib/controllerGrades.json 
 
 Die Stufe ist eine maschinelle Vorsortierung. Ob wirklich jede Zugart erreichbar ist, prüft K8 von Hand.
 
-## Ergebnis (21.11.2026, vor K7 und K8)
+**Verlauf:** Erste Messung vor K7: direct 38, carousel 12, cursor 8. Nach K7 (Fokus bei Zugbeginn) und dem ersten Durchgang von K8 (SVG-Bretter, Würfel bei Nicht ärgern!): siehe unten.
 
-58 Spiele: **direct 38**, **carousel 12**, **cursor 8**.
+## Grenzen
+
+- **Mehrschrittige Züge:** Wo ein Zug aus mehreren Schritten besteht (Schiff setzen und bestätigen, Stein und Feld wählen, mehrere Karten), schafft der Zufallslauf oft keine drei Züge, obwohl jedes Ziel ein Knopf ist. Solche Spiele stehen bei `carousel`, sind aber mit Steuerkreuz und A spielbar.
+- **Gleichzeitige Runden und Texteingabe:** Spiele ohne Zug-Rahmen (alle geben zugleich ab) und Spiele mit freier Eingabe (Kategorien-Sprint, Schätzmeister, Beschreib-Duell) brauchen die Bildschirmtastatur; der Zufallslauf tippt nicht.
+- **Echtzeit:** Enten-Rallye, Fix gefunden!, Ligretto und Speed laufen gegen die Uhr; dort genügt, dass jede Aktion erreichbar ist.
+- **Suche nach Teilen ohne Fokus (21.11.2026):** In allen 58 Spielen ist im Startzustand jedes anklickbare Teil fokussierbar oder die Verdopplung eines fokussierbaren Ziels.
+
+## Ergebnis (21.11.2026, nach K7 und dem ersten Durchgang von K8)
+
+58 Spiele: **direct 42**, **carousel 9**, **cursor 7**.
 
 | Spiel-id | Name | Stufe | Drücke | Fokus verloren | Verlassen | Texteingabe | Anmerkung |
 |---|---|---|---|---|---|---|---|
 | `battleship` | Schiffe versenken | carousel | 6 | 0 | 0 | – |  |
-| `bible-quiz` | Bibel-Quiz | cursor | – | 27 | 0 | – |  |
+| `bible-quiz` | Bibel-Quiz | cursor | – | 21 | 0 | – |  |
 | `bingo` | Bingo | cursor | – | 182 | 0 | – |  |
-| `binokel` | Binokel | direct | 36 | 2 | 1 | – |  |
-| `black-peter` | Schwarzer Peter | direct | 12 | 0 | 0 | – |  |
+| `binokel` | Binokel | direct | 34 | 2 | 1 | – |  |
+| `black-peter` | Schwarzer Peter | direct | 10 | 0 | 0 | – |  |
 | `category-sprint` | Kategorien-Sprint | cursor | – | 246 | 0 | ja |  |
-| `checkers` | Dame | direct | 79 | 0 | 0 | – |  |
-| `chess` | Schach | direct | 274 | 0 | 0 | – |  |
-| `chinese-checkers` | Sternhalma | carousel | 6 | 0 | 0 | – |  |
+| `checkers` | Dame | direct | 77 | 0 | 0 | – |  |
+| `chess` | Schach | direct | 273 | 0 | 0 | – |  |
+| `chinese-checkers` | Sternhalma | direct | 72 | 0 | 0 | – |  |
 | `color-and-shape` | Farbe & Form | carousel | 11 | 0 | 0 | – |  |
-| `color-sorter` | Narrenhof | direct | 111 | 0 | 0 | – |  |
+| `color-sorter` | Narrenhof | direct | 112 | 0 | 0 | – |  |
 | `describe-duel` | Verboten! | carousel | 9 | 249 | 0 | ja |  |
-| `dominoes` | Domino | direct | 12 | 0 | 0 | – |  |
-| `doppelkopf` | Doppelkopf | direct | 18 | 0 | 0 | – |  |
-| `drachenspiel` | Drachenspiel | direct | 100 | 10 | 0 | – |  |
+| `dominoes` | Domino | direct | 10 | 0 | 0 | – |  |
+| `doppelkopf` | Doppelkopf | direct | 16 | 0 | 0 | – |  |
+| `drachenspiel` | Drachenspiel | direct | 98 | 10 | 0 | – |  |
 | `dragon-towers` | Drachentürme | carousel | 8 | 0 | 1 | – |  |
 | `duck-rally` | Enten-Rallye | cursor | – | 0 | 0 | – |  |
-| `elevens` | Elf zuerst! | direct | 61 | 0 | 0 | – |  |
-| `estimate` | Schätzmeister | cursor | – | 242 | 0 | ja |  |
+| `elevens` | Elf zuerst! | direct | 59 | 0 | 0 | – |  |
+| `estimate` | Schätzmeister | cursor | – | 233 | 0 | ja |  |
 | `factor-grid` | Teiler-Duell | direct | 11 | 0 | 0 | – |  |
-| `four-in-a-row` | Vier in einer Reihe | direct | 18 | 0 | 0 | – |  |
+| `four-in-a-row` | Vier in einer Reihe | direct | 16 | 0 | 0 | – |  |
 | `four-player-chess` | Vierer-Schach | direct | 106 | 0 | 0 | – |  |
-| `go` | Go | direct | 17 | 0 | 0 | – |  |
-| `gomoku` | Gomoku | direct | 8 | 0 | 0 | – |  |
-| `grafschaft` | Grafschaft | carousel | 12 | 0 | 0 | – |  |
+| `go` | Go | direct | 15 | 0 | 0 | – |  |
+| `gomoku` | Gomoku | direct | 6 | 0 | 0 | – |  |
+| `grafschaft` | Grafschaft | direct | 41 | 0 | 0 | – |  |
 | `hangman` | Galgenmännchen | direct | 10 | 0 | 0 | – |  |
 | `kniffel` | Würfelblock | direct | 7 | 0 | 0 | – |  |
 | `ligretto` | Kartenblitz | direct | 187 | 14 | 8 | – |  |
-| `low-flight` | Tiefflug | direct | 8 | 0 | 0 | – |  |
-| `ludo` | Nicht ärgern! | carousel | 3 | 250 | 101 | – |  |
-| `maexle` | Mäxle | direct | 18 | 0 | 0 | – |  |
-| `majority` | Mehrheitsfrage | carousel | 8 | 157 | 0 | – |  |
-| `market-stalls` | Marktstände | direct | 28 | 0 | 0 | – |  |
+| `low-flight` | Tiefflug | direct | 6 | 0 | 0 | – |  |
+| `ludo` | Nicht ärgern! | direct | 10 | 0 | 0 | – |  |
+| `maexle` | Mäxle | direct | 16 | 0 | 0 | – |  |
+| `majority` | Mehrheitsfrage | carousel | 8 | 236 | 0 | – |  |
+| `market-stalls` | Marktstände | direct | 26 | 0 | 0 | – |  |
 | `marketplace` | Marktplatz | carousel | 8 | 0 | 0 | – |  |
-| `mau-mau` | Mau-Mau | direct | 16 | 0 | 0 | – |  |
-| `mill` | Mühle | direct | 13 | 0 | 0 | – |  |
+| `mau-mau` | Mau-Mau | direct | 14 | 0 | 0 | – |  |
+| `mill` | Mühle | direct | 11 | 0 | 0 | – |  |
 | `mole-tunnels` | Maulwurfsgänge | direct | 14 | 0 | 0 | – |  |
 | `number-wall` | Rechenmauer | cursor | – | 0 | 0 | – |  |
 | `pairs` | Paare finden | direct | 7 | 0 | 0 | – |  |
-| `poker` | Poker | direct | 61 | 0 | 0 | – |  |
-| `president` | Präsident | direct | 115 | 0 | 0 | – |  |
-| `quartett` | Quartett | direct | 91 | 0 | 0 | – |  |
-| `reversi` | Reversi | direct | 7 | 0 | 0 | – |  |
+| `poker` | Poker | direct | 57 | 0 | 0 | – |  |
+| `president` | Präsident | direct | 113 | 0 | 0 | – |  |
+| `quartett` | Quartett | carousel | 6 | 6 | 0 | – |  |
+| `reversi` | Reversi | direct | 5 | 0 | 0 | – |  |
 | `schafkopf` | Schafkopf | carousel | 6 | 0 | 0 | – |  |
 | `scrabble` | Wortgitter | direct | 42 | 0 | 0 | – |  |
 | `skat` | Skat | carousel | 10 | 0 | 0 | – |  |
@@ -77,11 +86,11 @@ Die Stufe ist eine maschinelle Vorsortierung. Ob wirklich jede Zugart erreichbar
 | `speed` | Speed | direct | 49 | 5 | 3 | – |  |
 | `symbol-match` | Fix gefunden! | direct | 10 | 0 | 0 | – |  |
 | `target-number` | Zielzahl | direct | 29 | 0 | 0 | – |  |
-| `tic-tac-toe` | Tic-Tac-Toe | direct | 12 | 0 | 0 | – |  |
-| `timeline` | Zeitstrahl | cursor | – | 249 | 0 | – |  |
-| `turnip-patch` | Rübenacker | carousel | 10 | 0 | 0 | – |  |
-| `ultimate-tic-tac-toe` | Ultimate Tic-Tac-Toe | direct | 12 | 0 | 0 | – |  |
-| `uno` | Eins! | direct | 12 | 0 | 0 | – |  |
-| `who-am-i` | Wer bin ich? | direct | 31 | 0 | 0 | – |  |
-| `wolves-sheep` | Wölfe im Schafspelz | cursor | – | 245 | 0 | – |  |
+| `tic-tac-toe` | Tic-Tac-Toe | direct | 10 | 0 | 0 | – |  |
+| `timeline` | Zeitstrahl | cursor | – | 237 | 0 | – |  |
+| `turnip-patch` | Rübenacker | direct | 5 | 0 | 0 | – |  |
+| `ultimate-tic-tac-toe` | Ultimate Tic-Tac-Toe | direct | 10 | 0 | 0 | – |  |
+| `uno` | Eins! | direct | 10 | 0 | 0 | – |  |
+| `who-am-i` | Wer bin ich? | direct | 30 | 0 | 0 | – |  |
+| `wolves-sheep` | Wölfe im Schafspelz | direct | 24 | 0 | 0 | – |  |
 | `word-salad` | Wort-Salat | direct | 133 | 0 | 0 | – |  |
