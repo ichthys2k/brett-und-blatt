@@ -8,6 +8,8 @@ Was wann umgesetzt wurde, mit Dateipfaden und Entscheidungen. Bis zum 12.11.2026
 
 ## Nachträge ab 12.11.2026
 
+**Eins!: Handkarten sortieren (21.11.2026):** Die eigene Hand lässt sich nach Farbe, nach Zahl oder in eigener Reihenfolge anzeigen (reine Anzeige, Spielstand unberührt). Rechenlogik in `packages/games/uno/src/handOrder.ts` (`sortHand`, `applyManualOrder`, `moveBefore`, Test `test/handOrder.test.ts`), Knöpfe „Farbe · Zahl · Eigene“ in `src/ui/index.tsx` (Wahl im Browser unter `brett-und-blatt:uno-sortierung`, CSS `.uno-sort*`). In „Eigene“ ziehen sich auch nicht spielbare Karten; losgelassen auf einer anderen Handkarte, landet die Karte davor.
+
 **Maulwurfsgänge: Bot-Porträt „Wühlmaus“ (21.11.2026, #567):** Porträt `packages/ui/src/bots/portraits/bot-wuehlmaus.webp` (256 × 256 px, mit der Canva-Bilderzeugung gemalt, Auswahl durch Cornelius, Original im privaten Repo), Eintrag `wuehlmaus` im Manifest `scripts/grafik/manifeste/bots.json`; `BOT_NAMES` und `BOT_BY_GAME['mole-tunnels']` in `apps/web/src/lib/botPortraits.ts`. Spielerleiste und Lobby zeigen damit „Wühlmaus“ statt „allgemeine Bots der Engine“. Der Krämer (Marktplatz) bleibt der Maulwurf, die Wühlmaus ist bewusst eine Wühlmaus mit runder Schnauze.
 
 **Maulwurfsgänge: Wappen (21.11.2026, #568):** Eigenes Wappen `apps/web/src/wappen/mole-tunnels.webp` (160 × 184 px), erstmals mit der Canva-Bilderzeugung statt Gemini gemalt (drei Varianten, Auswahl durch Cornelius; Original im privaten Repo). Eintrag im Manifest `scripts/grafik/manifeste/wappen.json`. Die Ausnahme `WITHOUT_CREST` in `tests/repo.test.ts` ist leer; die Startseite zeigt statt des Emojis das Wappen. Offen: Bot-Porträt „Wühlmaus“ (#567).

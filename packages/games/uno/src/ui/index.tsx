@@ -6,6 +6,7 @@ import './styles.css';
 import { describeMove } from '../describe';
 import { UnoCardView } from './UnoCard';
 import { unoCardDescription } from '../cardDescription';
+import { applyManualOrder, moveBefore, sortHand, type HandSort } from '../handOrder';
 
 interface FlyingCard {
   id: string;
@@ -26,6 +27,18 @@ interface FlyingCard {
   endScale: number;
   durationMs: number;
   delayMs?: number;
+}
+
+const SORT_KEY = 'brett-und-blatt:uno-sortierung';
+const SORT_LABELS: Record<HandSort, string> = { color: 'Farbe', number: 'Zahl', manual: 'Eigene' };
+
+function readSort(): HandSort {
+  try {
+    const raw = window.localStorage.getItem(SORT_KEY);
+    return raw === 'number' || raw === 'manual' ? raw : 'color';
+  } catch {
+    return 'color';
+  }
 }
 
 /** Handkarten: auf schmalen Bildschirmen 64 px, sonst 80 px breit (wie die Kartengröße „md“). */
@@ -114,7 +127,25 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
   const isDark = side === 'dark';
 
   // Karten auf der Hand des Spielers
-  const myHand: UnoCard[] = actor !== null ? state.hands[actor] ?? [] : [];
+  const dealtHand: UnoCard[] = actor !== null ? state.hands[actor] ?? [] : [];
+
+  // Sortierung der eigenen Hand: nur Anzeige, der Spielstand bleibt unberührt.
+  const [handSort, setHandSort] = useState<HandSort>(readSort);
+  const [manualOrder, setManualOrder] = useState<string[]>([]);
+  const myHand: UnoCard[] = useMemo(
+    () => (handSort === 'manual' ? applyManualOrder(dealtHand, manualOrder) : sortHand(dealtHand, handSort, state.activeSide)),
+    [dealtHand, handSort, manualOrder, state.activeSide],
+  );
+  const chooseSort = (mode: HandSort) => {
+    // Beim Wechsel zu „Eigene“ bleibt die Hand zunächst, wie sie gerade aussieht.
+    if (mode === 'manual' && handSort !== 'manual') setManualOrder(myHand.map((card) => card.id));
+    setHandSort(mode);
+    try {
+      window.localStorage.setItem(SORT_KEY, mode);
+    } catch {
+      /* ohne Speicher gilt die Wahl nur für diese Sitzung */
+    }
+  };
 
   // Kann der Spieler eine bestimmte Karte legen?
   const playableCardIds = useMemo(() => {
@@ -238,8 +269,15 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
   const { dragState, bindDrag } = usePointerDrag<UnoCard>({
     threshold: 8,
     targetAttribute: 'data-drop-target',
-    disabled: !isActor && state.options.jumpIn !== 'on',
+    disabled: handSort !== 'manual' && !isActor && state.options.jumpIn !== 'on',
     onDrop: (card, targetId) => {
+      // Eigene Reihenfolge: Karte vor die Karte ziehen, auf der sie losgelassen wird (oder ans Ende).
+      if (handSort === 'manual' && targetId?.startsWith('hand:')) {
+        const before = targetId.slice(5);
+        setManualOrder(moveBefore(myHand.map((c) => c.id), card.id, before === card.id ? null : before));
+        return true;
+      }
+      if (targetId === 'discard' && !playableCardIds.has(card.id)) return false;
       if (targetId === 'discard') {
         justDroppedCardIdRef.current = card.id;
         handleCardClick(card);
@@ -649,6 +687,24 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
           )}
         </div>
 
+        {myHand.length > 1 && (
+          <div className="uno-sort" role="group" aria-label="Handkarten sortieren">
+            <span className="uno-sort-label">Sortieren:</span>
+            {(['color', 'number', 'manual'] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                className="uno-sort-btn"
+                aria-pressed={handSort === mode}
+                onClick={() => chooseSort(mode)}
+              >
+                {SORT_LABELS[mode]}
+              </button>
+            ))}
+            {handSort === 'manual' && <span className="uno-sort-hint">Karten ziehen und vor eine andere legen</span>}
+          </div>
+        )}
+
         {/* Handkarten-Fächer mit Pointer Drag & Drop – bricht um, damit jede Karte sichtbar bleibt */}
         <div className="uno-hand-container">
           <CardFan
@@ -679,7 +735,8 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
                     }
                   : {};
 
-              const dragProps = isPlayable && (isActor || state.options.jumpIn === 'on') ? bindDrag(card) : undefined;
+              const dragProps =
+                handSort === 'manual' || (isPlayable && (isActor || state.options.jumpIn === 'on')) ? bindDrag(card) : undefined;
 
               return (
                 <div
@@ -687,7 +744,8 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
                     if (el) cardRefs.current.set(card.id, el);
                     else cardRefs.current.delete(card.id);
                   }}
-                  className={`uno-hand-card-wrapper ${isCardDragged ? 'uno-card-dragging' : ''} ${
+                  data-drop-target={handSort === 'manual' ? `hand:${card.id}` : undefined}
+                  className={`uno-hand-card-wrapper ${isCardDragged ? 'uno-card-dragging bub-dragging' : ''} ${
                     isCardSnapping ? 'uno-card-snapping' : ''
                   }`}
                   // Erst die Eigenschaften zum Ziehen, dann der Stil: Sonst überschreibt `touch-action` aus

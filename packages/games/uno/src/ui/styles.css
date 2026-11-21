@@ -443,3 +443,35 @@
     max-width: none;
   }
 }
+
+/* Sortierung der eigenen Hand (Farbe, Zahl, eigene Reihenfolge) */
+.uno-sort {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+}
+
+.uno-sort-label,
+.uno-sort-hint {
+  opacity: 0.7;
+}
+
+.uno-sort-btn {
+  min-height: 2rem;
+  padding: 0.15rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid #71717a;
+  background: transparent;
+  color: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.uno-sort-btn[aria-pressed='true'] {
+  background: #eab308;
+  border-color: #eab308;
+  color: #18181b;
+}
