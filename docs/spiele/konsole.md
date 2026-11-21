@@ -123,3 +123,4 @@ Jeder Schritt trägt hier nach der Umsetzung Datum, Issue und die wichtigsten Da
 - **K2a (#610, 21.11.2026):** Spielkatalog ohne Oberfläche – `apps/web/src/lib/gameCatalog.ts`, `mathPresets.ts`, `categoryOf` in `rubriken.ts`.
 - **K3a (#612, 21.11.2026):** Tastenhinweise je Bildschirm – `usePromptItems`, `PromptProvider` (`packages/ui/src/input/ButtonPrompt.tsx`, `promptStack.ts`).
 - **K3c (#613, 21.11.2026):** Schieberegler, Auswahllisten und Aufklapper per Controller – `packages/ui/src/input/formControls.ts`, `FocusZone.tsx`.
+- **K2b (#611, 21.11.2026):** Partie-Vorbereitung als `useSetupDraft` und `SetupForm` – `apps/web/src/lib/setupDraftCore.ts`, `setupDraft.ts`, `useSetupDraft.ts`, `components/SetupForm.tsx`.
