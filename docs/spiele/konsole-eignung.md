@@ -36,6 +36,7 @@ Die Stufe ist eine maschinelle Vorsortierung. Ob wirklich jede Zugart erreichbar
 - **Eins!:** Wunschfarbe im Fenster mit Steuerkreuz gewählt; B bricht ab.
 - **Go:** SGF-Fenster der Vorbereitung bedienbar (Textfeld, Bildschirmtastatur, B schließt).
 - **Online aus der Konsole:** Raum anlegen bis zum Zug am Spieltisch.
+- **Sonderzüge (Stellung über `?pgn=` vorgegeben, sonst fester Zufall):** Schach Rochade (Ke1–g1), en passant (e5×d6) und Umwandlung (e7–d8, Fenster „Umwandlung wählen“ mit Fokus, Figur gewählt). Skat: 18 sagen, Skat aufnehmen, zwei Karten wählen, drücken, Karo ansagen. Würfelblock: würfeln, zwei Würfel festhalten, nochmal würfeln, Sechser eintragen. Schiffe versenken: drehen, Schiff setzen, zufällig aufstellen, Flotte bestätigen, zweimal schießen. Alles angenommen.
 
 ## Grenzen
 
