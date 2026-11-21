@@ -20,7 +20,8 @@ export const defaultOptions: UnoOptions = {
   variant: 'classic',
   stacking: 'same',
   sevenZero: 'off',
-  jumpIn: 'off',
+  jumpIn: 'on',
+  doublePlay: 'on',
   drawRule: 'one',
   callUno: 'on',
   mercyLimit: 0,
@@ -115,6 +116,7 @@ export function canStackCard(card: UnoCard, topCard: UnoCard, side: 'light' | 'd
     draw1: 1,
     draw2: 2,
     wildDraw4: 4,
+    wildReverseDraw4: 4,
     flipDraw5: 5,
     draw6: 6,
     wildDraw6: 6,
@@ -235,6 +237,14 @@ export function currentPlayers(state: UnoState): number[] {
   return players;
 }
 
+/** Die zweite Karte eines Doppelzugs: Option an und exakt dieselbe Karte (Farbe und Wert) wie die erste. */
+function alsoIsLegal(state: UnoState, hand: UnoCard[], card: UnoCard, alsoCardId: string | undefined): boolean {
+  if (alsoCardId === undefined) return true;
+  if (state.options.doublePlay !== 'on' || alsoCardId === card.id) return false;
+  const also = hand.find((c) => c.id === alsoCardId);
+  return !!also && isIdenticalCard(also, card, state.activeSide);
+}
+
 /** Prüft, ob ein Zug unter den aktuellen Spielregeln erlaubt ist. */
 export function isLegal(state: UnoState, actor: Actor, move: UnoMove): boolean {
   if (typeof actor !== 'number' || state.winner !== null || state.eliminated[actor]) return false;
@@ -280,13 +290,15 @@ export function isLegal(state: UnoState, actor: Actor, move: UnoMove): boolean {
     if (state.options.jumpIn !== 'on' || state.pendingDraw > 0 || !topCard) return false;
     const card = hand.find((c) => c.id === move.cardId);
     if (!card) return false;
-    return isIdenticalCard(card, topCard, side);
+    if (!isIdenticalCard(card, topCard, side)) return false;
+    return alsoIsLegal(state, hand, card, move.alsoCardId);
   }
 
   if (move.type === 'play') {
     if (!isTurn) return false;
     const card = hand.find((c) => c.id === move.cardId);
     if (!card) return false;
+    if (!alsoIsLegal(state, hand, card, move.alsoCardId)) return false;
     const face = getActiveFace(card, side);
 
     if (state.pendingDraw > 0) {
@@ -317,8 +329,27 @@ export function isLegal(state: UnoState, actor: Actor, move: UnoMove): boolean {
   return false;
 }
 
-/** Ermittelt alle legalen Züge für einen bestimmten Spieler. */
+/**
+ * Ermittelt alle legalen Züge für einen bestimmten Spieler. Mit der Option `doublePlay` kommt zu jedem
+ * Legen einer Karte, von der noch eine identische auf der Hand liegt, der Doppelzug dazu.
+ */
 export function legalMoves(state: UnoState, actor: number): UnoMove[] {
+  const singles = singleMoves(state, actor);
+  if (state.options.doublePlay !== 'on') return singles;
+  const hand = state.hands[actor] ?? [];
+  const doubles: UnoMove[] = [];
+  for (const move of singles) {
+    if (move.type !== 'play' && move.type !== 'jumpIn') continue;
+    const card = hand.find((c) => c.id === move.cardId);
+    const also = card && hand.find((c) => c.id !== card.id && isIdenticalCard(c, card, state.activeSide));
+    if (!also) continue;
+    const { callUno: _single, ...rest } = move;
+    doubles.push({ ...rest, alsoCardId: also.id, ...(hand.length === 3 ? { callUno: true } : {}) });
+  }
+  return [...singles, ...doubles];
+}
+
+function singleMoves(state: UnoState, actor: number): UnoMove[] {
   if (state.winner !== null || state.eliminated[actor]) return [];
 
   const moves: UnoMove[] = [];
@@ -433,6 +464,30 @@ export function applyMove(
   if (!isLegal(state, actor, move)) {
     throw new Error('Dieser Zug ist nicht erlaubt.');
   }
+  if ((move.type === 'play' || move.type === 'jumpIn') && move.alsoCardId !== undefined) {
+    // Doppelzug: erst die erste Karte, dann die zweite mit derselben Wirkung noch einmal.
+    // Die zweite zählt von dem Platz an weiter, den die erste zuletzt übersprungen hat.
+    const { alsoCardId, callUno, ...first } = move;
+    const r1 = applyCard(state, actor, first, undefined);
+    if (r1.state.winner !== null) return r1;
+    const alive = r1.state.eliminated.filter((e) => !e).length;
+    const from =
+      move.type === 'jumpIn' || alive <= 2
+        ? actor
+        : getNextPlayer(r1.state.turn, (r1.state.direction * -1) as 1 | -1, r1.state.hands.length, r1.state.eliminated, 1);
+    const r2 = applyCard(r1.state, actor, { ...first, cardId: alsoCardId, ...(callUno ? { callUno } : {}) }, from);
+    return { state: r2.state, events: [...r1.events, ...r2.events] };
+  }
+  return applyCard(state, actor, move, undefined);
+}
+
+/** Wendet einen bereits geprüften Zug an; `fromSeat` ist der Platz, von dem aus der nächste Zug gezählt wird. */
+function applyCard(
+  state: UnoState,
+  actor: number,
+  move: UnoMove,
+  fromSeat: number | undefined,
+): MoveResult<UnoState> {
   const next = JSON.parse(JSON.stringify(state)) as UnoState;
   const rng = new Rng(next.rng);
   const events: GameEvent[] = [];
@@ -600,6 +655,8 @@ export function applyMove(
 
     // Sonderkarten auswerten
     let stepCount = 1;
+    // Platz, von dem aus der nächste Zug gezählt wird (bei Strafkarten: der Gezogene selbst, er wird übersprungen).
+    let turnFrom = fromSeat ?? actor;
 
     switch (face.type) {
       case 'skip':
@@ -630,7 +687,8 @@ export function applyMove(
         } else {
           const victim = getNextPlayer(actor, next.direction, total, next.eliminated, 1);
           giveCards(victim, 1);
-          stepCount = 2; // Überspringen
+          turnFrom = victim;
+          stepCount = 1;
         }
         break;
 
@@ -640,7 +698,8 @@ export function applyMove(
         } else {
           const victim = getNextPlayer(actor, next.direction, total, next.eliminated, 1);
           giveCards(victim, 2);
-          stepCount = 2;
+          turnFrom = victim;
+          stepCount = 1;
         }
         break;
 
@@ -650,9 +709,25 @@ export function applyMove(
         } else {
           const victim = getNextPlayer(actor, next.direction, total, next.eliminated, 1);
           giveCards(victim, 4);
-          stepCount = 2;
+          turnFrom = victim;
+          stepCount = 1;
         }
         break;
+
+      case 'wildReverseDraw4': {
+        // Richtungswechsel, dann bekommt der Nächste (in der neuen Richtung) 4 Strafkarten.
+        if (total > 2) next.direction = (next.direction * -1) as 1 | -1;
+        events.push({ type: 'reverse', direction: next.direction });
+        if (next.options.stacking !== 'off') {
+          next.pendingDraw += 4;
+        } else {
+          const victim = getNextPlayer(actor, next.direction, total, next.eliminated, 1);
+          giveCards(victim, 4);
+          turnFrom = victim;
+          stepCount = 1;
+        }
+        break;
+      }
 
       case 'flipDraw5':
         if (next.options.stacking !== 'off') {
@@ -660,7 +735,8 @@ export function applyMove(
         } else {
           const victim = getNextPlayer(actor, next.direction, total, next.eliminated, 1);
           giveCards(victim, 5);
-          stepCount = 2;
+          turnFrom = victim;
+          stepCount = 1;
         }
         break;
 
@@ -671,7 +747,8 @@ export function applyMove(
         } else {
           const victim = getNextPlayer(actor, next.direction, total, next.eliminated, 1);
           giveCards(victim, 6);
-          stepCount = 2;
+          turnFrom = victim;
+          stepCount = 1;
         }
         break;
 
@@ -682,7 +759,8 @@ export function applyMove(
         } else {
           const victim = getNextPlayer(actor, next.direction, total, next.eliminated, 1);
           giveCards(victim, 10);
-          stepCount = 2;
+          turnFrom = victim;
+          stepCount = 1;
         }
         break;
 
@@ -700,7 +778,8 @@ export function applyMove(
         events.push({ type: 'flip', side: next.activeSide });
         break;
 
-      case 'roulette': {
+      case 'roulette':
+      case 'wildDrawColor': {
         // Nächster Spieler muss so lange ziehen, bis er die gewählte Farbe zieht
         const victim = getNextPlayer(actor, next.direction, total, next.eliminated, 1);
         let drawn: UnoCard | undefined;
@@ -713,7 +792,8 @@ export function applyMove(
           }
         } while (drawn && getActiveFace(drawn, side).color !== next.activeColor && drawnCount < 15);
         events.push({ type: 'roulette', victim, drawnCount });
-        stepCount = 2;
+        turnFrom = victim;
+        stepCount = 1;
         break;
       }
 
@@ -749,7 +829,7 @@ export function applyMove(
       // Beim Jump-In geht das Spiel ab dem Einwerfer weiter!
       next.turn = getNextPlayer(actor, next.direction, total, next.eliminated, 1);
     } else if (stepCount > 0) {
-      next.turn = getNextPlayer(actor, next.direction, total, next.eliminated, stepCount);
+      next.turn = getNextPlayer(turnFrom, next.direction, total, next.eliminated, stepCount);
     }
 
     return finish();

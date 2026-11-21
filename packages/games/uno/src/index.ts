@@ -54,6 +54,16 @@ export const options: OptionSpec[] = [
     default: defaultOptions.jumpIn,
   },
   {
+    id: 'doublePlay',
+    label: 'Zwei gleiche Karten auf einmal',
+    description: 'Zwei exakt identische Karten (Farbe und Wert) dürfen zusammen gelegt werden, auch beim Zwischenwerfen. Die Wirkung zählt doppelt.',
+    choices: [
+      { value: 'off', label: 'Aus' },
+      { value: 'on', label: 'An' },
+    ],
+    default: defaultOptions.doublePlay,
+  },
+  {
     id: 'drawRule',
     label: 'Nachziehen',
     description: 'Nur eine Karte ziehen oder so lange ziehen, bis eine passende kommt.',
@@ -100,6 +110,7 @@ export const gameModule: GameModule<UnoState, UnoMove> = {
       stacking: (opts?.stacking as UnoOptions['stacking']) ?? defaultOptions.stacking,
       sevenZero: (opts?.sevenZero as UnoOptions['sevenZero']) ?? defaultOptions.sevenZero,
       jumpIn: (opts?.jumpIn as UnoOptions['jumpIn']) ?? defaultOptions.jumpIn,
+      doublePlay: (opts?.doublePlay as UnoOptions['doublePlay']) ?? defaultOptions.doublePlay,
       drawRule: (opts?.drawRule as UnoOptions['drawRule']) ?? defaultOptions.drawRule,
       callUno: (opts?.callUno as UnoOptions['callUno']) ?? defaultOptions.callUno,
       mathLabels: (opts?.mathLabels as UnoOptions['mathLabels']) ?? defaultOptions.mathLabels,
