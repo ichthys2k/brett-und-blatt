@@ -1,0 +1,638 @@
+/*
+ * Konsolen-Oberfläche (#607, K3b). Maße und Regeln: docs/spiele/konsole-styleguide.md.
+ * Jede Regel steht unter :root[data-shell='console'], damit die klassische Oberfläche unberührt bleibt.
+ * Farben nur aus den vorhandenen Variablen (--color-*).
+ */
+
+:root[data-shell='console'] {
+  --kns-u: clamp(6px, 0.625vw, 12px);
+  --kns-gutter: calc(5 * var(--kns-u));
+  --kns-gap: calc(2 * var(--kns-u));
+  --kns-bar: calc(7 * var(--kns-u));
+  --kns-legend: calc(6 * var(--kns-u));
+  --kns-text-s: calc(2.25 * var(--kns-u));
+  --kns-text: calc(2.5 * var(--kns-u));
+  --kns-text-l: calc(3 * var(--kns-u));
+  --kns-title: calc(4 * var(--kns-u));
+  --kns-hero: calc(6 * var(--kns-u));
+  --kns-tile-w: calc(28 * var(--kns-u));
+  --kns-tile-h: calc(19 * var(--kns-u));
+  --kns-radius: calc(2 * var(--kns-u));
+  --kns-target: calc(6 * var(--kns-u));
+}
+
+:root[data-shell='console'] .kns-frame {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-size: var(--kns-text);
+  line-height: 1.45;
+}
+
+/* ---------- Kopfleiste ---------- */
+
+:root[data-shell='console'] .kns-bar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: calc(3 * var(--kns-u));
+  height: var(--kns-bar);
+  padding: env(safe-area-inset-top) max(var(--kns-gutter), env(safe-area-inset-right)) 0 max(var(--kns-gutter), env(safe-area-inset-left));
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-surface);
+}
+
+:root[data-shell='console'] .kns-brand {
+  flex: none;
+  font-size: var(--kns-text-l);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+:root[data-shell='console'] .kns-tabs {
+  display: flex;
+  gap: calc(1 * var(--kns-u));
+  min-width: 0;
+}
+
+:root[data-shell='console'] .kns-tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--kns-target);
+  padding: 0 calc(2 * var(--kns-u));
+  border-radius: var(--kns-radius);
+  border-bottom: calc(0.5 * var(--kns-u)) solid transparent;
+  color: var(--color-muted);
+  font-size: var(--kns-text-l);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+:root[data-shell='console'] .kns-tab[aria-current='page'] {
+  color: var(--color-ink);
+  border-bottom-color: var(--color-accent);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+:root[data-shell='console'] .kns-status {
+  display: flex;
+  align-items: center;
+  gap: calc(2 * var(--kns-u));
+  margin-left: auto;
+  color: var(--color-muted);
+  font-size: var(--kns-text-s);
+  white-space: nowrap;
+}
+
+:root[data-shell='console'] .kns-status-avatar {
+  display: inline-grid;
+  place-items: center;
+  width: calc(4.5 * var(--kns-u));
+  height: calc(4.5 * var(--kns-u));
+  overflow: hidden;
+  border-radius: 999px;
+  font-size: var(--kns-text-l);
+}
+
+:root[data-shell='console'] .kns-status-avatar .bub-av-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---------- Inhalt ---------- */
+
+:root[data-shell='console'] .kns-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: calc(3 * var(--kns-u)) max(var(--kns-gutter), env(safe-area-inset-right)) calc(var(--kns-legend) + env(safe-area-inset-bottom) + calc(2 * var(--kns-u))) max(var(--kns-gutter), env(safe-area-inset-left));
+  scroll-behavior: smooth;
+}
+
+:root[data-shell='console'] .kns-title {
+  margin: 0 0 calc(2 * var(--kns-u));
+  font-size: var(--kns-title);
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+/* ---------- Regal ---------- */
+
+:root[data-shell='console'] .kns-shelf + .kns-shelf {
+  margin-top: calc(2 * var(--kns-u));
+}
+
+:root[data-shell='console'] .kns-shelf-head {
+  margin: 0 0 calc(0.5 * var(--kns-u));
+  font-size: var(--kns-text-l);
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+:root[data-shell='console'] .kns-shelf-sub {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--kns-text-s);
+}
+
+:root[data-shell='console'] .kns-shelf-row {
+  display: flex;
+  gap: var(--kns-gap);
+  margin: 0 calc(-1.5 * var(--kns-u));
+  padding: calc(1.5 * var(--kns-u));
+  overflow-x: auto;
+  overflow-y: hidden;
+  list-style: none;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+
+:root[data-shell='console'] .kns-shelf-row::-webkit-scrollbar {
+  display: none;
+}
+
+:root[data-shell='console'] .kns-shelf-row > li {
+  flex: none;
+  scroll-snap-align: start;
+}
+
+/* ---------- Kachel ---------- */
+
+:root[data-shell='console'] .kns-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: var(--kns-tile-w);
+  height: var(--kns-tile-h);
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: var(--kns-radius);
+  background: var(--color-surface);
+  background-size: cover;
+  background-position: center;
+  color: var(--color-ink);
+  text-decoration: none;
+  transition: transform 120ms ease;
+}
+
+:root[data-shell='console'] .kns-tile[data-image] {
+  color: #fff;
+}
+
+:root[data-shell='console'] .kns-tile[data-image]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgb(0 0 0 / 0.05) 30%, rgb(0 0 0 / 0.65) 100%);
+}
+
+:root[data-shell='console'] .kns-tile-art {
+  position: absolute;
+  inset: calc(1 * var(--kns-u)) 0 calc(7 * var(--kns-u));
+  display: grid;
+  place-items: center;
+  font-size: var(--kns-hero);
+  line-height: 1;
+}
+
+:root[data-shell='console'] .kns-tile-art img {
+  height: calc(11 * var(--kns-u));
+  max-height: 184px;
+  width: auto;
+  filter: drop-shadow(0 2px 6px rgb(0 0 0 / 0.45));
+}
+
+:root[data-shell='console'] .kns-tile-text {
+  position: relative;
+  padding: 0 calc(1.5 * var(--kns-u)) calc(1.25 * var(--kns-u));
+}
+
+:root[data-shell='console'] .kns-tile-name {
+  display: block;
+  overflow: hidden;
+  font-size: var(--kns-text);
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+:root[data-shell='console'] .kns-tile-meta {
+  display: block;
+  overflow: hidden;
+  font-size: var(--kns-text-s);
+  line-height: 1.3;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0.85;
+}
+
+:root[data-shell='console'] .kns-tile-star {
+  position: absolute;
+  top: calc(1 * var(--kns-u));
+  right: calc(1.25 * var(--kns-u));
+  color: var(--color-warning);
+  font-size: var(--kns-text-l);
+  line-height: 1;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.5);
+}
+
+:root[data-shell='console'] .kns-grade {
+  position: absolute;
+  top: calc(1 * var(--kns-u));
+  left: calc(1 * var(--kns-u));
+  padding: calc(0.25 * var(--kns-u)) calc(0.75 * var(--kns-u));
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.55);
+  color: #fff;
+  font-size: var(--kns-text-s);
+  line-height: 1.2;
+}
+
+/* Verweis-Kachel (Mehr, Mathe-Voreinstellungen) */
+:root[data-shell='console'] .kns-linktile .kns-tile-art {
+  bottom: calc(7.5 * var(--kns-u));
+}
+
+/* ---------- Fokus ---------- */
+
+/* Die Konsole zeigt den Fokus immer, auch nach programmatischem Setzen (Anfangsfokus) – sie ist für Controller gebaut. */
+:root[data-shell='console'] .kns-frame :focus-visible,
+:root[data-shell='console'] .kns-frame :is(.kns-tile, .kns-button, .kns-tab, [data-kns-id]):focus,
+:root[data-shell='console'][data-input-mode='gamepad'] .kns-frame :focus {
+  outline: calc(0.5 * var(--kns-u)) solid var(--color-accent);
+  outline-offset: calc(0.5 * var(--kns-u));
+  box-shadow: none;
+}
+
+:root[data-shell='console'] .kns-tile:focus {
+  transform: scale(1.05);
+  z-index: 1;
+}
+
+@media (hover: hover) {
+  :root[data-shell='console'] .kns-tile:hover {
+    transform: scale(1.03);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-shell='console'] .kns-tile,
+  :root[data-shell='console'] .kns-main {
+    transition: none;
+    scroll-behavior: auto;
+  }
+
+  :root[data-shell='console'] .kns-tile:focus,
+  :root[data-shell='console'] .kns-tile:hover {
+    transform: none;
+  }
+}
+
+/* ---------- Knöpfe ---------- */
+
+:root[data-shell='console'] .kns-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--kns-target);
+  padding: 0 calc(3 * var(--kns-u));
+  border: 1px solid var(--color-line);
+  border-radius: var(--kns-radius);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+:root[data-shell='console'] .kns-button-primary {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+:root[data-shell='console'] .kns-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- Laufende Partie ---------- */
+
+:root[data-shell='console'] .kns-resume {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: calc(3 * var(--kns-u));
+  min-height: calc(22 * var(--kns-u));
+  margin-bottom: calc(3 * var(--kns-u));
+  padding: calc(2.5 * var(--kns-u)) calc(3 * var(--kns-u));
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: var(--kns-radius);
+  background: var(--color-surface);
+  background-size: cover;
+  background-position: center;
+}
+
+:root[data-shell='console'] .kns-resume[data-image] {
+  color: #fff;
+}
+
+:root[data-shell='console'] .kns-resume[data-image]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgb(0 0 0 / 0.72) 0%, rgb(0 0 0 / 0.55) 55%, rgb(0 0 0 / 0.25) 100%);
+}
+
+:root[data-shell='console'] .kns-resume > * {
+  position: relative;
+}
+
+:root[data-shell='console'] .kns-resume-art {
+  display: grid;
+  flex: none;
+  place-items: center;
+  font-size: var(--kns-hero);
+}
+
+:root[data-shell='console'] .kns-resume-art img {
+  height: calc(16 * var(--kns-u));
+  max-height: 184px;
+  width: auto;
+}
+
+:root[data-shell='console'] .kns-resume-text {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+:root[data-shell='console'] .kns-resume-text p {
+  margin: 0;
+}
+
+:root[data-shell='console'] .kns-resume-kicker {
+  font-size: var(--kns-text-s);
+  opacity: 0.85;
+}
+
+:root[data-shell='console'] .kns-resume-name {
+  font-size: var(--kns-title);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+:root[data-shell='console'] .kns-resume-seats {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+:root[data-shell='console'] .kns-resume-actions {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: calc(1.5 * var(--kns-u));
+}
+
+/* ---------- Verweis-Kachel ---------- */
+
+:root[data-shell='console'] .kns-linktile-hint {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* ---------- Bibliothek ---------- */
+
+:root[data-shell='console'] .kns-filters {
+  position: sticky;
+  top: calc(-3 * var(--kns-u));
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: calc(1 * var(--kns-u));
+  margin: calc(-3 * var(--kns-u)) calc(-1 * var(--kns-gutter)) calc(2 * var(--kns-u));
+  padding: calc(2 * var(--kns-u)) var(--kns-gutter) calc(1 * var(--kns-u));
+  background: var(--color-bg);
+}
+
+:root[data-shell='console'] .kns-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(1 * var(--kns-u));
+}
+
+:root[data-shell='console'] .kns-chip {
+  min-height: var(--kns-target);
+  padding: 0 calc(2 * var(--kns-u));
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+:root[data-shell='console'] .kns-chip-small {
+  min-width: var(--kns-target);
+  padding: 0 calc(1.25 * var(--kns-u));
+}
+
+:root[data-shell='console'] .kns-chip[aria-pressed='true'] {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+:root[data-shell='console'] .kns-search-wrap {
+  display: inline-flex;
+  flex: 1 1 calc(30 * var(--kns-u));
+  align-items: center;
+  gap: calc(1 * var(--kns-u));
+}
+
+:root[data-shell='console'] .kns-search {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: var(--kns-target);
+  padding: 0 calc(2 * var(--kns-u));
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+}
+
+:root[data-shell='console'] .kns-count {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--kns-text-s);
+}
+
+:root[data-shell='console'] .kns-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, var(--kns-tile-w));
+  justify-content: center;
+  gap: var(--kns-gap);
+  margin: 0;
+  padding: calc(1.5 * var(--kns-u));
+  list-style: none;
+}
+
+:root[data-shell='console'] .kns-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(2 * var(--kns-u));
+  padding: calc(6 * var(--kns-u)) 0;
+  text-align: center;
+}
+
+/* Eigener Knopf ✕ ist mit dem Controller erreichbar; das Kreuz des Browsers nicht. */
+:root[data-shell='console'] .kns-search::-webkit-search-cancel-button {
+  display: none;
+}
+
+/* ---------- Spielseite ---------- */
+
+:root[data-shell='console'] .kns-game {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: calc(4 * var(--kns-u));
+  align-items: start;
+}
+
+:root[data-shell='console'] .kns-game-info p {
+  margin: 0 0 calc(1 * var(--kns-u));
+}
+
+:root[data-shell='console'] .kns-game-art {
+  display: grid;
+  place-items: start;
+  margin-bottom: calc(2 * var(--kns-u));
+  font-size: calc(2 * var(--kns-hero));
+  line-height: 1;
+}
+
+:root[data-shell='console'] .kns-game-art img {
+  max-width: 160px;
+  max-height: min(184px, 24vh);
+  width: auto;
+  height: auto;
+}
+
+:root[data-shell='console'] .kns-game-meta {
+  color: var(--color-muted);
+  font-size: var(--kns-text-s);
+}
+
+:root[data-shell='console'] .kns-actions {
+  display: flex;
+  flex-direction: column;
+  gap: calc(1.5 * var(--kns-u));
+}
+
+:root[data-shell='console'] .kns-action {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: calc(8 * var(--kns-u));
+  padding: calc(1 * var(--kns-u)) calc(3 * var(--kns-u));
+  border: 1px solid var(--color-line);
+  border-radius: var(--kns-radius);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+:root[data-shell='console'] .kns-action-primary {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+:root[data-shell='console'] .kns-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+:root[data-shell='console'] .kns-action-label {
+  font-size: var(--kns-text-l);
+  font-weight: 700;
+}
+
+:root[data-shell='console'] .kns-action-sub {
+  font-size: var(--kns-text-s);
+  opacity: 0.9;
+}
+
+:root[data-shell='console'] .kns-panel {
+  display: flex;
+  flex-direction: column;
+  gap: calc(2 * var(--kns-u));
+  padding: calc(2 * var(--kns-u));
+  border: 1px solid var(--color-line);
+  border-radius: var(--kns-radius);
+  background: var(--color-surface);
+  font-size: var(--kns-text);
+}
+
+:root[data-shell='console'] .kns-panel :is(button, select, input:not([type='checkbox']):not([type='radio'])) {
+  min-height: var(--kns-target);
+  font-size: var(--kns-text);
+}
+
+/* ---------- Klassische Seiten im Rahmen (K9) ---------- */
+
+/* Nur der Rahmen rollt; die Seite füllt ihn ohne eigene Mindesthöhe und ohne feststehende Szene davor. */
+:root[data-shell='console'] .kns-main:has(> .kns-classic) {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+:root[data-shell='console'] .kns-classic {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  font-size: 1rem;
+}
+
+:root[data-shell='console'] .kns-classic > * {
+  flex: 1 0 auto;
+}
+
+:root[data-shell='console'] .kns-classic .bub-tav,
+:root[data-shell='console'] .kns-classic .bub-lobby,
+:root[data-shell='console'] .kns-classic .min-h-dvh {
+  min-height: 0;
+}
+
+/* Platz für die Tastenleiste unten, innerhalb der Seite (damit ihr Hintergrund bis unten reicht). */
+:root[data-shell='console'] .kns-classic .bub-tav-inner,
+:root[data-shell='console'] .kns-classic .bub-lobby {
+  padding-bottom: calc(var(--kns-legend) + env(safe-area-inset-bottom) + 1rem);
+}
+
+:root[data-shell='console'] .kns-classic .bub-menu-scene {
+  position: absolute;
+}
+
+:root[data-shell='console'] .kns-classic .bub-tav {
+  overflow: hidden;
+}

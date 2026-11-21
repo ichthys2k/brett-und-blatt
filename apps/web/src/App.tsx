@@ -1,6 +1,7 @@
 import { SnesEgg } from './components/SnesEgg';
 import { RewardBanner } from './components/RewardBanner';
 import { UpdateBanner } from './components/UpdateBanner';
+import { ConsoleOffer } from './components/ConsoleOffer';
 import { useRoute } from './lib/router';
 import { DisplayScreen } from './screens/Display';
 import { Home } from './screens/Home';
@@ -56,6 +57,7 @@ export function App() {
         <SoftCursor />
         <ButtonPrompt onDismiss={() => saveInputSettings({ prompts: false })} />
         <UpdateBanner />
+        <ConsoleOffer />
         <SnesEgg />
         <RewardBanner />
       </CardCosmeticsProvider>

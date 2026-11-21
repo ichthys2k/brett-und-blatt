@@ -7,8 +7,9 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from 'playwright';
+import { installVirtualPad, pressPad as pressVirtualPad } from './lib/virtual-pad.mjs';
 
-const DIST = path.resolve('apps/web/dist');
+const DIST = path.resolve(process.env.PROBE_DIST || 'apps/web/dist');
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -48,37 +49,10 @@ try {
   page.on('pageerror', (err) => errors.push(err.message));
 
   // Virtuelles Gamepad injizieren
-  await page.addInitScript(() => {
-    const buttons = Array.from({ length: 16 }, () => ({ pressed: false, touched: false, value: 0 }));
-    const pad = {
-      id: 'Virtual Test Controller (STANDARD GAMEPAD)',
-      index: 0,
-      connected: true,
-      timestamp: 0,
-      mapping: 'standard',
-      axes: [0, 0, 0, 0],
-      buttons,
-    };
-    window.__virtPad = pad;
-    Object.defineProperty(navigator, 'getGamepads', {
-      value: () => [pad, null, null, null],
-      configurable: true,
-    });
-    window.addEventListener('load', () => {
-      window.dispatchEvent(new CustomEvent('gamepadconnected', { detail: { gamepad: pad } }));
-    });
-  });
-
-  const pressPad = async (btnIndex) => {
-    await page.evaluate((idx) => {
-      window.__virtPad.buttons[idx] = { pressed: true, touched: true, value: 1 };
-    }, btnIndex);
-    await page.waitForTimeout(90);
-    await page.evaluate((idx) => {
-      window.__virtPad.buttons[idx] = { pressed: false, touched: false, value: 0 };
-    }, btnIndex);
-    await page.waitForTimeout(70);
-  };
+  await installVirtualPad(page);
+  const pressPad = (btnIndex) => pressVirtualPad(page, btnIndex);
+  // Der einmalige Hinweis „Controller erkannt“ (#624) bleibt hier aus; er hat unten einen eigenen Abschnitt.
+  await page.addInitScript(() => localStorage.setItem('brett-und-blatt:konsole-gefragt', 'ja'));
 
   // 1. Optionen (#/ton): Controller erkannt & Modus umschalten
   await page.goto(`${baseUrl}/#/ton`, { waitUntil: 'networkidle' });
@@ -146,10 +120,64 @@ try {
   await pressPad(15); // D-Pad Right -> nächster Zug
   await pressPad(0);  // A -> Zug ausführen
 
+  // 4. Tic-Tac-Toe im Bedienmodus Standard (#618): Fokus im Brett, A zieht, B und das Menü verlassen die Partie nicht.
+  await page.evaluate(() => {
+    localStorage.setItem('brett-und-blatt:eingabe', JSON.stringify({ mode: 'standard', deadzone: 0.25, scanIntervalMs: 1200, haptics: false, prompts: true, hotSeatMode: 'pass' }));
+    localStorage.removeItem('brett-und-blatt:einstellungen:tic-tac-toe');
+  });
+  await page.goto(`${baseUrl}/#/neu/tic-tac-toe?autostart=1`, { waitUntil: 'networkidle' });
+  await page.evaluate(() => window.dispatchEvent(new Event('gamepadconnected')));
+  await page.locator('main.bub-table').waitFor({ timeout: 8000 });
+  await page.locator('.bub-turn-frame').first().waitFor({ timeout: 8000 });
+  await pressPad(13); // runter
+  const inBoard = await page.evaluate(() => Boolean(document.activeElement?.closest('[data-focus-zone="play-board"]')));
+  if (!inBoard) {
+    throw new Error(`Nach dem ersten Druck sollte der Fokus im Brett liegen, liegt aber auf ${await page.evaluate(() => document.activeElement?.outerHTML.slice(0, 120))}`);
+  }
+  await pressPad(0); // A
+  await page.waitForFunction(() => document.querySelector('main.bub-table')?.getAttribute('data-human-moves') === '1', null, { timeout: 4000 });
+  await pressPad(1); // B
+  if (!(await page.evaluate(() => location.hash.startsWith('#/partie')))) {
+    throw new Error('B darf die Partie nicht verlassen');
+  }
+  await pressPad(9); // Start: Menü
+  await page.waitForTimeout(150);
+  const menuFocus = await page.evaluate(() => Boolean(document.activeElement?.closest('[data-focus-zone="play-menu"]')));
+  if (!menuFocus) {
+    throw new Error('Start sollte das Menü öffnen und den Fokus hineinlegen');
+  }
+  await pressPad(1); // B schließt das Menü
+  if (!(await page.evaluate(() => location.hash.startsWith('#/partie')))) {
+    throw new Error('B im Menü darf die Partie nicht verlassen');
+  }
+
+  // 5. Hinweis „Controller erkannt“ (#624): erscheint einmal, A schaltet die Konsole ein.
+  const offerPage = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  offerPage.on('pageerror', (err) => errors.push(err.message));
+  await installVirtualPad(offerPage);
+  await offerPage.goto(`${baseUrl}/#/`, { waitUntil: 'networkidle' });
+  await offerPage.evaluate(() => window.dispatchEvent(new Event('gamepadconnected')));
+  await pressVirtualPad(offerPage, 13);
+  await offerPage.locator('[data-console-offer="yes"]').waitFor({ timeout: 4000 });
+  const offerFocus = await offerPage.evaluate(() => document.activeElement?.getAttribute('data-console-offer'));
+  if (offerFocus !== 'yes') {
+    throw new Error(`Der Hinweis sollte den Fokus auf „Einschalten“ legen, liegt aber auf ${offerFocus}`);
+  }
+  await pressVirtualPad(offerPage, 0);
+  const offerResult = await offerPage.evaluate(() => ({
+    shell: document.documentElement.dataset.shell ?? null,
+    asked: localStorage.getItem('brett-und-blatt:konsole-gefragt'),
+  }));
+  if (offerResult.shell !== 'console' || offerResult.asked !== 'ja') {
+    throw new Error(`Nach „Einschalten“ sollte die Konsole gelten: ${JSON.stringify(offerResult)}`);
+  }
+  await offerPage.evaluate(() => localStorage.removeItem('brett-und-blatt:oberflaeche'));
+  await offerPage.close();
+
   if (errors.length > 0) {
     throw new Error(`Browser-Fehler: ${errors.join('; ')}`);
   }
-  console.log('✓ Controller-Browser-Probe erfolgreich (Optionen, Schieberegler, Startseite-Zonen, Schach-Karussell).');
+  console.log('✓ Controller-Browser-Probe erfolgreich (Optionen, Schieberegler, Startseite-Zonen, Schach-Karussell, Tic-Tac-Toe mit Steuerkreuz, Hinweis Konsole).');
 } finally {
   await browser.close();
   server.close();

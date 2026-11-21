@@ -18,6 +18,8 @@ import { games, loadGame, type LoadedGame } from '../lib/registry';
 import { navigate, paths } from '../lib/router';
 import { storage, type Profile } from '../lib/storage';
 import { GameTable } from './Play';
+import { useActiveShell } from '../lib/shell';
+import { ClassicInFrame } from '../console/ClassicInFrame';
 import { TakeBackBar } from '../components/TakeBackBar';
 import { PinRoom } from '../components/PinRoom';
 import { GAME_SERVER as BOARD_SERVER } from '../lib/server';
@@ -57,6 +59,8 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
   const [state, connection] = useRoomConnection(code ?? '', code ? profile : null);
   // Sprachchat (#352): vor allen frühen Rückgaben, wie es React für Hooks verlangt.
   const { voice, voiceState } = useVoice(connection, state);
+  // Konsolen-Oberfläche (#623): Die Lobby steht im Rahmen der Konsole, die laufende Partie nicht.
+  const consoleShell = useActiveShell() === 'console';
 
   useEffect(() => {
     if (code && profile) {
@@ -254,7 +258,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
     );
   }
 
-  return (
+  const lobby = (
     <>
       <Lobby room={room} state={state} connection={connection} isHost={isHost} onLeave={leave} pushToggle={pushToggle} voiceMenu={voiceMenu(false)} />
       {toasts}
@@ -262,6 +266,7 @@ export function RoomScreen({ code: rawCode }: { code: string }) {
       {banner}
     </>
   );
+  return consoleShell ? <ClassicInFrame tab="online">{lobby}</ClassicInFrame> : lobby;
 }
 
 /**

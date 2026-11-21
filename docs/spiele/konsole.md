@@ -10,7 +10,7 @@ Auftrag (Cornelius, 20.11.2026): eine Oberfläche in der Art des Steam Deck, als
 2. **Eine Logik, zwei Darstellungen.** Die Konsole ersetzt nur den Weg zum Spiel (Hauptmenü, Spielübersicht, Partie-Vorbereitung). Spieltisch und Spiele bleiben eine Fassung. Seltene Bereiche (Klassen, Turniere, Lernen, Pass, Betreiber) bleiben klassisch.
 3. **Gleiche Adressen** in beiden Darstellungen: `#/`, `#/einzelspieler`, `#/neu/<id>`, `#/partie`.
 4. **Schalter** unter Optionen (`#/ton`, „Oberfläche“), gespeichert in `brett-und-blatt:oberflaeche`; Startparameter `?modus=konsole` / `?modus=klassisch` gilt nur für den Aufruf.
-5. **Nur im Querformat ab 700 × 400 px**; sonst gilt automatisch die klassische Oberfläche.
+5. **Nur im Querformat ab 700 × 360 px**; sonst gilt automatisch die klassische Oberfläche.
 6. **Beide Aussehen** („Schlicht“, „Taverne“, hell, dunkel, erhöhter Kontrast) über die vorhandenen Farbvariablen.
 7. **Keine neuen Bilder, keine neuen Klänge.** Kacheln nutzen Wappen und Kulissen, nie größer als die Datei.
 8. **Feste Tastenbelegung**, B verlässt nie eine laufende Partie (Tabelle im Styleguide).
@@ -124,3 +124,11 @@ Jeder Schritt trägt hier nach der Umsetzung Datum, Issue und die wichtigsten Da
 - **K3a (#612, 21.11.2026):** Tastenhinweise je Bildschirm – `usePromptItems`, `PromptProvider` (`packages/ui/src/input/ButtonPrompt.tsx`, `promptStack.ts`).
 - **K3c (#613, 21.11.2026):** Schieberegler, Auswahllisten und Aufklapper per Controller – `packages/ui/src/input/formControls.ts`, `FocusZone.tsx`.
 - **K2b (#611, 21.11.2026):** Partie-Vorbereitung als `useSetupDraft` und `SetupForm` – `apps/web/src/lib/setupDraftCore.ts`, `setupDraft.ts`, `useSetupDraft.ts`, `components/SetupForm.tsx`.
+- **K0 (#608, 21.11.2026):** Messwerkzeug und Daten – `scripts/controller-audit.mjs`, `scripts/lib/virtual-pad.mjs`, `apps/web/src/lib/controllerGrades.json`, Bericht [`konsole-eignung.md`](konsole-eignung.md).
+- **K3b (#614, 21.11.2026):** Rahmen, Kachel, Regal, Anfangsfokus – `apps/web/src/console/`. Mindesthöhe der Konsole 360 px statt 400 px (sonst fiele Handy quer 844 × 390 heraus).
+- **K4 (#615, 21.11.2026):** Start mit Regalen – `console/ConsoleHome.tsx`.
+- **K5 (#616, 21.11.2026):** Bibliothek – `console/ConsoleLibrary.tsx`.
+- **K6 (#617, 21.11.2026):** Spielseite – `console/ConsoleGame.tsx`.
+- **K7 (#618, 21.11.2026):** Spieltisch mit Controller – `lib/turnFocus.ts`, `screens/Play.tsx`.
+- **K9 (#623, 21.11.2026):** Klassische Seiten und Lobby im Rahmen – `console/ClassicInFrame.tsx`.
+- **K10 (#624, 21.11.2026):** Hinweis „Controller erkannt“ – `components/ConsoleOffer.tsx`.

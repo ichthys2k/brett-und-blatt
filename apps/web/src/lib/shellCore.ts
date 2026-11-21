@@ -8,7 +8,7 @@ export type Shell = 'classic' | 'console';
 
 /** Unter dieser Fenstergröße gilt immer die klassische Oberfläche (#607, Festlegung 5). */
 export const CONSOLE_MIN_WIDTH = 700;
-export const CONSOLE_MIN_HEIGHT = 400;
+export const CONSOLE_MIN_HEIGHT = 360;
 
 /** Liest `?modus=konsole` bzw. `?modus=klassisch` aus `location.search`; alles andere ergibt `null`. */
 export function parseShellParam(search: string): Shell | null {

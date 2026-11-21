@@ -9,6 +9,15 @@ import { CATEGORIES, type CategoryId, type CategorySpec } from './rubriken';
 
 export type FilterId = 'all' | CategoryId;
 
+/** Reiter der Rubriken (Spielübersicht und Bibliothek der Konsole). */
+export const FILTER_TABS: readonly { id: FilterId; icon: string; label: string }[] = [
+  { id: 'all', icon: '🎲', label: 'Alle' },
+  { id: 'board', icon: '♟️', label: 'Strategie & Brett' },
+  { id: 'cards', icon: '🃏', label: 'Karten & Stich' },
+  { id: 'family', icon: '🎲', label: 'Familie & Gesellschaft' },
+  { id: 'math', icon: '📐', label: 'Mathe (Kl. 5/6)' },
+];
+
 /** Auswahl „Wie viele spielt ihr?“ – zeigt nur Spiele, deren Platzzahl die Anzahl zulässt. */
 export const PLAYER_COUNTS: readonly number[] = [1, 2, 3, 4, 5, 6, 8, 10, 20, 30];
 const PLAYER_COUNT_KEY = 'bub.home.players';
@@ -90,4 +99,16 @@ export function savePlayerCount(count: number | null): void {
   } catch {
     // Ohne Speicher gilt die Auswahl nur bis zum Neuladen.
   }
+}
+
+/** Die Spiele der Bibliothek in Anzeige-Reihenfolge: bei Suche die Treffer; sonst die sichtbaren Rubriken hintereinander, Lieblingsspiele zuerst (in der Reihenfolge von `favorites`), ohne Doppelte (#616). */
+export function libraryGames(input: { all: readonly GameInfo[]; favorites: readonly string[]; filter: FilterId; players: number | null; query: string }): GameInfo[] {
+  const { all, favorites, filter, players, query } = input;
+  const found = searchGames(all, query, players);
+  if (found !== null) return found;
+  const list = visibleGroups(groupGames(all, players), filter, players).flatMap((group) => group.games);
+  const shown = new Set(list.map((g) => g.id));
+  const favs = favorites.flatMap((id) => (shown.has(id) ? list.filter((g) => g.id === id) : []));
+  const favIds = new Set(favs.map((g) => g.id));
+  return [...favs, ...list.filter((g) => !favIds.has(g.id))];
 }

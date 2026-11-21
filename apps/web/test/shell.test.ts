@@ -24,8 +24,9 @@ describe('Darstellung Klassisch/Konsole (#607, K1)', () => {
 
   it('Konsole nur im Querformat ab der Mindestgröße', () => {
     expect(resolveShell({ chosen: 'console', param: null, width: 699, height: 500 })).toBe('classic');
-    expect(resolveShell({ chosen: 'console', param: null, width: 800, height: 399 })).toBe('classic');
+    expect(resolveShell({ chosen: 'console', param: null, width: 800, height: 359 })).toBe('classic');
+    expect(resolveShell({ chosen: 'console', param: null, width: 844, height: 390 })).toBe('console');
     expect(resolveShell({ chosen: 'console', param: null, width: 800, height: 900 })).toBe('classic');
-    expect(resolveShell({ chosen: 'console', param: null, width: 700, height: 400 })).toBe('console');
+    expect(resolveShell({ chosen: 'console', param: null, width: 700, height: 360 })).toBe('console');
   });
 });

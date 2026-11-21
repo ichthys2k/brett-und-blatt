@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Messwerkzeug für die Bildschirmnutzung aller Spiele (#483, Vorhaben #482).
-// Misst für jedes Spiel in vier Bildschirmgrößen den Anteil des Spielfelds (main)
+// Misst für jedes Spiel in fünf Bildschirmgrößen (seit #608 auch 1280 × 800, Steam Deck) den Anteil des Spielfelds (main)
 // an der Gesamtfläche, Überlauf, Chipgröße und Porträtgröße.
 //
 //   corepack pnpm build
@@ -90,6 +90,8 @@ const sizes = [
   { name: '844×390', width: 844, height: 390 },
   { name: '1024×768', width: 1024, height: 768 },
   { name: '1440×900', width: 1440, height: 900 },
+  // Steam Deck (#608); am Ende, damit die Spalten 0–3 ihre Bedeutung behalten.
+  { name: '1280×800', width: 1280, height: 800 },
 ];
 
 const maxSeatGames = [
@@ -198,6 +200,7 @@ function formatOverflow(m) {
   if (m[1]?.overflow > 0) parts.push(`${m[1].overflow}q`);
   if (m[2]?.overflow > 0) parts.push(`${m[2].overflow}t`);
   if (m[3]?.overflow > 0) parts.push(`${m[3].overflow}d`);
+  if (m[4]?.overflow > 0) parts.push(`${m[4].overflow}s`);
   return parts.length > 0 ? `${parts.join(' / ')} px` : '-';
 }
 
@@ -226,11 +229,11 @@ const rawResults = {
   maxSeats: {},
 };
 
-console.log('| Spiel | 390×844 | 844×390 | 1024×768 | 1440×900 | Überlauf | Chip (1440×900) | Porträt | Zustand |');
-console.log('|---|---|---|---|---|---|---|---|---|');
+console.log('| Spiel | 390×844 | 844×390 | 1024×768 | 1440×900 | 1280×800 | Überlauf | Chip (1440×900) | Porträt | Zustand |');
+console.log('|---|---|---|---|---|---|---|---|---|---|');
 
-const sizeSums = [0, 0, 0, 0];
-const sizeCounts = [0, 0, 0, 0];
+const sizeSums = sizes.map(() => 0);
+const sizeCounts = sizes.map(() => 0);
 
 for (const id of ids) {
   const gameMeasurements = [];
@@ -250,19 +253,21 @@ for (const id of ids) {
     '844x390': gameMeasurements[1],
     '1024x768': gameMeasurements[2],
     '1440x900': gameMeasurements[3],
+    '1280x800': gameMeasurements[4],
   };
 
   const s0 = gameMeasurements[0].error ? 'Fehler' : `${gameMeasurements[0].share} %`;
   const s1 = gameMeasurements[1].error ? 'Fehler' : `${gameMeasurements[1].share} %`;
   const s2 = gameMeasurements[2].error ? 'Fehler' : `${gameMeasurements[2].share} %`;
   const s3 = gameMeasurements[3].error ? 'Fehler' : `${gameMeasurements[3].share} %`;
+  const s4 = gameMeasurements[4].error ? 'Fehler' : `${gameMeasurements[4].share} %`;
   const ov = formatOverflow(gameMeasurements);
   const dM = gameMeasurements[3];
   const chipStr = dM && !dM.error && dM.chip ? `${dM.chip[0]} × ${dM.chip[1]} px` : '-';
   const portraitStr = dM && !dM.error && dM.portrait ? `${dM.portrait} px` : '-';
   const zustandStr = formatZustand(dM);
 
-  console.log(`| ${id} | ${s0} | ${s1} | ${s2} | ${s3} | ${ov} | ${chipStr} | ${portraitStr} | ${zustandStr} |`);
+  console.log(`| ${id} | ${s0} | ${s1} | ${s2} | ${s3} | ${s4} | ${ov} | ${chipStr} | ${portraitStr} | ${zustandStr} |`);
 }
 
 const averages = sizeSums.map((sum, i) => (sizeCounts[i] > 0 ? Math.round(sum / sizeCounts[i]) : 0));
@@ -271,17 +276,18 @@ rawResults.averages = {
   '844x390': averages[1],
   '1024x768': averages[2],
   '1440x900': averages[3],
+  '1280x800': averages[4],
 };
 
 console.log(
-  `| **Durchschnitt** | **${averages[0]} %** | **${averages[1]} %** | **${averages[2]} %** | **${averages[3]} %** | | | | |`,
+  `| **Durchschnitt** | **${averages[0]} %** | **${averages[1]} %** | **${averages[2]} %** | **${averages[3]} %** | **${averages[4]} %** | | | | |`,
 );
 
 // Zweiter Durchlauf mit höchster Platzzahl für feste Auswahl (nur bei vollem Lauf ohne spezifische Spieleauswahl)
 if (positional.length === 0) {
   console.log('\n### Höchste Platzzahl (Auswahl)\n');
-  console.log('| Spiel | Plätze | 390×844 | 844×390 | 1024×768 | 1440×900 | Überlauf | Chip (1440×900) | Zustand |');
-  console.log('|---|---|---|---|---|---|---|---|---|');
+  console.log('| Spiel | Plätze | 390×844 | 844×390 | 1024×768 | 1440×900 | 1280×800 | Überlauf | Chip (1440×900) | Zustand |');
+  console.log('|---|---|---|---|---|---|---|---|---|---|');
 
   for (const item of maxSeatGames) {
     const seats = Array.from({ length: item.count }, (_, i) => {
@@ -307,18 +313,20 @@ if (positional.length === 0) {
       '844x390': maxMeasurements[1],
       '1024x768': maxMeasurements[2],
       '1440x900': maxMeasurements[3],
+      '1280x800': maxMeasurements[4],
     };
 
     const s0 = maxMeasurements[0].error ? 'Fehler' : `${maxMeasurements[0].share} %`;
     const s1 = maxMeasurements[1].error ? 'Fehler' : `${maxMeasurements[1].share} %`;
     const s2 = maxMeasurements[2].error ? 'Fehler' : `${maxMeasurements[2].share} %`;
     const s3 = maxMeasurements[3].error ? 'Fehler' : `${maxMeasurements[3].share} %`;
+    const s4 = maxMeasurements[4].error ? 'Fehler' : `${maxMeasurements[4].share} %`;
     const ov = formatOverflow(maxMeasurements);
     const dM = maxMeasurements[3];
     const chipStr = dM && !dM.error && dM.chip ? `${dM.chip[0]} × ${dM.chip[1]} px` : '-';
     const zustandStr = formatZustand(dM);
 
-    console.log(`| ${item.id} | ${item.count} | ${s0} | ${s1} | ${s2} | ${s3} | ${ov} | ${chipStr} | ${zustandStr} |`);
+    console.log(`| ${item.id} | ${item.count} | ${s0} | ${s1} | ${s2} | ${s3} | ${s4} | ${ov} | ${chipStr} | ${zustandStr} |`);
   }
 }
 

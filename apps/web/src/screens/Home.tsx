@@ -15,7 +15,7 @@ import { navigate, paths } from '../lib/router';
 import { storage } from '../lib/storage';
 
 import { CATEGORIES, categoryOf, type CategoryId, type CategorySpec } from '../lib/rubriken';
-import { PLAYER_COUNTS, fitsPlayers, groupGames, loadPlayerCount, parseFilter, savePlayerCount, searchGames, visibleGroups as pickVisibleGroups, type FilterId } from '../lib/gameCatalog';
+import { FILTER_TABS, PLAYER_COUNTS, fitsPlayers, groupGames, loadPlayerCount, parseFilter, savePlayerCount, searchGames, visibleGroups as pickVisibleGroups, type FilterId } from '../lib/gameCatalog';
 import { mathPresetsFor } from '../lib/mathPresets';
 
 export { CATEGORIES, categoryOf };
@@ -46,13 +46,6 @@ const EXTERNAL_GAMES: readonly ExternalGameLink[] = [
   },
 ];
 
-const FILTER_TABS: readonly { id: FilterId; icon: string; label: string }[] = [
-  { id: 'all', icon: '🎲', label: 'Alle' },
-  { id: 'board', icon: '♟️', label: 'Strategie & Brett' },
-  { id: 'cards', icon: '🃏', label: 'Karten & Stich' },
-  { id: 'family', icon: '🎲', label: 'Familie & Gesellschaft' },
-  { id: 'math', icon: '📐', label: 'Mathe (Kl. 5/6)' },
-];
 
 function playerCount(info: GameInfo): string {
   const { min, max } = info.players;
