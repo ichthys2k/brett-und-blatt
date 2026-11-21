@@ -20,7 +20,7 @@ export const defaultOptions: UnoOptions = {
   variant: 'classic',
   stacking: 'same',
   sevenZero: 'off',
-  jumpIn: 'off',
+  jumpIn: 'on',
   drawRule: 'one',
   callUno: 'on',
   mercyLimit: 0,
