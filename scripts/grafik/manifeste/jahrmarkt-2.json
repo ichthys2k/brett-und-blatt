@@ -101,7 +101,8 @@
     {
       "id": "tag-stock",
       "titel": "Festschmaus",
-      "prompt": "A roasted chicken leg and a golden roast on a pewter platter with a jug of apple juice, steaming."
+      "prompt": "A roasted chicken leg and a golden roast on a pewter platter with a jug of apple juice, steaming.",
+      "zuschnittRand": 0.03
     },
     {
       "id": "tag-bakery",
