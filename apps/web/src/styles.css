@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '../../../packages/ui/src/ui.css';
+@import '../../../packages/ui/src/konsole/konsole.css';
 @import '@fontsource/almendra/latin-700.css';
 @import './look.css';
 

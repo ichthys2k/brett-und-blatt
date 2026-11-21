@@ -93,7 +93,7 @@ async function openGame(id, mode) {
   await page.addInitScript(
     ({ value, seed }) => {
       localStorage.setItem('brett-und-blatt:eingabe', value);
-      localStorage.setItem('brett-und-blatt:konsole-gefragt', 'ja');
+      localStorage.setItem('brett-und-blatt:oberflaeche-hinweis', 'gesehen');
       // Fester Zufall auf der Seite (Startwert der Partie, Kartenmischen), damit zwei Läufe dieselbe Partie sehen.
       let a = seed >>> 0;
       const next = () => {

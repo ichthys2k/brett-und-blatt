@@ -48,8 +48,8 @@ try {
   // Virtuelles Gamepad injizieren
   await installVirtualPad(page);
   const pressPad = (btnIndex) => pressVirtualPad(page, btnIndex);
-  // Der einmalige Hinweis „Controller erkannt“ (#624) bleibt hier aus; er hat unten einen eigenen Abschnitt.
-  await page.addInitScript(() => localStorage.setItem('brett-und-blatt:konsole-gefragt', 'ja'));
+  // Diese Abschnitte prüfen die klassische Oberfläche (seit #639 nicht mehr Standard); der Hinweis „Neue Oberfläche“ hat unten einen eigenen Abschnitt.
+  await page.addInitScript(() => localStorage.setItem('brett-und-blatt:oberflaeche', 'klassisch'));
 
   // 1. Optionen (#/ton): Controller erkannt & Modus umschalten
   await page.goto(`${baseUrl}/#/ton`, { waitUntil: 'networkidle' });
@@ -162,33 +162,22 @@ try {
     throw new Error(`B sollte die Anleitung schließen und in der Partie bleiben: ${JSON.stringify(afterModal)}`);
   }
 
-  // 5. Hinweis „Controller erkannt“ (#624): erscheint einmal, A schaltet die Konsole ein.
-  const offerPage = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-  offerPage.on('pageerror', (err) => errors.push(err.message));
-  await installVirtualPad(offerPage);
-  await offerPage.goto(`${baseUrl}/#/`, { waitUntil: 'networkidle' });
-  await offerPage.evaluate(() => window.dispatchEvent(new Event('gamepadconnected')));
-  await pressVirtualPad(offerPage, 13);
-  await offerPage.locator('[data-console-offer="yes"]').waitFor({ timeout: 4000 });
-  const offerFocus = await offerPage.evaluate(() => document.activeElement?.getAttribute('data-console-offer'));
-  if (offerFocus !== 'yes') {
-    throw new Error(`Der Hinweis sollte den Fokus auf „Einschalten“ legen, liegt aber auf ${offerFocus}`);
-  }
-  await pressVirtualPad(offerPage, 0);
-  const offerResult = await offerPage.evaluate(() => ({
-    shell: document.documentElement.dataset.shell ?? null,
-    asked: localStorage.getItem('brett-und-blatt:konsole-gefragt'),
-  }));
-  if (offerResult.shell !== 'console' || offerResult.asked !== 'ja') {
-    throw new Error(`Nach „Einschalten“ sollte die Konsole gelten: ${JSON.stringify(offerResult)}`);
-  }
-  await offerPage.evaluate(() => localStorage.removeItem('brett-und-blatt:oberflaeche'));
-  await offerPage.close();
+  // 5. Ohne gespeicherte Wahl gilt die Konsole; der Hinweis „Neue Oberfläche“ erscheint einmal (#639).
+  const noticePage = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  noticePage.on('pageerror', (err) => errors.push(err.message));
+  await noticePage.goto(`${baseUrl}/#/`, { waitUntil: 'networkidle' });
+  const fresh = await noticePage.evaluate(() => ({ shell: document.documentElement.dataset.shell ?? null, frame: Boolean(document.querySelector('.kns-frame')) }));
+  if (fresh.shell !== 'console' || !fresh.frame) throw new Error(`Ohne gespeicherte Wahl sollte die Konsole gelten: ${JSON.stringify(fresh)}`);
+  await noticePage.locator('.kns-shell-notice').waitFor({ timeout: 4000 });
+  await noticePage.getByRole('button', { name: 'Verstanden' }).click();
+  await noticePage.reload({ waitUntil: 'networkidle' });
+  if ((await noticePage.locator('.kns-shell-notice').count()) !== 0) throw new Error('Der Hinweis „Neue Oberfläche“ sollte nach „Verstanden“ nicht wiederkommen');
+  await noticePage.close();
 
   if (errors.length > 0) {
     throw new Error(`Browser-Fehler: ${errors.join('; ')}`);
   }
-  console.log('✓ Controller-Browser-Probe erfolgreich (Optionen, Schieberegler, Startseite-Zonen, Schach-Karussell, Tic-Tac-Toe mit Steuerkreuz, Fenster, Hinweis Konsole).');
+  console.log('✓ Controller-Browser-Probe erfolgreich (Optionen, Schieberegler, Startseite-Zonen, Schach-Karussell, Tic-Tac-Toe mit Steuerkreuz, Fenster, Konsole als Standard mit Hinweis).');
 } finally {
   await browser.close();
   server.close();

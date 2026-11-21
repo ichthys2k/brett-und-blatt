@@ -41,7 +41,7 @@ await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
 const baseUrl = `http://127.0.0.1:${server.address().port}`;
 const browser = await chromium.launch(process.env.RAUCHTEST_CHROMIUM ? { executablePath: process.env.RAUCHTEST_CHROMIUM } : {});
 
-const A = 0, B = 1, X = 2, RB = 5, START = 9, UP = 12, DOWN = 13, LEFT = 14, RIGHT = 15;
+const A = 0, B = 1, X = 2, LB = 4, RB = 5, START = 9, UP = 12, DOWN = 13, LEFT = 14, RIGHT = 15;
 
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
@@ -51,7 +51,7 @@ try {
     if (msg.type() === 'error' && !/Failed to load resource|klaenge|\.mp3/i.test(msg.text())) errors.push(msg.text());
   });
   await page.addInitScript(() => {
-    localStorage.setItem('brett-und-blatt:konsole-gefragt', 'ja');
+    localStorage.setItem('brett-und-blatt:oberflaeche-hinweis', 'gesehen');
     localStorage.setItem('brett-und-blatt:eingabe', JSON.stringify({ mode: 'standard', deadzone: 0.25, scanIntervalMs: 1200, haptics: false, prompts: true, hotSeatMode: 'pass' }));
   });
   await installVirtualPad(page);
@@ -98,7 +98,9 @@ try {
         if (!target) return 'missing';
         if (current === target) return 'here';
         const t = target.getBoundingClientRect();
-        const c = current?.getBoundingClientRect() ?? { top: 0, left: 0 };
+        const c = current?.getBoundingClientRect() ?? { top: 0, left: 0, right: 0 };
+        // Liegt das Ziel in einer anderen Spalte (keine waagrechte Überlappung), zuerst hinüber – wie von Hand.
+        if (t.left >= c.right || t.right <= c.left) return t.left < c.left ? 'left' : 'right';
         if (Math.abs(t.top - c.top) > 8) return t.top < c.top ? 'up' : 'down';
         return t.left < c.left ? 'left' : 'right';
       }, selector);
@@ -122,6 +124,34 @@ try {
     const el = document.activeElement;
     return !!el?.hasAttribute('data-kns-game') && getComputedStyle(el).outlineStyle !== 'none';
   });
+
+  // 2b. Schnellzugriff mit Start ☰ und B; fünf Hauptreiter mit RB/LB (#638)
+  await press(START);
+  await expectState('Schnellzugriff offen', () => !!document.querySelector('.kns-quick[aria-modal="true"]') && !!document.activeElement?.closest('.kns-quick'));
+  await press(B);
+  await expectState('Schnellzugriff zu', () => !document.querySelector('.kns-quick'));
+  const tabHashes = ['#/einzelspieler', '#/online', '#/pass', '#/ton'];
+  for (const hash of tabHashes) {
+    await press(RB);
+    await expectState(`Reiter ${hash}`, (h) => location.hash === h && !!document.querySelector('.kns-frame'), hash);
+  }
+  await expectState('Unterreiter fehlen bei Optionen', () => !document.querySelector('.kns-subbar'));
+  // Optionen (#640): Kategorie „Controller“ mit Steuerkreuz und A, Stick-Totzone mit Rechts, Kategorie bleibt beim Neuladen
+  if ((await steerTo('[data-kns-id="cat:input"]')) !== 'here') throw new Error('Konsolen-Probe: Kategorie „Controller“ nicht erreichbar');
+  await press(A);
+  await expectState('Kategorie Controller', () => location.hash === '#/ton?bereich=input' && !!document.querySelector('.kns-slider'));
+  if ((await steerTo('.kns-slider')) !== 'here') throw new Error('Konsolen-Probe: Regler der Totzone nicht erreichbar');
+  const deadzoneBefore = await page.evaluate(() => Number(document.querySelector('.kns-slider').value));
+  await press(RIGHT);
+  await expectState('Totzone verstellt', (before) => Number(document.querySelector('.kns-slider').value) > before, deadzoneBefore);
+  await page.reload({ waitUntil: 'networkidle' });
+  await expectState('Kategorie nach Neuladen', () => document.querySelector('.kns-split-tab[aria-current="true"]')?.getAttribute('data-kns-id') === 'cat:input');
+  await press(LB);
+  await expectState('Unterreiter beim Pass', () => location.hash === '#/pass' && document.querySelector('.kns-subtab[aria-current="page"]')?.textContent === 'Pass');
+  for (const hash of ['#/online', '#/einzelspieler', '#/']) {
+    await press(LB);
+    await expectState(`zurück zu ${hash}`, (h) => location.hash === h, hash);
+  }
 
   // 3. Bibliothek, Suche „TIC“ über die Bildschirmtastatur
   await press(RB);
@@ -183,7 +213,7 @@ try {
   await expectState('Weiterspielen', () => !!document.querySelector('.kns-resume') && document.activeElement?.getAttribute('data-kns-id') === 'resume');
 
   if (errors.length > 0) throw new Error(`Browser-Fehler: ${errors.join('; ')}`);
-  console.log('✓ Konsolen-Probe erfolgreich (Start, Bibliothek, Suche, Spielseite, Partie, Menü, Weiterspielen).');
+  console.log('✓ Konsolen-Probe erfolgreich (Start, Schnellzugriff, fünf Reiter, Optionen, Bibliothek, Suche, Spielseite, Partie, Menü, Weiterspielen).');
 } finally {
   await browser.close();
   server.close();

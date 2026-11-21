@@ -73,7 +73,7 @@ Namen nach dem Xbox-Schema („Standard-Gamepad“); auf dem Steam Deck sind die
 | **X** (`i`) | Bibliothek: Suche | Großansicht der Karte oder Figur |
 | **Y** | Lieblingsspiel an/aus | – |
 | **LB / RB** (`[` `]`, Bild↑ Bild↓) | Reiter wechseln | Bereich wechseln (Spielfeld ↔ Menü) |
-| **Start ☰** | – | Menü der Partie öffnen und schließen |
+| **Start ☰** | Schnellzugriff (#638) | Menü der Partie öffnen und schließen |
 | rechter Stick, LT / RT | Seite rollen | Spielfeld rollen |
 | L3 / Select | Zeiger ein/aus (Notlösung) | Zeiger ein/aus |
 
@@ -109,7 +109,7 @@ Regeln dazu:
 ## 7. Texte
 
 - Deutsch, du-Form, kurz. Knöpfe sind Verben oder Dingwörter ohne Satzzeichen: „Spielen“, „Partie einstellen“, „Anleitung“, „Weiterspielen“.
-- Alle Texte in `apps/web/src/i18n.ts` unter `console.*` (Spieltisch: `play.prompt.*`, Schalter: `shell.*`, Hinweis: `consoleOffer.*`).
+- Alle Texte in `apps/web/src/i18n.ts` unter `console.*` (Spieltisch: `play.prompt.*`, Schalter: `shell.*`, Hinweis „Neue Oberfläche“: `shellNotice.*`).
 - Jede Kachel und jeder Knopf hat einen vollständigen Vorleser-Text (`aria-label`), der ohne das Bild verständlich ist. Zustandswechsel (Lieblingsspiel, Trefferzahl) werden angesagt (`announce` bzw. `aria-live="polite"`).
 
 ## 8. Technik-Regeln
@@ -118,7 +118,7 @@ Regeln dazu:
 - Bedienelemente sind `<button>` oder `<a href>`; sonst `tabIndex={0}`, `role="button"`, `aria-label` und Enter/Leertaste. Dann findet sie die räumliche Navigation von selbst.
 - Keine eigene Pfeiltasten-Logik je Bildschirm. Kurzbefehle über `useInputIntent(handler, 5)`; wer eine Taste verbraucht, gibt `true` zurück.
 - Sichere Ränder beachten: `env(safe-area-inset-*)` zusätzlich zu `--kns-gutter`.
-- Prüfgrößen: 1280 × 800, 1920 × 1080, 844 × 390; dazu 390 × 844 (bis U2 von #635 klassisch, danach Hochformat der Konsole, Abschnitt 9). Jeweils „Taverne“ und „Schlicht“, hell und dunkel.
+- Prüfgrößen: 390 × 844, 360 × 640, 768 × 1024 (Hochformat, Abschnitt 9), 844 × 390, 1280 × 800, 1920 × 1080. Jeweils „Taverne“ und „Schlicht“, hell und dunkel.
 
 ---
 
@@ -126,8 +126,11 @@ Die Abschnitte 9–13 gehören zum Vorhaben „Konsole überall“ (#635, Plan i
 
 ## 9. Hochformat (U2)
 
-- Hochformat gilt, wenn das Fenster höher als breit oder schmaler als 700 px ist (`knsLayout`); `<html>` trägt `data-kns-layout="portrait|landscape"`.
-- Maße im Hochformat: `--kns-u: clamp(7px, 2.05vw, 10px)` (8 px bei 390 px Breite), `--kns-gutter` 2 u, Kacheln zweispaltig (ab 600 px Breite dreispaltig), Seitenverhältnis der Kachel 1 : 0,72.
+- Hochformat gilt, wenn das Fenster höher als breit oder schmaler als 700 px ist (`knsLayout` in `packages/ui/src/konsole/layout.ts`); `useKnsLayout()` (`apps/web/src/console/`) setzt `data-kns-layout="portrait|landscape"` an `<html>`.
+- Maße im Hochformat: `--kns-u: clamp(7px, 2.05vw, 10px)` (8 px bei 390 px Breite), `--kns-gutter` 2 u, `--kns-gap` 1,5 u. Schriftstufen kleiner als im Querformat: Text 2 u (16 px), klein 1,75 u, groß 2,25 u, Titel 3 u; `--kns-target` mindestens 44 px.
+- Raster zweispaltig (ab 600 px Breite dreispaltig), die Kachel füllt ihre Spalte im Verhältnis 1 : 0,72. Im Regal sind zwei Kacheln ganz und die dritte angeschnitten zu sehen (`--kns-tile-w` = verfügbare Breite / 2,3).
+- Bibliothek: Suche in voller Breite, Rubriken als rollende Chip-Zeile, am Ende ein Chip „Spielerzahl“, der ein Fenster mit den Spielerzahlen öffnet.
+- Spielseite einspaltig in der Reihenfolge Wappen, Name, Spielerzahl, Aktionen, Beschreibung.
 - **Leiste unten** statt Reitern oben: Höhe 8 u plus `env(safe-area-inset-bottom)`, je Reiter Symbol über Name, aktiver Reiter in `--color-accent`. Oben eine schmale Kopfzeile (6 u) mit Schriftzug, „☰“ und Pass-Avatar.
 - Unterreiter und Kategorien werden zu einer waagrecht rollenden Zeile unter der Kopfzeile.
 - Zweispaltige Seiten (Detail, Einstellungen) werden einspaltig; die Hauptaktion steht ohne Rollen im sichtbaren Bereich.
@@ -181,6 +184,15 @@ Ort: `packages/ui/src/konsole/`, CSS in `konsole.css` (Präfix `kns-`, nur unter
 
 Fehlt ein Baustein, wird er dort ergänzt und auf der Schauseite gezeigt – nicht auf der Seite nachgebaut.
 
+**Stand nach U1 (#636), Abweichungen vom Plan:**
+- `KnsTile` hat statt `badges` zwei Plätze: `badge` (oben links, z. B. Controller-Eignung) und `mark` (oben rechts, z. B. Stern), dazu `variant: 'game' | 'link'` für Verweis-Kacheln.
+- `KnsListItem` kennt zusätzlich `label` (Vorleser-Text der Hauptaktion), `disabled` und `focusId` (`data-kns-id` für die Fokus-Wiederherstellung).
+- `KnsCode` hat `label` (Vorleser-Text) und `copy` (Knopf „Kopieren“, Standard an); `KnsSubTabs` und `KnsSplit` haben `label` für den Vorleser.
+- `KnsChoiceRow` nimmt optional `mode`, um Knopfleiste oder Fenster zu erzwingen.
+- Text auf `danger`-Knöpfen in `--color-bg` (in beiden Helligkeiten lesbar), nicht in Weiß.
+- Fenster liegen als `position: fixed` im Seitenbaum (kein Portal), damit der Fokus-Rahmen der Konsole greift; Hochformat (`orientation: portrait` oder unter 700 px Breite) zeigt sie von unten über die volle Breite.
+- `useViewportSize()` liefert die Fenstergröße für `KnsSplit` und spätere Layout-Entscheidungen.
+
 ## 12. Navigation (U3)
 
 - **Zwei Ebenen:** fünf Hauptreiter (Start · Bibliothek · Online · Pass · Optionen), darunter Unterreiter (Tabelle in [`konsole-ueberall.md`](konsole-ueberall.md), Abschnitt 3). Eine dritte Ebene gibt es nur innerhalb einer Seite (Unterreiter eines Profils, Kategorien der Einstellungen).
@@ -188,7 +200,9 @@ Fehlt ein Baustein, wird er dort ergänzt und auf der Schauseite gezeigt – nic
 - **B** geht eine Ebene zurück: Fenster zu → vorige Seite → Start. B verlässt nie die App und nie eine Partie.
 - **Start ☰** öffnet in den Menüs den Schnellzugriff (Lautstärke, Musik, Pass, Weiterspielen, „Alle Optionen“); am Spieltisch das Menü der Partie. In der Kopfleiste gibt es denselben Knopf für Finger und Maus.
 - **X** ist die Nebenaktion der fokussierten Zeile (z. B. Ausblenden, Ergebnis eintragen), **Y** das Anheften (Lieblingsspiel). Beides steht in der Tastenleiste und ist immer auch als sichtbarer Knopf vorhanden.
-- Jede Route gehört zu genau einem Platz (`placeForRoute`); ein Test verhindert vergessene Routen.
+- Jede Route gehört zu genau einem Platz (`placeForRoute` in `apps/web/src/console/consoleTabs.ts`) oder steht in `ROUTES_WITHOUT_PLACE` (Partie, Tisch-Bildschirm, Beamer, Einbettungen, Schauseite); ein Test verhindert vergessene Routen.
+- Die Unterreiter stehen in einer eigenen Zeile unter der Kopfleiste (`kns-subbar`), im Hochformat ebenso, waagrecht rollend. Impressum, Datenschutz und Betreiber gehören zu „Optionen“ ohne eigenen Unterreiter.
+- Der Schnellzugriff ist ein `KnsDialog` der Größe `s`; im Querformat dockt er rechts über die volle Höhe an, im Hochformat kommt er von unten.
 
 ## 13. Meldungen, Zustände und Texte der Menüs (U15)
 

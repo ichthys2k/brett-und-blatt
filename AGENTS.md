@@ -55,7 +55,7 @@ node scripts/controller-probe.mjs && node scripts/konsole-probe.mjs   # Controll
 
 Karten, Plättchen oder Porträts groß zeigen nur über den Baustein `CardInspect` (`packages/ui`, #418; Einzelheiten in `CLAUDE.md` unter „Technik in Kürze“), keine eigenen Zoom-Fenster.
 
-Die Konsolen-Oberfläche (#607, `apps/web/src/console/`, Schalter in `lib/shell.ts`) ist eine zweite Darstellung über derselben Logik: keine Regeln aus `Home.tsx` oder `Setup.tsx` abschreiben, sondern gemeinsame Module nutzen; Plan und Styleguide unter `docs/spiele/konsole*.md`. Ein neues Spiel muss mit Steuerkreuz und A spielbar sein und bekommt seine Zeile in `apps/web/src/lib/controllerGrades.json` (`node scripts/controller-audit.mjs <id>`).
+Die Konsolen-Oberfläche (#607, seit #639 Standard; `apps/web/src/console/`, Schalter in `lib/shell.ts`, „Klassisch“ bleibt wählbar) ist eine zweite Darstellung über derselben Logik: keine Regeln aus `Home.tsx` oder `Setup.tsx` abschreiben, sondern gemeinsame Module nutzen; Plan und Styleguide unter `docs/spiele/konsole*.md`. Menüseiten der Konsole bestehen nur aus den Bausteinen in `packages/ui/src/konsole/` (Schauseite `#/bausteine`, Vorhaben #635); fehlt einer, wird er dort ergänzt. Ein neues Spiel muss mit Steuerkreuz und A spielbar sein und bekommt seine Zeile in `apps/web/src/lib/controllerGrades.json` (`node scripts/controller-audit.mjs <id>`).
 
 Neue Spielordner findet ein laufender Dev-Server erst nach einem Neustart. Mehrspieler-Spiele (ab 2 Plätzen) zusätzlich in `apps/server/src/games.ts` und `apps/server/package.json` eintragen.
 

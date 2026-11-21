@@ -10,23 +10,17 @@ describe('Darstellung Klassisch/Konsole (#607, K1)', () => {
     expect(parseShellParam('?a=1&modus=konsole')).toBe('console');
   });
 
-  it('liest die gespeicherte Wahl', () => {
-    expect(parseStoredShell(null)).toBe('classic');
+  it('liest die gespeicherte Wahl; ohne Eintrag gilt die Konsole (#639)', () => {
+    expect(parseStoredShell(null)).toBe('console');
     expect(parseStoredShell('konsole')).toBe('console');
-    expect(parseStoredShell('unsinn')).toBe('classic');
+    expect(parseStoredShell('klassisch')).toBe('classic');
+    expect(parseStoredShell('unsinn')).toBe('console');
   });
 
   it('Parameter schlägt die gespeicherte Wahl in beide Richtungen', () => {
-    expect(resolveShell({ chosen: 'classic', param: 'console', width: 1280, height: 800 })).toBe('console');
-    expect(resolveShell({ chosen: 'console', param: 'classic', width: 1280, height: 800 })).toBe('classic');
-    expect(resolveShell({ chosen: 'console', param: null, width: 1280, height: 800 })).toBe('console');
-  });
-
-  it('Konsole nur im Querformat ab der Mindestgröße', () => {
-    expect(resolveShell({ chosen: 'console', param: null, width: 699, height: 500 })).toBe('classic');
-    expect(resolveShell({ chosen: 'console', param: null, width: 800, height: 359 })).toBe('classic');
-    expect(resolveShell({ chosen: 'console', param: null, width: 844, height: 390 })).toBe('console');
-    expect(resolveShell({ chosen: 'console', param: null, width: 800, height: 900 })).toBe('classic');
-    expect(resolveShell({ chosen: 'console', param: null, width: 700, height: 360 })).toBe('console');
+    expect(resolveShell({ chosen: 'classic', param: 'console' })).toBe('console');
+    expect(resolveShell({ chosen: 'console', param: 'classic' })).toBe('classic');
+    expect(resolveShell({ chosen: 'console', param: null })).toBe('console');
+    expect(resolveShell({ chosen: 'classic', param: null })).toBe('classic');
   });
 });

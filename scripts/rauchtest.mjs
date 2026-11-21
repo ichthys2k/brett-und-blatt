@@ -119,6 +119,8 @@ const newPage = async () => {
   await page.addInitScript(() => {
     window.__csp = [];
     document.addEventListener('securitypolicyviolation', (e) => window.__csp.push(`${e.violatedDirective} ${e.blockedURI}`));
+    // Der einmalige Hinweis „Neue Oberfläche“ (#639) liegt sonst über dem unteren Rand.
+    localStorage.setItem('brett-und-blatt:oberflaeche-hinweis', 'gesehen');
   });
   if (process.env.RAUCHTEST_LOOK) await page.addInitScript((look) => localStorage.setItem('brett-und-blatt:aussehen', look), process.env.RAUCHTEST_LOOK);
   return page;

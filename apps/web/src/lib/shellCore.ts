@@ -1,14 +1,9 @@
 /*
- * Darstellung der App (#607, K1): „Klassisch“ (Standard) oder „Konsole“ (Bibliothek für Controller,
- * Handheld und Fernseher). Reine Funktionen ohne `window`, damit sie sich ohne DOM testen lassen;
+ * Darstellung der App (#607, K1): „Konsole“ (seit #639 Standard) oder „Klassisch“ (die frühere Oberfläche). Reine Funktionen ohne `window`, damit sie sich ohne DOM testen lassen;
  * den Zustand im Browser hält `shell.ts`.
  */
 
 export type Shell = 'classic' | 'console';
-
-/** Unter dieser Fenstergröße gilt immer die klassische Oberfläche (#607, Festlegung 5). */
-export const CONSOLE_MIN_WIDTH = 700;
-export const CONSOLE_MIN_HEIGHT = 360;
 
 /** Liest `?modus=konsole` bzw. `?modus=klassisch` aus `location.search`; alles andere ergibt `null`. */
 export function parseShellParam(search: string): Shell | null {
@@ -18,14 +13,18 @@ export function parseShellParam(search: string): Shell | null {
   return null;
 }
 
-/** Liest den gespeicherten Wert: `'konsole'` → `'console'`, alles andere (auch `null`) → `'classic'`. */
+/**
+ * Liest den gespeicherten Wert (#639: die Konsole ist Standard): `'klassisch'` → `'classic'`, alles andere – auch
+ * `null` und das frühere `'konsole'` – → `'console'`.
+ */
 export function parseStoredShell(raw: string | null): Shell {
-  return raw === 'konsole' ? 'console' : 'classic';
+  return raw === 'klassisch' ? 'classic' : 'console';
 }
 
-/** Die Darstellung, die wirklich gilt: Parameter vor gespeicherter Wahl; Konsole nur im Querformat ab der Mindestgröße. */
-export function resolveShell(input: { chosen: Shell; param: Shell | null; width: number; height: number }): Shell {
-  const wanted = input.param ?? input.chosen;
-  const fits = input.width >= CONSOLE_MIN_WIDTH && input.height >= CONSOLE_MIN_HEIGHT && input.width > input.height;
-  return wanted === 'console' && fits ? 'console' : 'classic';
+/**
+ * Die Darstellung, die wirklich gilt: Parameter vor gespeicherter Wahl. Seit #637 (Hochformat der Konsole) gilt
+ * die Konsole in jeder Fenstergröße; die frühere Mindestgröße 700 × 360 im Querformat ist entfallen.
+ */
+export function resolveShell(input: { chosen: Shell; param: Shell | null }): Shell {
+  return input.param ?? input.chosen;
 }
