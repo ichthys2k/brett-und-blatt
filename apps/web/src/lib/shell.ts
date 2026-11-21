@@ -3,7 +3,7 @@ import { parseShellParam, parseStoredShell, resolveShell, type Shell } from './s
 
 /*
  * Gewählte und geltende Darstellung im Browser (#607, K1), nach dem Muster von `look.ts`.
- * Gespeichert wird nur „Konsole“ (`brett-und-blatt:oberflaeche` = `konsole`); der Startparameter
+ * Gespeichert wird nur „Klassisch“ (`brett-und-blatt:oberflaeche` = `klassisch`, seit #639; ohne Eintrag gilt die Konsole); der Startparameter
  * `?modus=konsole|klassisch` gilt nur für diesen Aufruf. Die geltende Darstellung steht als
  * `data-shell="console"` an <html> (klassisch: kein Attribut).
  */
@@ -16,7 +16,7 @@ function loadShell(): Shell {
   try {
     return parseStoredShell(window.localStorage.getItem(SHELL_KEY));
   } catch {
-    return 'classic';
+    return 'console';
   }
 }
 
@@ -57,7 +57,7 @@ export function shellParam(): Shell | null {
 export function setShell(next: Shell): void {
   chosen = next;
   try {
-    if (next === 'console') window.localStorage.setItem(SHELL_KEY, 'konsole');
+    if (next === 'classic') window.localStorage.setItem(SHELL_KEY, 'klassisch');
     else window.localStorage.removeItem(SHELL_KEY);
   } catch {
     // Ohne Speicher gilt die Wahl nur bis zum Neuladen.

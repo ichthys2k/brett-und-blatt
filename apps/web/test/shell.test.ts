@@ -10,10 +10,11 @@ describe('Darstellung Klassisch/Konsole (#607, K1)', () => {
     expect(parseShellParam('?a=1&modus=konsole')).toBe('console');
   });
 
-  it('liest die gespeicherte Wahl', () => {
-    expect(parseStoredShell(null)).toBe('classic');
+  it('liest die gespeicherte Wahl; ohne Eintrag gilt die Konsole (#639)', () => {
+    expect(parseStoredShell(null)).toBe('console');
     expect(parseStoredShell('konsole')).toBe('console');
-    expect(parseStoredShell('unsinn')).toBe('classic');
+    expect(parseStoredShell('klassisch')).toBe('classic');
+    expect(parseStoredShell('unsinn')).toBe('console');
   });
 
   it('Parameter schlägt die gespeicherte Wahl in beide Richtungen', () => {

@@ -109,7 +109,7 @@ Regeln dazu:
 ## 7. Texte
 
 - Deutsch, du-Form, kurz. Knöpfe sind Verben oder Dingwörter ohne Satzzeichen: „Spielen“, „Partie einstellen“, „Anleitung“, „Weiterspielen“.
-- Alle Texte in `apps/web/src/i18n.ts` unter `console.*` (Spieltisch: `play.prompt.*`, Schalter: `shell.*`, Hinweis: `consoleOffer.*`).
+- Alle Texte in `apps/web/src/i18n.ts` unter `console.*` (Spieltisch: `play.prompt.*`, Schalter: `shell.*`, Hinweis „Neue Oberfläche“: `shellNotice.*`).
 - Jede Kachel und jeder Knopf hat einen vollständigen Vorleser-Text (`aria-label`), der ohne das Bild verständlich ist. Zustandswechsel (Lieblingsspiel, Trefferzahl) werden angesagt (`announce` bzw. `aria-live="polite"`).
 
 ## 8. Technik-Regeln

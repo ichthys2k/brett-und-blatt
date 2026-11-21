@@ -94,8 +94,8 @@ function ShellChoice() {
   const chosen = useChosenShell();
   const param = shellParam();
   const options: readonly { id: Shell; label: string; text: string }[] = [
-    { id: 'classic', label: t('shell.classic'), text: t('shell.classic.text') },
     { id: 'console', label: t('shell.console'), text: t('shell.console.text') },
+    { id: 'classic', label: t('shell.classic'), text: t('shell.classic.text') },
   ];
   return (
     <fieldset className="space-y-2 rounded-2xl border border-line bg-surface p-4">

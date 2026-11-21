@@ -1,7 +1,7 @@
 import { SnesEgg } from './components/SnesEgg';
 import { RewardBanner } from './components/RewardBanner';
 import { UpdateBanner } from './components/UpdateBanner';
-import { ConsoleOffer } from './components/ConsoleOffer';
+import { ShellNotice } from './components/ShellNotice';
 import { useRoute } from './lib/router';
 import {
   ButtonPrompt,
@@ -36,7 +36,7 @@ export function App() {
         <SoftCursor />
         <ButtonPrompt onDismiss={() => saveInputSettings({ prompts: false })} />
         <UpdateBanner />
-        <ConsoleOffer />
+        <ShellNotice />
         <SnesEgg />
         <RewardBanner />
       </CardCosmeticsProvider>

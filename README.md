@@ -22,7 +22,7 @@ pnpm dev        # http://localhost:5173
 - [Konzept](docs/KONZEPT.md): Entscheidungen, Aufbau, Spielmodul-Schnittstelle, Bots, Zeitlimits, Datenschutz, Fahrplan
 - [Spielpläne](docs/spiele/README.md): ein Plan pro Spiel mit Regeln, Bot, Oberfläche und Tests
 - [Mitmachen](CONTRIBUTING.md): Aufbau des Codes und wie man ein neues Spiel hinzufügt
-- [Steam Deck und Controller](docs/steam-deck.md): die Konsolen-Oberfläche einschalten und auf dem Steam Deck einrichten
+- [Steam Deck und Controller](docs/steam-deck.md): die Konsolen-Oberfläche (seit November 2026 Standard; die frühere unter Optionen → Oberfläche → Klassisch) und das Steam Deck einrichten
 
 ## Grundsätze
 

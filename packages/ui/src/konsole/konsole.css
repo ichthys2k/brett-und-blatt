@@ -163,9 +163,9 @@
   bottom: calc(7.5 * var(--kns-u));
 }
 
-:root[data-shell='console'] :is(.kns-frame, .kns-dialog) :focus-visible,
-:root[data-shell='console'] :is(.kns-frame, .kns-dialog) :is(.kns-tile, .kns-button, .kns-tab, .kns-subtab, .kns-split-tab, .kns-row-button, .kns-seg, .kns-list-main, .kns-choice, [data-kns-id]):focus,
-:root[data-shell='console'][data-input-mode='gamepad'] :is(.kns-frame, .kns-dialog) :focus {
+:root[data-shell='console'] :is(.kns-frame, .kns-dialog, .kns-banner-floating) :focus-visible,
+:root[data-shell='console'] :is(.kns-frame, .kns-dialog, .kns-banner-floating) :is(.kns-tile, .kns-button, .kns-tab, .kns-subtab, .kns-split-tab, .kns-row-button, .kns-seg, .kns-list-main, .kns-choice, [data-kns-id]):focus,
+:root[data-shell='console'][data-input-mode='gamepad'] :is(.kns-frame, .kns-dialog, .kns-banner-floating) :focus {
   outline: calc(0.5 * var(--kns-u)) solid var(--color-accent);
   outline-offset: calc(0.5 * var(--kns-u));
   box-shadow: none;

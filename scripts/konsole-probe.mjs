@@ -51,7 +51,7 @@ try {
     if (msg.type() === 'error' && !/Failed to load resource|klaenge|\.mp3/i.test(msg.text())) errors.push(msg.text());
   });
   await page.addInitScript(() => {
-    localStorage.setItem('brett-und-blatt:konsole-gefragt', 'ja');
+    localStorage.setItem('brett-und-blatt:oberflaeche-hinweis', 'gesehen');
     localStorage.setItem('brett-und-blatt:eingabe', JSON.stringify({ mode: 'standard', deadzone: 0.25, scanIntervalMs: 1200, haptics: false, prompts: true, hotSeatMode: 'pass' }));
   });
   await installVirtualPad(page);

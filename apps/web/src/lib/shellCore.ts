@@ -1,6 +1,5 @@
 /*
- * Darstellung der App (#607, K1): „Klassisch“ (Standard) oder „Konsole“ (Bibliothek für Controller,
- * Handheld und Fernseher). Reine Funktionen ohne `window`, damit sie sich ohne DOM testen lassen;
+ * Darstellung der App (#607, K1): „Konsole“ (seit #639 Standard) oder „Klassisch“ (die frühere Oberfläche). Reine Funktionen ohne `window`, damit sie sich ohne DOM testen lassen;
  * den Zustand im Browser hält `shell.ts`.
  */
 
@@ -14,9 +13,12 @@ export function parseShellParam(search: string): Shell | null {
   return null;
 }
 
-/** Liest den gespeicherten Wert: `'konsole'` → `'console'`, alles andere (auch `null`) → `'classic'`. */
+/**
+ * Liest den gespeicherten Wert (#639: die Konsole ist Standard): `'klassisch'` → `'classic'`, alles andere – auch
+ * `null` und das frühere `'konsole'` – → `'console'`.
+ */
 export function parseStoredShell(raw: string | null): Shell {
-  return raw === 'konsole' ? 'console' : 'classic';
+  return raw === 'klassisch' ? 'classic' : 'console';
 }
 
 /**

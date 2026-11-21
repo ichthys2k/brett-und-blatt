@@ -9,7 +9,7 @@ Auftrag (Cornelius, 20.11.2026): eine Oberfläche in der Art des Steam Deck, als
 1. **Eigene Gestaltung, keine Kopie.** Übernommen wird die Bedienlogik der Gattung (Regale, Bibliothek, Spielseite, Schnellmenü, Tastenleiste), nicht Aussehen, Symbole, Schriften oder Klänge eines Herstellers.
 2. **Eine Logik, zwei Darstellungen.** Die Konsole ersetzt nur den Weg zum Spiel (Hauptmenü, Spielübersicht, Partie-Vorbereitung). Spieltisch und Spiele bleiben eine Fassung. Seltene Bereiche (Klassen, Turniere, Lernen, Pass, Betreiber) bleiben klassisch.
 3. **Gleiche Adressen** in beiden Darstellungen: `#/`, `#/einzelspieler`, `#/neu/<id>`, `#/partie`.
-4. **Schalter** unter Optionen (`#/ton`, „Oberfläche“), gespeichert in `brett-und-blatt:oberflaeche`; Startparameter `?modus=konsole` / `?modus=klassisch` gilt nur für den Aufruf.
+4. **Schalter** unter Optionen (`#/ton`, „Oberfläche“), gespeichert in `brett-und-blatt:oberflaeche`; Startparameter `?modus=konsole` / `?modus=klassisch` gilt nur für den Aufruf. **Seit #639 (21.11.2026) ist die Konsole Standard:** gespeichert wird nur noch `klassisch`; ohne Eintrag (auch mit dem früheren Wert `konsole`) gilt die Konsole. Statt des Angebots „Controller erkannt“ erscheint einmal der Hinweis „Neue Oberfläche“ (`components/ShellNotice.tsx`, Speicher `brett-und-blatt:oberflaeche-hinweis`).
 5. ~~Nur im Querformat ab 700 × 360 px~~ – seit #637 (21.11.2026) gilt die Konsole in jeder Fenstergröße; im Hochformat stehen die Reiter als Leiste unten (Styleguide Abschnitt 9).
 6. **Beide Aussehen** („Schlicht“, „Taverne“, hell, dunkel, erhöhter Kontrast) über die vorhandenen Farbvariablen.
 7. **Keine neuen Bilder, keine neuen Klänge.** Kacheln nutzen Wappen und Kulissen, nie größer als die Datei.
@@ -41,7 +41,7 @@ App.tsx ── Screen()
 | Start, Bibliothek, Spielseite | `apps/web/src/console/ConsoleHome.tsx`, `ConsoleLibrary.tsx`, `ConsoleGame.tsx` | K4–K6 |
 | Fokus und B am Spieltisch | `apps/web/src/screens/Play.tsx`, `apps/web/src/lib/turnFocus.ts` | K7 |
 | Controller-Eignung | `scripts/controller-audit.mjs`, `apps/web/src/lib/controllerGrades.json`, `controllerGrade.ts`, [`konsole-eignung.md`](konsole-eignung.md) | K0, K8 |
-| Einmaliger Hinweis | `apps/web/src/components/ConsoleOffer.tsx`, `lib/consoleOffer.ts` | K10 |
+| Einmaliger Hinweis | `apps/web/src/components/ShellNotice.tsx`, `lib/shellNotice.ts` (bis #639: `ConsoleOffer`) | K10, #639 |
 | Proben | `scripts/controller-probe.mjs`, `scripts/konsole-probe.mjs`, `scripts/lib/virtual-pad.mjs` | K0, K11 |
 
 Die Navigation innerhalb der Konsolen-Bildschirme kommt vollständig aus der vorhandenen Controller-Schicht (#533–#542, `packages/ui/src/input/`): `GlobalSpatialNavigator` bewegt den Fokus räumlich über alle fokussierbaren Elemente und rollt sie ins Bild, A löst `click()` aus, B geht zurück. Die Konsole ergänzt nur: LB/RB für die Reiter (`ConsoleFrame`), X für die Suche, Y für Lieblingsspiele, den Anfangsfokus je Bildschirm.
