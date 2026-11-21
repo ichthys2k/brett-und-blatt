@@ -8,6 +8,8 @@ Was wann umgesetzt wurde, mit Dateipfaden und Entscheidungen. Bis zum 12.11.2026
 
 ## Nachträge ab 12.11.2026
 
+**Maulwurfsgänge: Wappen (21.11.2026, #568):** Eigenes Wappen `apps/web/src/wappen/mole-tunnels.webp` (160 × 184 px), erstmals mit der Canva-Bilderzeugung statt Gemini gemalt (drei Varianten, Auswahl durch Cornelius; Original im privaten Repo). Eintrag im Manifest `scripts/grafik/manifeste/wappen.json`. Die Ausnahme `WITHOUT_CREST` in `tests/repo.test.ts` ist leer; die Startseite zeigt statt des Emojis das Wappen. Offen: Bot-Porträt „Wühlmaus“ (#567).
+
 **Maulwurfsgänge freigeschaltet, Glied M5 (20.11.2026, #457):** `draft` ist aus `packages/games/mole-tunnels/src/meta.ts` entfernt, das Spiel steht in `apps/server/src/games.ts` (`onlineGames`) und `apps/server/package.json` (Lockfile aktualisiert), in der VR-Spieltafel (`apps/xr/src/catalog.ts`, Zeilen in `apps/xr/src/scene/tafel-lines.ts`: Rüben je Platz und wer was tut). `BOT_STEP_MS['mole-tunnels'] = 5` war schon eingetragen. **Regeländerung mit Cornelius' Zustimmung (20.11.2026):** Ein fertiges Spiel darf vorläufig ohne Wappen erscheinen, wenn es in `WITHOUT_CREST` in `tests/repo.test.ts` steht (derzeit nur `mole-tunnels`, Startseite zeigt das Emoji 🕳️); der Test meldet den Eintrag, sobald das Wappen da ist (#568) oder das Spiel wieder Entwurf wird. Alle anderen Spiele brauchen weiter ein Wappen. Ohne Bot-Porträt (Rückfall „Zufall“, #567). Klänge bleiben die vorläufige Auswahl aus dem Katalog (Cornelius wählt endgültig). Nicht geprüft: Partie online mit zwei Geräten, Spieltafel in der Brille.
 
 **Sprachchat: Schalter der Raumleitung und gezieltes Melden (20.11.2026, #352):** Abgleich mit Cornelius' Entscheidungen vom 16.11.2026.
