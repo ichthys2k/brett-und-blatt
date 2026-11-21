@@ -37,7 +37,8 @@ export const unoBot: BotDefinition<UnoState, UnoMove> = {
   levels: ['easy', 'medium', 'hard'],
   chooseMove(ctx) {
     const { view, seat: actor, level, rng, module } = ctx;
-    const moves = module.legalMoves(view, actor);
+    // Die Bots legen immer nur eine Karte; Doppelzüge bleiben den Menschen.
+    const moves = module.legalMoves(view, actor).filter((m) => !((m.type === 'play' || m.type === 'jumpIn') && m.alsoCardId));
     if (moves.length === 1) return moves[0];
 
     const hand = view.hands[actor];

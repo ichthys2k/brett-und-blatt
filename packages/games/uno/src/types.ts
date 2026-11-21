@@ -79,6 +79,8 @@ export interface UnoOptions {
   sevenZero: 'off' | 'on';
   /** Identische Karte (Farbe + Wert) darf sofort reingeworfen werden. */
   jumpIn: 'off' | 'on';
+  /** Zwei exakt identische Karten (Farbe + Wert) dürfen auf einmal gelegt werden; die Wirkung zählt doppelt. */
+  doublePlay: 'off' | 'on';
   /** Nachzieh-Regel: eine Karte oder ziehen bis passend. */
   drawRule: 'one' | 'untilMatch' | 'upToThree';
   /** Muss vor der letzten Karte "Eins!" gerufen werden? */
@@ -125,6 +127,8 @@ export type UnoMove =
       chosenColor?: UnoColor;
       callUno?: boolean;
       targetPlayer?: number; // z. B. bei Handtausch (7) oder gezieltem Ziehen
+      /** Zweite, identische Karte, die gleichzeitig gelegt wird (Option doublePlay). */
+      alsoCardId?: string;
     }
   | { type: 'draw' }
   | { type: 'pass' }
@@ -135,4 +139,5 @@ export type UnoMove =
       cardId: string;
       chosenColor?: UnoColor;
       callUno?: boolean;
+      alsoCardId?: string;
     };

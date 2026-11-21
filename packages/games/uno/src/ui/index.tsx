@@ -92,6 +92,9 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
 }) => {
   const [selectedWildCard, setSelectedWildCard] = useState<UnoCard | null>(null);
   const [selectedSevenCard, setSelectedSevenCard] = useState<UnoCard | null>(null);
+  // Doppelzug: Frage „eine oder beide?“ und die gewählte zweite Karte für Farb- und Tauschwahl.
+  const [doubleOffer, setDoubleOffer] = useState<{ card: UnoCard; also: string } | null>(null);
+  const [pendingAlso, setPendingAlso] = useState<string | null>(null);
   const [callUnoToggled, setCallUnoToggled] = useState<boolean>(false);
   const [flyingCards, setFlyingCards] = useState<FlyingCard[]>([]);
   const [discardLanding, setDiscardLanding] = useState<boolean>(false);
@@ -222,9 +225,20 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
   });
 
   // Klick auf eine Handkarte
-  const handleCardClick = useCallback((card: UnoCard) => {
+  const handleCardClick = useCallback((card: UnoCard, decided = false, also: string | null = null) => {
     if (!isActor && state.options.jumpIn !== 'on') return;
     if (!playableCardIds.has(card.id)) return;
+
+    // Gibt es einen Doppelzug mit einer identischen zweiten Karte, erst fragen.
+    if (!decided) {
+      const twin = moves.find((m) => (m.type === 'play' || m.type === 'jumpIn') && m.cardId === card.id && m.alsoCardId);
+      if (twin && (twin.type === 'play' || twin.type === 'jumpIn') && twin.alsoCardId) {
+        setDoubleOffer({ card, also: twin.alsoCardId });
+        return;
+      }
+    }
+    setPendingAlso(also);
+    const alsoPart = also ? { alsoCardId: also } : {};
 
     const face = getActiveFace(card, side);
 
@@ -240,11 +254,12 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
         .map((_, idx) => idx)
         .filter((idx) => idx !== actor && !state.eliminated[idx]);
       if (otherSeats.length === 1) {
-        const willHaveOne = myHand.length === 2;
+        const willHaveOne = myHand.length - (also ? 2 : 1) === 1;
         onMove({
           type: 'play',
           cardId: card.id,
           targetPlayer: otherSeats[0],
+          ...alsoPart,
           ...(willHaveOne ? { callUno: callUnoToggled } : {}),
         });
         setCallUnoToggled(false);
@@ -256,14 +271,15 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
 
     // Reguläres Legen oder Jump-In
     const moveType = isActor ? 'play' : 'jumpIn';
-    const willHaveOne = myHand.length === 2;
+    const willHaveOne = myHand.length - (also ? 2 : 1) === 1;
     onMove({
       type: moveType,
       cardId: card.id,
+      ...alsoPart,
       ...(willHaveOne ? { callUno: callUnoToggled } : {}),
     });
     setCallUnoToggled(false);
-  }, [isActor, state.options, playableCardIds, side, actor, state.hands, state.eliminated, myHand.length, onMove, callUnoToggled]);
+  }, [isActor, state.options, playableCardIds, moves, side, actor, state.hands, state.eliminated, myHand.length, onMove, callUnoToggled]);
 
   // Pointer Drag & Drop Hook für Handkarten
   const { dragState, bindDrag } = usePointerDrag<UnoCard>({
@@ -469,28 +485,32 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
   // Farbwahl bestätigen
   const handleColorSelect = (chosenColor: UnoColor) => {
     if (!selectedWildCard) return;
-    const willHaveOne = myHand.length === 2;
+    const willHaveOne = myHand.length - (pendingAlso ? 2 : 1) === 1;
     onMove({
-      type: 'play',
+      type: isActor ? 'play' : 'jumpIn',
       cardId: selectedWildCard.id,
+      ...(pendingAlso ? { alsoCardId: pendingAlso } : {}),
       chosenColor,
       ...(willHaveOne ? { callUno: callUnoToggled } : {}),
     });
     setSelectedWildCard(null);
+    setPendingAlso(null);
     setCallUnoToggled(false);
   };
 
   // 7er-Tauschziel bestätigen
   const handleSevenTargetSelect = (targetPlayer: number) => {
     if (!selectedSevenCard) return;
-    const willHaveOne = myHand.length === 2;
+    const willHaveOne = myHand.length - (pendingAlso ? 2 : 1) === 1;
     onMove({
       type: 'play',
       cardId: selectedSevenCard.id,
+      ...(pendingAlso ? { alsoCardId: pendingAlso } : {}),
       targetPlayer,
       ...(willHaveOne ? { callUno: callUnoToggled } : {}),
     });
     setSelectedSevenCard(null);
+    setPendingAlso(null);
     setCallUnoToggled(false);
   };
 
@@ -899,6 +919,43 @@ export const UnoBoard: React.FC<BoardProps<UnoState, UnoMove>> = ({
           {center}
           {own}
         </>
+      )}
+
+      {/* 3b. Doppelzug: eine oder beide identischen Karten legen */}
+      {doubleOffer && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-label="Eine oder zwei Karten legen?">
+          <div className="bg-zinc-900 border border-white/20 p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-4 max-w-xs w-full text-center">
+            <h3 className="text-lg font-extrabold text-white">Du hast diese Karte doppelt</h3>
+            <p className="text-sm text-zinc-300">Beide auf einmal legen? Die Wirkung zählt dann doppelt.</p>
+            <div className="flex gap-3 w-full">
+              <button
+                type="button"
+                onClick={() => {
+                  const { card } = doubleOffer;
+                  setDoubleOffer(null);
+                  handleCardClick(card, true, null);
+                }}
+                className="flex-1 py-3 rounded-xl font-black bg-zinc-700 text-white hover:bg-zinc-600 cursor-pointer"
+              >
+                Eine Karte
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const { card, also } = doubleOffer;
+                  setDoubleOffer(null);
+                  handleCardClick(card, true, also);
+                }}
+                className="flex-1 py-3 rounded-xl font-black bg-yellow-400 text-zinc-950 hover:bg-yellow-300 cursor-pointer"
+              >
+                Beide Karten
+              </button>
+            </div>
+            <button type="button" onClick={() => setDoubleOffer(null)} className="text-xs text-zinc-400 hover:text-white cursor-pointer">
+              Abbrechen
+            </button>
+          </div>
+        </div>
       )}
 
       {/* 4. Farbwahl-Modal bei Jokern */}

@@ -73,6 +73,7 @@ export function describeMove(view: UnoState, move: UnoMove): string {
       let text = `${ownCardName(view, move.cardId)} ${move.type === 'play' ? 'spielen' : 'reinwerfen'}`;
       if (move.chosenColor) text += `, ${UNO_COLOR_NAMES[move.chosenColor]} wünschen`;
       if (move.type === 'play' && move.targetPlayer !== undefined) text += `, Ziel Platz ${move.targetPlayer + 1}`;
+      if (move.alsoCardId) text += ', dazu die gleiche zweite Karte';
       if (move.callUno) text += ' und „Eins!“ rufen';
       return text;
     }
