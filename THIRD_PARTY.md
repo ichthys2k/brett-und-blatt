@@ -154,6 +154,10 @@ Die 47 Porträts der Computergegner (`packages/ui/src/bots/portraits/bot-*.webp`
 
 Das Porträt der Wühlmaus (`packages/ui/src/bots/portraits/bot-wuehlmaus.webp`, Maulwurfsgänge, #567) entstand im November 2026 mit der Bilderzeugung von Canva nach demselben Stil-Kopf; Auswahl aus drei Varianten und Zuschnitt durch Cornelius Lipponer, Eintrag `wuehlmaus` im Manifest `bots.json`, das Original liegt im privaten Repo `ichthys2k/brett-und-blatt-grafik`.
 
+## Ersatzbilder ohne Alkohol im Narrenhof (KI-erzeugt)
+
+Der Narrenhof-Mundschenk (`packages/games/color-sorter/src/ui/portraits/fool-cupbearer-1.webp`) und das Medaillon „Festschmaus“ (`packages/games/color-sorter/src/ui/items/tag-stock.webp`) ersetzen am 21.11.2026 zwei ältere Bilder mit Weinglas und Bierkrug (#329): **KI-erzeugt** mit der Bilderzeugung von Canva nach den berichtigten Bildbeschreibungen in `scripts/grafik/manifeste/narren.json` und `jahrmarkt-2.json`. Auswahl aus je drei Varianten und Zuschnitt durch Cornelius Lipponer; die Originale liegen im privaten Repo `ichthys2k/brett-und-blatt-grafik`. Der Mundschenk ist eine frei erfundene Figur, keine echte Person.
+
 Sie stehen wie die übrigen Inhalte unter CC BY-SA 4.0 (Brett & Blatt). Hinweis: Die Bilder sind KI-erzeugt; ob an ihnen ein Urheberrecht besteht, ist rechtlich nicht abschließend geklärt.
 
 ## Kulissen je Rubrik und Spiel (KI-erzeugt)
