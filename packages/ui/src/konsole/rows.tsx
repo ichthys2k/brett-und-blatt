@@ -234,7 +234,7 @@ export interface KnsInfoRowProps extends RowBase {
 /** Nur Anzeige, nicht fokussierbar. */
 export function KnsInfoRow({ label, hint, value, className }: KnsInfoRowProps) {
   return (
-    <div className={cls('kns-row', className)}>
+    <div className={cls('kns-row kns-row-wide', className)}>
       <RowText label={label} hint={hint} />
       <span className="kns-row-control">
         <span className="kns-row-value">{value}</span>

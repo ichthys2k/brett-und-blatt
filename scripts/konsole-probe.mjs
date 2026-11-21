@@ -98,7 +98,9 @@ try {
         if (!target) return 'missing';
         if (current === target) return 'here';
         const t = target.getBoundingClientRect();
-        const c = current?.getBoundingClientRect() ?? { top: 0, left: 0 };
+        const c = current?.getBoundingClientRect() ?? { top: 0, left: 0, right: 0 };
+        // Liegt das Ziel in einer anderen Spalte (keine waagrechte Überlappung), zuerst hinüber – wie von Hand.
+        if (t.left >= c.right || t.right <= c.left) return t.left < c.left ? 'left' : 'right';
         if (Math.abs(t.top - c.top) > 8) return t.top < c.top ? 'up' : 'down';
         return t.left < c.left ? 'left' : 'right';
       }, selector);
@@ -134,6 +136,16 @@ try {
     await expectState(`Reiter ${hash}`, (h) => location.hash === h && !!document.querySelector('.kns-frame'), hash);
   }
   await expectState('Unterreiter fehlen bei Optionen', () => !document.querySelector('.kns-subbar'));
+  // Optionen (#640): Kategorie „Controller“ mit Steuerkreuz und A, Stick-Totzone mit Rechts, Kategorie bleibt beim Neuladen
+  if ((await steerTo('[data-kns-id="cat:input"]')) !== 'here') throw new Error('Konsolen-Probe: Kategorie „Controller“ nicht erreichbar');
+  await press(A);
+  await expectState('Kategorie Controller', () => location.hash === '#/ton?bereich=input' && !!document.querySelector('.kns-slider'));
+  if ((await steerTo('.kns-slider')) !== 'here') throw new Error('Konsolen-Probe: Regler der Totzone nicht erreichbar');
+  const deadzoneBefore = await page.evaluate(() => Number(document.querySelector('.kns-slider').value));
+  await press(RIGHT);
+  await expectState('Totzone verstellt', (before) => Number(document.querySelector('.kns-slider').value) > before, deadzoneBefore);
+  await page.reload({ waitUntil: 'networkidle' });
+  await expectState('Kategorie nach Neuladen', () => document.querySelector('.kns-split-tab[aria-current="true"]')?.getAttribute('data-kns-id') === 'cat:input');
   await press(LB);
   await expectState('Unterreiter beim Pass', () => location.hash === '#/pass' && document.querySelector('.kns-subtab[aria-current="page"]')?.textContent === 'Pass');
   for (const hash of ['#/online', '#/einzelspieler', '#/']) {
@@ -201,7 +213,7 @@ try {
   await expectState('Weiterspielen', () => !!document.querySelector('.kns-resume') && document.activeElement?.getAttribute('data-kns-id') === 'resume');
 
   if (errors.length > 0) throw new Error(`Browser-Fehler: ${errors.join('; ')}`);
-  console.log('✓ Konsolen-Probe erfolgreich (Start, Schnellzugriff, fünf Reiter, Bibliothek, Suche, Spielseite, Partie, Menü, Weiterspielen).');
+  console.log('✓ Konsolen-Probe erfolgreich (Start, Schnellzugriff, fünf Reiter, Optionen, Bibliothek, Suche, Spielseite, Partie, Menü, Weiterspielen).');
 } finally {
   await browser.close();
   server.close();

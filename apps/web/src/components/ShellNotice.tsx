@@ -44,14 +44,16 @@ export function ShellNotice() {
       onClose={close}
       action={
         <>
-          <KnsButton
-            onClick={() => {
-              close();
-              navigate(paths.sound);
-            }}
-          >
-            {t('shellNotice.options')}
-          </KnsButton>
+          {route.name !== 'sound' && (
+            <KnsButton
+              onClick={() => {
+                close();
+                navigate(paths.sound);
+              }}
+            >
+              {t('shellNotice.options')}
+            </KnsButton>
+          )}
           <KnsButton variant="primary" onClick={close}>
             {t('shellNotice.ok')}
           </KnsButton>

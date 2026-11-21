@@ -32,7 +32,8 @@ export type Route =
   | { name: 'tournamentBeamer'; code: string }
   | { name: 'series'; code: string; leader?: string }
   | { name: 'seriesEmbed'; code: string }
-  | { name: 'sound' }
+  /** Optionen; `section` ist die Kategorie der Konsole (`?bereich=…`, #640). */
+  | { name: 'sound'; section?: string }
   | { name: 'helpers'; tool?: HelperTool }
   | { name: 'pass' }
   | { name: 'account'; ticket?: string; provider?: string; error?: string; reason?: string }
@@ -87,7 +88,7 @@ export function parseRoute(hash: string): Route {
   if (parts[0] === 'turnier' && parts[1] && parts[2] === 'beamer') return { name: 'tournamentBeamer', code: decodeURIComponent(parts[1]) };
   if (parts[0] === 'turnier' && parts[1] && parts[2] === 'ansicht') return { name: 'tournamentEmbed', code: decodeURIComponent(parts[1]) };
   if (parts[0] === 'turnier' && parts[1]) return { name: 'tournament', code: decodeURIComponent(parts[1]), ...(params.neu ? { claim: params.neu } : {}), ...(params.helfer ? { helper: params.helfer } : {}), ...(params.leitung ? { leader: params.leitung } : {}) };
-  if (parts[0] === 'ton') return { name: 'sound' };
+  if (parts[0] === 'ton') return params.bereich ? { name: 'sound', section: params.bereich } : { name: 'sound' };
   if (parts[0] === 'helfer') {
     const tool = parts[1];
     const valid = tool === 'wuerfel' || tool === 'zufall' || tool === 'startspieler' || tool === 'uhren' || tool === 'punkte' ? tool : undefined;

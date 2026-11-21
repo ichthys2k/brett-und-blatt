@@ -430,8 +430,14 @@
 }
 
 :root[data-shell='console'] .kns-row-value {
+  min-width: 0;
   color: var(--color-muted);
   font-variant-numeric: tabular-nums;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+:root[data-shell='console'] :is(.kns-stepper-value, .kns-slider + .kns-row-value) {
   white-space: nowrap;
 }
 

@@ -5,6 +5,7 @@ import { ClassicInFrame } from './ClassicInFrame';
 import { ConsoleGame } from './ConsoleGame';
 import { ConsoleHome } from './ConsoleHome';
 import { ConsoleLibrary } from './ConsoleLibrary';
+import { ConsoleOptions } from './ConsoleOptions';
 import { placeForRoute } from './consoleTabs';
 import { Gallery } from './Gallery';
 
@@ -25,6 +26,8 @@ export function consoleScreen(route: Route): ReactElement | null {
       return <ConsoleLibrary initialFilter={route.filter} initialPlayers={route.players} />;
     case 'gallery':
       return <Gallery />;
+    case 'sound':
+      return <ConsoleOptions section={route.section} />;
     // Der Raum legt den Rahmen selbst um die Lobby; die Partie im Raum steht ohne Rahmen da.
     case 'room':
       return null;

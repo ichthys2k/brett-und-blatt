@@ -568,3 +568,51 @@
 :root[data-shell='console'] .kns-quick .kns-section + .kns-section {
   margin-top: calc(2 * var(--kns-u));
 }
+
+/* ---------- Optionen (#640, U5) ---------- */
+
+:root[data-shell='console'] .kns-options-note {
+  margin: calc(1 * var(--kns-u)) 0;
+  padding: calc(1 * var(--kns-u)) calc(2 * var(--kns-u));
+  color: var(--color-muted);
+  font-size: var(--kns-text-s);
+}
+
+:root[data-shell='console'] .kns-options-tracks {
+  padding: calc(1 * var(--kns-u));
+}
+
+:root[data-shell='console'] .kns-options-tracks .kns-list-main {
+  min-height: calc(6.5 * var(--kns-u));
+}
+
+:root[data-shell='console'] .kns-options-tracks .kns-list-leading {
+  width: calc(4 * var(--kns-u));
+  height: calc(4 * var(--kns-u));
+  font-size: var(--kns-text-l);
+}
+
+:root[data-shell='console'] .kns-options-excluded {
+  color: var(--color-muted);
+  text-decoration: line-through;
+}
+
+:root[data-shell='console'] .kns-options-dim {
+  opacity: 0.4;
+  filter: grayscale(1);
+}
+
+/* Eingebettete Bausteine der klassischen Seite (Figurensätze, Hinweise aufs Gerät) mit normaler Schriftgröße. */
+:root[data-shell='console'] .kns-options-embed {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: calc(2 * var(--kns-u));
+  font-size: 1rem;
+}
+
+:root[data-shell='console'] .kns-options-table {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(1.5 * var(--kns-u));
+}
