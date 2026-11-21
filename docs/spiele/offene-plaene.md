@@ -46,6 +46,7 @@ Ablauf in [`klaenge-alle-spiele.md`](klaenge-alle-spiele.md), Werkzeuge im priva
 
 - **Maulwurfsgänge (#457, Glied M5):** Wappen (#568), Bot-Porträt „Wühlmaus“ (#567), Klangauswahl und Prüfliste vor dem Freischalten: [`maulwurfsgaenge-freischalten.md`](maulwurfsgaenge-freischalten.md).
 - **Konsolen-Oberfläche (Vorhaben #607, 20.11.2026):** zuschaltbare Darstellung für Controller, Steam Deck und Fernseher (Bibliothek mit Regalen, feste Tasten, Controller-Eignung je Spiel). Plan in [`konsole.md`](konsole.md), Maße und Tasten in [`konsole-styleguide.md`](konsole-styleguide.md), Schritte K0–K11 als Unter-Issues #608–#625 (alle `status: Idee`).
+- **Konsole überall (Vorhaben #635, 21.11.2026):** Die Konsolen-Oberfläche wird Standard auf jedem Gerät (mit Hochformat), und alle Menüs außerhalb der Partie werden aus gemeinsamen Bausteinen neu gebaut. Plan in [`konsole-ueberall.md`](konsole-ueberall.md), Muster und Bausteine im [Styleguide](konsole-styleguide.md) (Abschnitte 9–13), Schritte U1–U16 als Unter-Issues #636–#654 (alle `status: Idee`). Die Oberfläche in den Partien ist Phase 2.
 - **Belohnungen (#324):** Die Schritte 1 bis 8 sind umgesetzt (Konzept und Stand: [`belohnungen.md`](belohnungen.md)). Offen: Rahmenbilder ([Issue #598](https://github.com/ichthys2k/brett-und-blatt/issues/598)) und eine Quelle für den Rahmen im Online-Profil.
 
 ## 7. Zurückgestellt

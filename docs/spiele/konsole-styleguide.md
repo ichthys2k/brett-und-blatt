@@ -118,4 +118,82 @@ Regeln dazu:
 - Bedienelemente sind `<button>` oder `<a href>`; sonst `tabIndex={0}`, `role="button"`, `aria-label` und Enter/Leertaste. Dann findet sie die räumliche Navigation von selbst.
 - Keine eigene Pfeiltasten-Logik je Bildschirm. Kurzbefehle über `useInputIntent(handler, 5)`; wer eine Taste verbraucht, gibt `true` zurück.
 - Sichere Ränder beachten: `env(safe-area-inset-*)` zusätzlich zu `--kns-gutter`.
-- Prüfgrößen: 1280 × 800, 1920 × 1080, 844 × 390; dazu 390 × 844 (muss klassisch bleiben). Jeweils „Taverne“ und „Schlicht“, hell und dunkel.
+- Prüfgrößen: 1280 × 800, 1920 × 1080, 844 × 390; dazu 390 × 844 (bis U2 von #635 klassisch, danach Hochformat der Konsole, Abschnitt 9). Jeweils „Taverne“ und „Schlicht“, hell und dunkel.
+
+---
+
+Die Abschnitte 9–13 gehören zum Vorhaben „Konsole überall“ (#635, Plan in [`konsole-ueberall.md`](konsole-ueberall.md)). Sie beschreiben den **Soll-Stand**; wer einen Schritt umsetzt und abweichen muss, trägt die Abweichung hier nach.
+
+## 9. Hochformat (U2)
+
+- Hochformat gilt, wenn das Fenster höher als breit oder schmaler als 700 px ist (`knsLayout`); `<html>` trägt `data-kns-layout="portrait|landscape"`.
+- Maße im Hochformat: `--kns-u: clamp(7px, 2.05vw, 10px)` (8 px bei 390 px Breite), `--kns-gutter` 2 u, Kacheln zweispaltig (ab 600 px Breite dreispaltig), Seitenverhältnis der Kachel 1 : 0,72.
+- **Leiste unten** statt Reitern oben: Höhe 8 u plus `env(safe-area-inset-bottom)`, je Reiter Symbol über Name, aktiver Reiter in `--color-accent`. Oben eine schmale Kopfzeile (6 u) mit Schriftzug, „☰“ und Pass-Avatar.
+- Unterreiter und Kategorien werden zu einer waagrecht rollenden Zeile unter der Kopfzeile.
+- Zweispaltige Seiten (Detail, Einstellungen) werden einspaltig; die Hauptaktion steht ohne Rollen im sichtbaren Bereich.
+- Fenster kommen von unten über die volle Breite, höchstens 90 % der Höhe; Aktionen unten nebeneinander, bei mehr als zwei untereinander.
+- Tippziele mindestens 44 × 44 px (`--kns-target`), Abstand zwischen Zielen mindestens 1 u.
+- Die Tastenleiste erscheint nur bei Controller-Nutzung und sitzt dann über der Leiste.
+
+## 10. Seitenmuster
+
+Jede Menüseite ist eines dieser sieben Muster. Der Name steht im Issue des Schritts.
+
+| Nr. | Muster | Aufbau | Bausteine | Beispiele |
+|---|---|---|---|---|
+| 1 | **Regal** | Überschriften mit waagrecht rollenden Kachelzeilen | `KnsShelf`, `KnsTile` | Start |
+| 2 | **Raster** | Filterzeile, darunter Kachelraster | `KnsGrid`, `KnsTile` | Bibliothek, Lernpakete, Helfer-Übersicht, Stempel |
+| 3 | **Einstellungen** | Kategorien links (Hochformat: Chips oben), rechts Abschnitte mit Zeilen: Beschriftung links, Bedienelement rechts; wirkt sofort, kein „Speichern“ | `KnsSplit`, `KnsSection`, Zeilen | Optionen, Konto |
+| 4 | **Detail** | Links Bild, Name, Kerndaten; rechts oben **eine** Hauptaktion, darunter Zeilen und Listen | `KnsPage`, `KnsButton`, Zeilen, `KnsList` | Spielseite, Lobby, Lernpaket |
+| 5 | **Liste mit Aktion** | Kopf mit ein bis zwei Aktionen, Chip-Filter, Liste; je Zeile eine Hauptaktion (A) und höchstens zwei Nebenaktionen | `KnsPage`, `KnsList`, `KnsEmpty` | Offene Runden, Schwarzes Brett, Turniere, Klassen, Sammlung |
+| 6 | **Formular** | Felder untereinander, Aktionen unten („Abbrechen“ links, Hauptaktion rechts); als Fenster (`KnsDialog`), als Seite mit fester Fußzeile oder geführt in Schritten | `KnsDialog`, `KnsField`, Zeilen | Raum eröffnen, Turnier anlegen, Karten-Editor |
+| 7 | **Text** | Abschnitte als Kategorien, Lesetext mit höchstens 70 Zeichen je Zeile | `KnsSplit` | Impressum, Datenschutz, Anleitung |
+
+Benannte Spielarten, die die Issues verwenden:
+- **„Bibliothek“** = Regal und Raster zusammen (Rubriken als Regale, „Alle“ als Raster).
+- **„Profil“** = Detail mit Kopf (Wappen, Name, Stand) und `KnsSubTabs` darunter (Pass, Turnierseite, Klasse, Verein, Serie).
+- **„Werkzeug“** = Detail mit großer Anzeige in der Mitte und der Hauptaktion darunter (Spielhelfer).
+- **„Schritte“** = Formular, geführt: ein Schritt je Ansicht, „Zurück“/„Weiter“, LB/RB wechselt den Schritt.
+
+Regeln für alle Muster:
+- Genau **eine** Hauptaktion je Ansicht (`variant="primary"`); sie ist das erste Fokusziel, außer es gibt eine Liste, in der man weitermacht.
+- Gefährliches (`variant="danger"`) steht unten und fragt immer nach.
+- Leere Listen zeigen `KnsEmpty` mit der nächstliegenden Aktion, nie eine leere Fläche.
+- Unterreiter und Kategorie stehen in der Adresse (Abfrage `?reiter=…` bzw. `?bereich=…`), damit B und Neuladen stimmen.
+
+## 11. Bausteine `Kns…` (U1)
+
+Ort: `packages/ui/src/konsole/`, CSS in `konsole.css` (Präfix `kns-`, nur unter `:root[data-shell='console']`). Schauseite: `/?modus=konsole#/bausteine`. Die Eigenschaften je Baustein stehen in #636.
+
+| Gruppe | Bausteine | Maße und Aussehen |
+|---|---|---|
+| Knopf | `KnsButton` (`primary`, `secondary`, `danger`, `quiet`; Größe `m`, `l`) | Höhe `m` = `--kns-target`, `l` = 8 u; Ecken 1 u; `primary` in `--color-accent`, `danger` in der Warnfarbe, `quiet` ohne Fläche |
+| Seite | `KnsPage`, `KnsSection` | Titel `--kns-title`, größte Inhaltsbreite 120 u; ein Abschnitt ist eine Fläche in `--color-panel` mit Ecken 1,5 u, Zeilen durch feine Linien getrennt |
+| Zeilen | `KnsToggleRow`, `KnsSliderRow`, `KnsChoiceRow`, `KnsActionRow`, `KnsLinkRow`, `KnsInfoRow`, `KnsTextRow`, `KnsStepperRow` | Höhe mindestens 7 u, Innenabstand 2 u; Beschriftung links in `--kns-text`, Hinweis darunter in `--kns-text-s` und gedämpft; Bedienelement rechtsbündig. Die **ganze Zeile** trägt den Fokus-Rahmen. Im Hochformat rutscht ein breites Bedienelement (Regler, Knopfleiste) unter die Beschriftung |
+| Auswahl | `KnsChoiceRow` | bis 4 Möglichkeiten als Knopfleiste in der Zeile, sonst Wert + „›“ und Liste im Fenster (`role="radio"`) |
+| Liste | `KnsList`, `KnsListItem` | Zeile mindestens 8 u; links Bild 6 u, Titel und Meta-Zeile, rechts Zustand und Nebenknöpfe; ganze Zeile = Hauptaktion |
+| Navigation | `KnsSubTabs`, `KnsSplit` | Unterreiter 6 u hoch, aktiver mit Unterstrich in `--color-accent`; Kategorien links 30 u breit |
+| Fenster | `KnsDialog` (`s` 50 u, `m` 80 u, `l` 110 u breit) | abgedunkelter Hintergrund, Titel oben, Schließen-Knopf, Aktionen unten; `aria-modal`, B schließt, Fokus kehrt zurück |
+| Meldung | `KnsBanner` (`info`, `success`, `warning`, `danger`), `KnsEmpty` | Banner mit farbiger Kante links, höchstens eine Aktion; `KnsEmpty` mittig mit großem Symbol |
+| Formular | `KnsField` | Beschriftung über dem Feld, Fehler darunter in der Warnfarbe und mit `aria-describedby` |
+| Kacheln | `KnsTile`, `KnsShelf`, `KnsGrid` | wie Abschnitt 6 (Kachel, Regal); `GameTile` baut auf `KnsTile` auf |
+| Anzeige | `KnsCode` | große Zeichen mit Abstand, für Raumcodes; daneben „Kopieren“ |
+
+Fehlt ein Baustein, wird er dort ergänzt und auf der Schauseite gezeigt – nicht auf der Seite nachgebaut.
+
+## 12. Navigation (U3)
+
+- **Zwei Ebenen:** fünf Hauptreiter (Start · Bibliothek · Online · Pass · Optionen), darunter Unterreiter (Tabelle in [`konsole-ueberall.md`](konsole-ueberall.md), Abschnitt 3). Eine dritte Ebene gibt es nur innerhalb einer Seite (Unterreiter eines Profils, Kategorien der Einstellungen).
+- **LB/RB** wechselt immer die Hauptreiter – außer in einem Fenster mit Schritten. Unterreiter und Kategorien erreicht das Steuerkreuz.
+- **B** geht eine Ebene zurück: Fenster zu → vorige Seite → Start. B verlässt nie die App und nie eine Partie.
+- **Start ☰** öffnet in den Menüs den Schnellzugriff (Lautstärke, Musik, Pass, Weiterspielen, „Alle Optionen“); am Spieltisch das Menü der Partie. In der Kopfleiste gibt es denselben Knopf für Finger und Maus.
+- **X** ist die Nebenaktion der fokussierten Zeile (z. B. Ausblenden, Ergebnis eintragen), **Y** das Anheften (Lieblingsspiel). Beides steht in der Tastenleiste und ist immer auch als sichtbarer Knopf vorhanden.
+- Jede Route gehört zu genau einem Platz (`placeForRoute`); ein Test verhindert vergessene Routen.
+
+## 13. Meldungen, Zustände und Texte der Menüs (U15)
+
+- **Meldungen** erscheinen als `KnsBanner` in einem gemeinsamen Stapel (Querformat oben rechts, Hochformat oben über die Breite), höchstens drei gleichzeitig. Ohne Aktion verschwinden sie von selbst und nehmen nie den Fokus; mit Aktion bleiben sie, bis man sie bedient oder schließt.
+- **Rückfragen** immer über `KnsDialog`, nie über Fenster des Browsers. Titel ist die Frage („Klasse auflösen?“), die Knöpfe nennen die Handlung („Auflösen“, „Abbrechen“), nicht „Ja/Nein“. Fokus steht auf der ungefährlichen Antwort.
+- **Laden:** `KnsEmpty` mit ruhiger Bewegung (ohne bei `prefers-reduced-motion`); erst nach 300 ms zeigen, damit nichts flackert.
+- **Fehler:** sagen, was nicht ging und was man tun kann („Das hat nicht geklappt. Prüfe die Verbindung.“ + „Nochmal“). Keine Fehlercodes im Text.
+- **Texte:** Regeln aus Abschnitt 7; Zeilen-Beschriftungen sind Dingwörter („Lautstärke Musik“), Hinweise ganze kurze Sätze. Schlüssel unter `console.*` in `apps/web/src/i18n.ts`, vorhandene Texte der klassischen Seiten wiederverwenden.
